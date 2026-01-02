@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PetCareX - Hệ thống quản lý thú cưng</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                <img src="assets/logo.png" alt="PetCareX Logo" onerror="this.src='https://via.placeholder.com/50'">
+                <span>PetCareX</span>
+            </div>
+            <ul>
+                <li><a href="#">Trang chủ</a></li>
+                <li><a href="#">Dịch vụ</a></li>
+                <li><a href="#">Thú cưng</a></li>
+                <li><a href="#">Liên hệ</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>Chào mừng bạn đến với PetCareX 🐾</h1>
+            <p>Giải pháp chăm sóc thú cưng toàn diện và hiện đại.</p>
+            <div id="status-badge" class="badge">Đang kiểm tra kết nối server...</div>
+        </section>
+
+        <section class="api-test">
+            <h3>Danh sách dịch vụ (Từ API)</h3>
+            <ul id="service-list">
+                <li>Đang tải dữ liệu...</li>
+            </ul>
+        </section>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
