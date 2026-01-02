@@ -1,61 +1,96 @@
-:root {
-    --primary-color: #ff6b6b;
-    --secondary-color: #4ecdc4;
-    --dark-color: #2d3436;
-    --light-color: #f9f9f9;
+/* --- Global Styles --- */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    margin: 0;
-    background-color: var(--light-color);
-}
-
-nav {
+    background: linear-gradient(135deg, #74ebd5 0%, #acb6e5 100%);
+    min-height: 100vh;
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
-    padding: 1rem 5%;
-    background: white;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-.logo {
-    display: flex;
-    align-items: center;
-    font-weight: bold;
-    font-size: 1.5rem;
-    color: var(--primary-color);
-}
-
-.logo img { width: 40px; margin-right: 10px; }
-
-nav ul { display: flex; list-style: none; }
-
-nav ul li { margin-left: 20px; }
-
-nav ul li a { text-decoration: none; color: var(--dark-color); font-weight: 500; }
-
-.hero {
-    text-align: center;
-    padding: 50px 20px;
-    background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%);
-    color: white;
-}
-
-.badge {
-    display: inline-block;
-    padding: 8px 15px;
-    border-radius: 20px;
-    background: rgba(255, 255, 255, 0.2);
-    margin-top: 15px;
-    font-size: 0.9rem;
-}
-
-.api-test {
-    max-width: 800px;
-    margin: 30px auto;
     padding: 20px;
-    background: white;
-    border-radius: 8px;
 }
+
+.login-container {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 450px;
+}
+
+h2 { text-align: center; color: #333; margin-bottom: 10px; }
+p { text-align: center; color: #777; font-size: 14px; margin-bottom: 25px; }
+
+/* --- Form Elements --- */
+.input-group { margin-bottom: 15px; }
+.input-group label { display: block; margin-bottom: 8px; color: #555; font-weight: bold; font-size: 14px; }
+
+.input-group input, 
+.input-group select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    outline: none;
+    font-size: 15px;
+    transition: 0.3s;
+}
+
+.input-group input:focus { border-color: #4e73df; }
+
+/* --- Password Group Fix --- */
+.password-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-group input {
+    padding-right: 45px; /* Chừa chỗ cho icon */
+}
+
+.toggle-btn {
+    position: absolute;
+    right: 15px;
+    cursor: pointer;
+    color: #888;
+    z-index: 10;
+    font-size: 16px;
+}
+
+.toggle-btn:hover { color: #4e73df; }
+
+/* --- Buttons --- */
+button {
+    width: 100%;
+    padding: 12px;
+    background: #4e73df;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+    margin-top: 10px;
+}
+
+button:hover { background: #2e59d9; }
+button:disabled { background: #ccc; cursor: not-allowed; }
+
+/* --- Messages --- */
+.error-msg {
+    text-align: center;
+    margin-top: 15px;
+    font-size: 14px;
+    min-height: 20px;
+}
+
+a { color: #4e73df; text-decoration: none; font-weight: 600; }
+a:hover { text-decoration: underline; }

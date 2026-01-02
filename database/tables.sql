@@ -153,7 +153,7 @@ CREATE TABLE KHACH_HANG (
     CCCD CHAR(12) NOT NULL UNIQUE,
     GioiTinh NVARCHAR(3) NOT NULL,
     NgaySinh DATE,
-    DiemTichLuy INT NOT NULL, -- Cột phi chuẩn hóa
+    DiemTichLuy INT NOT NULL DEFAULT 0, -- Cột phi chuẩn hóa
     CONSTRAINT CHK_KhachHang_GioiTinh CHECK (GioiTinh IN (N'Nam', N'Nữ')),
     CONSTRAINT CHK_KhachHang_DiemTichLuy CHECK (DiemTichLuy >= 0)
 );
@@ -376,6 +376,26 @@ CREATE TABLE PHIEU_TIEM_PHONG (
 );
 GO
 
+-- Bảng: TAI_KHOAN (Quản lý đăng nhập cho cả Khách hàng và Nhân viên)
+CREATE TABLE TAI_KHOAN (
+    MaTaiKhoan INT IDENTITY(1,1) PRIMARY KEY,
+    TenDangNhap VARCHAR(50) NOT NULL UNIQUE,
+    MatKhau VARCHAR(255) NOT NULL, -- Lưu Hash Password
+    Email VARCHAR(50) NOT NULL UNIQUE,
+    VaiTro NVARCHAR(20) NOT NULL, -- 'KhachHang', 'NhanVien', 'Admin'
+    MaKhachHang CHAR(10) NULL,    -- Link tới bảng KHACH_HANG
+    MaNhanVien CHAR(10) NULL,     -- Link tới bảng NHAN_VIEN
+    TrangThai NVARCHAR(20) DEFAULT N'Hoạt động',
+    NgayTao DATETIME DEFAULT GETDATE(),
+    CONSTRAINT CHK_TaiKhoan_VaiTro CHECK (VaiTro IN (N'Admin', N'QuanLi', N'NhanVien', N'KhachHang')),
+    CONSTRAINT CHK_TaiKhoan_LienKet CHECK (
+        (MaKhachHang IS NOT NULL AND MaNhanVien IS NULL) OR 
+        (MaNhanVien IS NOT NULL AND MaKhachHang IS NULL) OR
+        (MaKhachHang IS NULL AND MaNhanVien IS NULL AND VaiTro = N'Admin')
+    )
+);
+GO
+
 --==============================================================
 -- PHẦN 3: THIẾT LẬP RÀNG BUỘC KHÓA NGOẠI (FOREIGN KEY)
 --==============================================================
@@ -467,6 +487,10 @@ ALTER TABLE PHIEU_TIEM_PHONG ADD CONSTRAINT FK_PTP_ThuCung FOREIGN KEY (MaThuCun
 ALTER TABLE PHIEU_TIEM_PHONG ADD CONSTRAINT FK_PTP_BacSi FOREIGN KEY (MaBacSi) REFERENCES BAC_SI_THU_Y(MaNhanVien);
 GO
 
+-- Ràng buộc cho TAI_KHOAN
+ALTER TABLE TAI_KHOAN ADD CONSTRAINT FK_TaiKhoan_KhachHang FOREIGN KEY (MaKhachHang) REFERENCES KHACH_HANG(MaKhachHang);
+ALTER TABLE TAI_KHOAN ADD CONSTRAINT FK_TaiKhoan_NhanVien FOREIGN KEY (MaNhanVien) REFERENCES NHAN_VIEN(MaNhanVien);
+GO
 
 --==============================================================
 -- PHẦN 4: THIẾT LẬP CHỈ MỤC (INDEXES)
@@ -492,6 +516,8 @@ CREATE INDEX IX_LS_DIEU_DONG_Ma_Ngay ON LICH_SU_DIEU_DONG(MaNhanVien, NgayBatDau
 CREATE INDEX IX_PHIEU_TIEM_Ma_Ngay ON PHIEU_TIEM_PHONG(MaThuCung, NgayTiem);
 GO
 
+CREATE INDEX IX_TAI_KHOAN_TenDangNhap ON TAI_KHOAN(TenDangNhap);
+GO
 
 --==============================================================
 -- PHẦN 5: THIẾT LẬP VIEW (VIEWS)

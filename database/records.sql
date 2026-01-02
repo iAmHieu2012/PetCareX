@@ -452,19 +452,65 @@ INSERT INTO DANH_GIA (MaHoaDon, NgayLap, DiemChatLuongDichVu, ThaiDoNhanVien, Mu
 GO
 
 --==============================================================
--- HOÀN TẤT NHẬP DỮ LIỆU
+-- PHẦN 5: DỮ LIỆU TÀI KHOẢN (AUTHENTICATION)
+-- Lưu ý: Mật khẩu ở đây đang để dạng thô để dễ test. 
+-- Trong thực tế, Node.js sẽ lưu chuỗi đã Hash (bcrypt).
 --==============================================================
 
-PRINT N'Đã nhập dữ liệu thành công vào database PETCAREX!';
-PRINT N'';
-PRINT N'Tổng kết:';
-PRINT N'- Chi nhánh: 8';
-PRINT N'- Nhân viên: 18';
-PRINT N'- Khách hàng: 10';
-PRINT N'- Thú cưng: 12';
-PRINT N'- Sản phẩm: 15';
-PRINT N'- Vắc xin: 6';
-PRINT N'- Gói tiêm: 6';
-PRINT N'- Phiếu dịch vụ: 20';
-PRINT N'- Hóa đơn: 20';
+-- 28. TÀI KHOẢN
+-- =============================================================
+-- PHẦN 1: TÀI KHOẢN ADMIN (CHỦ HỆ THỐNG - SUPER ADMIN)
+-- =============================================================
+INSERT INTO TAI_KHOAN (TenDangNhap, MatKhau, Email, VaiTro, MaKhachHang, MaNhanVien)
+VALUES ('admin_root', 'admin123', 'admin@petcarex.com', N'Admin', NULL, NULL);
+
+-- =============================================================
+-- PHẦN 2: TÀI KHOẢN QUẢN LÝ (VAI TRÒ: QUANLI) - Liên kết NV01-NV04
+-- =============================================================
+INSERT INTO TAI_KHOAN (TenDangNhap, MatKhau, Email, VaiTro, MaNhanVien) VALUES
+('an.nguyen',   'ql123', 'an.nguyen@petcarex.com',   N'QuanLi', 'NV00000001'),
+('binh.tran',   'ql123', 'binh.tran@petcarex.com',   N'QuanLi', 'NV00000002'),
+('cuong.le',    'ql123', 'cuong.le@petcarex.com',    N'QuanLi', 'NV00000003'),
+('dung.pham',   'ql123', 'dung.pham@petcarex.com',   N'QuanLi', 'NV00000004');
+
+-- =============================================================
+-- PHẦN 3: TÀI KHOẢN NHÂN VIÊN (VAI TRÒ: NHANVIEN) - Liên kết NV05-NV18
+-- =============================================================
+-- Bác sĩ thú y (NV05 - NV10)
+INSERT INTO TAI_KHOAN (TenDangNhap, MatKhau, Email, VaiTro, MaNhanVien) VALUES
+('em.hoang',    'nv123', 'em.hoang@petcarex.com',    N'NhanVien', 'NV00000005'),
+('phuong.vo',   'nv123', 'phuong.vo@petcarex.com',   N'NhanVien', 'NV00000006'),
+('giang.dang',  'nv123', 'giang.dang@petcarex.com',  N'NhanVien', 'NV00000007'),
+('hoa.bui',     'nv123', 'hoa.bui@petcarex.com',     N'NhanVien', 'NV00000008'),
+('inh.truong',  'nv123', 'inh.truong@petcarex.com',  N'NhanVien', 'NV00000009'),
+('kim.ly',      'nv123', 'kim.ly@petcarex.com',      N'NhanVien', 'NV00000010');
+
+-- Tiếp tân (NV11 - NV14)
+INSERT INTO TAI_KHOAN (TenDangNhap, MatKhau, Email, VaiTro, MaNhanVien) VALUES
+('long.phan',   'nv123', 'long.phan@petcarex.com',   N'NhanVien', 'NV00000011'),
+('mai.ngo',     'nv123', 'mai.ngo@petcarex.com',     N'NhanVien', 'NV00000012'),
+('nam.do',      'nv123', 'nam.do@petcarex.com',      N'NhanVien', 'NV00000013'),
+('oanh.nguyen', 'nv123', 'oanh.nguyen@petcarex.com', N'NhanVien', 'NV00000014');
+
+-- Nhân viên bán hàng (NV15 - NV18)
+INSERT INTO TAI_KHOAN (TenDangNhap, MatKhau, Email, VaiTro, MaNhanVien) VALUES
+('phuc.huynh',  'nv123', 'phuc.huynh@petcarex.com',  N'NhanVien', 'NV00000015'),
+('quynh.cao',   'nv123', 'quynh.cao@petcarex.com',   N'NhanVien', 'NV00000016'),
+('rong.lam',    'nv123', 'rong.lam@petcarex.com',    N'NhanVien', 'NV00000017'),
+('suong.dinh',  'nv123', 'suong.dinh@petcarex.com',  N'NhanVien', 'NV00000018');
+
+-- =============================================================
+-- PHẦN 4: TÀI KHOẢN KHÁCH HÀNG (VAI TRÒ: KHACHHANG) - Liên kết KH01-KH10
+-- =============================================================
+INSERT INTO TAI_KHOAN (TenDangNhap, MatKhau, Email, VaiTro, MaKhachHang) VALUES
+('kh_lan',      'kh123', 'lan.nguyen@email.com',   N'KhachHang', 'KH00000001'),
+('kh_minh',     'kh123', 'minh.tran@email.com',    N'KhachHang', 'KH00000002'),
+('kh_nga',      'kh123', 'nga.le@email.com',       N'KhachHang', 'KH00000003'),
+('kh_oanh',     'kh123', 'oanh.pham@email.com',    N'KhachHang', 'KH00000004'),
+('kh_phuong',   'kh123', 'phuong.hoang@email.com', N'KhachHang', 'KH00000005'),
+('kh_quang',    'kh123', 'quang.vo@email.com',     N'KhachHang', 'KH00000006'),
+('kh_rang',     'kh123', 'rang.dang@email.com',    N'KhachHang', 'KH00000007'),
+('kh_son',      'kh123', 'son.bui@email.com',      N'KhachHang', 'KH00000008'),
+('kh_tam',      'kh123', 'tam.trinh@email.com',    N'KhachHang', 'KH00000009'),
+('kh_uy',       'kh123', 'uy.duong@email.com',     N'KhachHang', 'KH00000010');
 GO
