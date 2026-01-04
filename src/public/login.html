@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập - PetCareX</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/auth.css">
+</head>
+<body>
+    <div class="login-container">
+        <form id="loginForm">
+            <h2>🐾 PETCAREX LOGIN</h2>
+            <p>Chào mừng bạn quay trở lại</p>
+            
+            <div class="input-group">
+                <label>Tên đăng nhập hoặc Email</label>
+                <input type="text" id="username" placeholder="Nhập username hoặc email" required>
+            </div>
+
+            <div class="input-group">
+                <label>Mật khẩu</label>
+                <div class="password-group">
+                    <input type="password" id="password" placeholder="••••••••" required>
+                    <i class="fas fa-eye toggle-btn" id="toggleIconLogin" onclick="togglePass('password', 'toggleIconLogin')"></i>
+                </div>
+            </div>
+
+            <button type="submit" id="btnLogin">Đăng Nhập</button>
+            <div id="message" class="error-msg"></div>
+            <p style="margin-top: 20px;">Chưa có tài khoản? <a href="register.html">Đăng ký ngay</a></p>
+        </form>
+    </div>
+    <script src="js/auth.js"></script>
+</body>
+</html>
