@@ -294,7 +294,7 @@ BEGIN
         JOIN PHIEU_DANG_KY_GOI_TIEM pdk ON i.MaPhieuDichVu = pdk.MaPhieuDichVu 
         JOIN GOI_TIEM gt ON pdk.MaGoiTiem = gt.MaGoiTiem 
         JOIN PHIEU_DICH_VU pdv ON i.MaPhieuDichVu = pdv.MaPhieuDichVu 
-        WHERE i.KhuyenMai < (pdv.TongTien * gt.UuDai)
+        WHERE i.KhuyenMai < gt.UuDai
     )
     BEGIN 
         RAISERROR(N'Lỗi: Số tiền khuyến mãi thấp hơn mức ưu đãi tối thiểu của gói tiêm.', 16, 1);

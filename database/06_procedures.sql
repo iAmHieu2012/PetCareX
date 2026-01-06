@@ -950,7 +950,7 @@ BEGIN
     FROM NHAN_VIEN nv JOIN BANG_LUONG bl ON nv.ChucVu = bl.ChucVu
     WHERE nv.MaNhanVien = @MaNV;
 
-    SET @ThuongDoanhThu = dbo.FN_TinhThuongDoanhThu(@MaNV, @Thang, @Nam);
+    SET @ThuongDoanhThu = dbo.FN_TinhThuongDoanhThu(@MaNV, @Thang, @Nam, DEFAULT);
 
     IF @Thang = 12 
         SET @ThuongTet = dbo.FN_TinhThuongTet(@MaNV, @Nam);
