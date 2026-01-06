@@ -1,28 +1,12 @@
---==============================================================
--- PHẦN 1: TẠO CƠ SỞ DỮ LIỆU MỚI: PETCAREX
---==============================================================
-
-USE master;
-GO
-
-IF EXISTS (SELECT name
-FROM sys.databases
-WHERE name = N'PETCAREX')
-BEGIN
-    ALTER DATABASE PETCAREX SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-    DROP DATABASE PETCAREX;
-END
-GO
-
---==============================================================
--- PHẦN 1: TẠO CƠ SỞ DỮ LIỆU MỚI: PETCAREX & HẠ TẦNG PHÂN VÙNG
---==============================================================
-
-CREATE DATABASE PETCAREX;
-GO
-
 USE PETCAREX;
 GO
+
+--==============================================================
+-- PHẦN 2: TẠO CÁC BẢNG VÀ RÀNG BUỘC KHÓA NGOẠI
+--==============================================================
+--==============================================================
+-- PHẦN 2.1: TẠO CƠ SỞ DỮ LIỆU MỚI: PETCAREX & HẠ TẦNG PHÂN VÙNG
+--==============================================================
 
 -- 1. Tạo hàm phân vùng theo Quý cho bảng HOA_DON
 CREATE PARTITION FUNCTION PF_HoaDon_TheoQuy (DATE)
@@ -47,7 +31,7 @@ GO
 
 
 --==============================================================
--- PHẦN 2: THIẾT LẬP CÁC TABLE
+-- PHẦN 2.2: THIẾT LẬP CÁC TABLE
 --==============================================================
 
 -- Bảng: DICH_VU
@@ -237,6 +221,7 @@ CREATE TABLE DANH_GIA (
     ThaiDoNhanVien INT,
     MucDoHaiLong INT,
     BinhLuan NVARCHAR(100),
+    PhanHoi NVARCHAR(100)
     CONSTRAINT PK_DANH_GIA PRIMARY KEY (MaHoaDon, NgayLap),
     CONSTRAINT CHK_DanhGia_DiemChatLuong CHECK (DiemChatLuongDichVu IN (1, 2, 3, 4, 5)),
     CONSTRAINT CHK_DanhGia_ThaiDo CHECK (ThaiDoNhanVien IN (1, 2, 3, 4, 5)),
@@ -397,7 +382,7 @@ CREATE TABLE TAI_KHOAN (
 GO
 
 --==============================================================
--- PHẦN 3: THIẾT LẬP RÀNG BUỘC KHÓA NGOẠI (FOREIGN KEY)
+-- PHẦN 2.3: THIẾT LẬP RÀNG BUỘC KHÓA NGOẠI (FOREIGN KEY)
 --==============================================================
 
 -- Ràng buộc cho DICH_VU_CHI_NHANH
@@ -417,6 +402,7 @@ ALTER TABLE QUAN_LI ADD CONSTRAINT FK_QuanLi_NhanVien FOREIGN KEY (MaNhanVien) R
 
 -- Ràng buộc cho QUAN_LI
 ALTER TABLE QUAN_LI ADD CONSTRAINT FK_QuanLi_ChiNhanh FOREIGN KEY (MaChiNhanhQuanLi) REFERENCES CHI_NHANH(MaChiNhanh); 
+ALTER TABLE QUAN_LI ADD CONSTRAINT UQ_QuanLi_ChiNhanh UNIQUE (MaChiNhanhQuanLi); 
 
 -- Ràng buộc cho LICH_SU_DIEU_DONG
 ALTER TABLE LICH_SU_DIEU_DONG ADD CONSTRAINT FK_LSDD_NhanVien FOREIGN KEY (MaNhanVien) REFERENCES NHAN_VIEN(MaNhanVien); 
@@ -490,92 +476,4 @@ GO
 -- Ràng buộc cho TAI_KHOAN
 ALTER TABLE TAI_KHOAN ADD CONSTRAINT FK_TaiKhoan_KhachHang FOREIGN KEY (MaKhachHang) REFERENCES KHACH_HANG(MaKhachHang);
 ALTER TABLE TAI_KHOAN ADD CONSTRAINT FK_TaiKhoan_NhanVien FOREIGN KEY (MaNhanVien) REFERENCES NHAN_VIEN(MaNhanVien);
-GO
-
---==============================================================
--- PHẦN 4: THIẾT LẬP CHỈ MỤC (INDEXES)
---==============================================================
-
-CREATE UNIQUE INDEX IX_KHACH_HANG_SĐT ON KHACH_HANG(SoDienThoai);
-CREATE UNIQUE INDEX IX_KHACH_HANG_CCCD ON KHACH_HANG(CCCD);
-CREATE UNIQUE INDEX IX_HOA_DON_MaPhieuDichVu ON HOA_DON(MaPhieuDichVu, NgayLap);
-CREATE INDEX IX_THU_CUNG_MaKH ON THU_CUNG(MaKhachHang);
-CREATE INDEX IX_SAN_PHAM_TenSP ON SAN_PHAM(TenSanPham);
-CREATE INDEX IX_VACXIN_TenVX ON VACXIN(TenVacxin);
-CREATE INDEX IX_LO_HANG_HSD ON LO_HANG(HanSuDung);
-CREATE INDEX IX_HOA_DON_NgayLap ON HOA_DON(NgayLap);
-CREATE INDEX IX_DANH_GIA_DiemCL ON DANH_GIA(DiemChatLuongDichVu);
-CREATE INDEX IX_CT_MUA_HANG_MaPDV ON CHI_TIET_MUA_HANG(MaPhieuDichVu);
-CREATE INDEX IX_PHIEU_KHAM_MaTC ON PHIEU_KHAM_BENH(MaThuCung);
-CREATE INDEX IX_LICH_HEN_CN_TG ON LICH_HEN(MaChiNhanh, ThoiGian);
-CREATE INDEX IX_KHO_HANG_CN_SP ON KHO_HANG(MaChiNhanh, MaSanPham);
-CREATE INDEX IX_HOA_DON_NV_Ngay ON HOA_DON(MaNhanVien, NgayLap);
-CREATE INDEX IX_PHAN_LOAI_KH_Ma_Nam ON PHAN_LOAI_KHACH_HANG(MaKhachHang, Nam);
-CREATE INDEX IX_NHAN_VIEN_CN_ChucVu ON NHAN_VIEN(MaChiNhanh, ChucVu);
-CREATE INDEX IX_LS_DIEU_DONG_Ma_Ngay ON LICH_SU_DIEU_DONG(MaNhanVien, NgayBatDau);
-CREATE INDEX IX_PHIEU_TIEM_Ma_Ngay ON PHIEU_TIEM_PHONG(MaThuCung, NgayTiem);
-GO
-
-CREATE INDEX IX_TAI_KHOAN_TenDangNhap ON TAI_KHOAN(TenDangNhap);
-GO
-
---==============================================================
--- PHẦN 5: THIẾT LẬP VIEW (VIEWS)
---==============================================================
-
-CREATE OR ALTER VIEW vw_KhachHang_Loyalty AS
-SELECT 
-    kh.MaKhachHang, 
-    kh.TenKhachHang, 
-    kh.SoDienThoai, 
-    kh.DiemTichLuy,
-    pl.TenLoai AS HangThanhVien,
-    pl.MucChiTieu,
-    pl.Nam AS NamXetHang
-FROM KHACH_HANG kh
-LEFT JOIN PHAN_LOAI_KHACH_HANG pl ON kh.MaKhachHang = pl.MaKhachHang 
-    AND pl.Nam = YEAR(GETDATE());
-GO
-
-CREATE OR ALTER VIEW vw_LichSuKhamBenh AS
-SELECT 
-    pkb.MaThuCung, 
-    pkb.MaPhieuDichVu, 
-    pkb.ChuanDoan, 
-    pkb.NgayHenTaiKham,
-    dt.TenThuoc, 
-    ct.SoLuong AS SoLuongKeToa
-FROM PHIEU_KHAM_BENH pkb
-LEFT JOIN CHI_TIET_TOA_THUOC ct ON pkb.MaPhieuDichVu = ct.MaPhieuKhamBenh
-LEFT JOIN DANH_MUC_THUOC dt ON ct.MaThuoc = dt.MaThuoc;
-GO
-
-CREATE OR ALTER VIEW vw_LichSuTiemPhong AS
-SELECT 
-    pdk.MaThuCung, 
-    tc.TenThuCung, 
-    gt.LoaiGoiTiem,
-    vx.TenVacxin, 
-    ctgt.SoThuTuVacxin AS MuiSo, 
-    pdk.NgayDangKy
-FROM PHIEU_DANG_KY_GOI_TIEM pdk
-JOIN THU_CUNG tc ON pdk.MaThuCung = tc.MaThuCung
-JOIN GOI_TIEM gt ON pdk.MaGoiTiem = gt.MaGoiTiem
-JOIN CHI_TIET_GOI_TIEM ctgt ON gt.MaGoiTiem = ctgt.MaGoiTiem
-JOIN VACXIN vx ON ctgt.MaVacxin = vx.MaVacxin;
-GO
-
-CREATE OR ALTER VIEW vw_BaoCaoDoanhThu_ChiNhanh AS
-SELECT 
-    cn.MaChiNhanh,
-    cn.TenChiNhanh,
-    CAST(hd.NgayLap AS DATE) AS NgayBaoCao,
-    SUM(hd.TongTienThanhToan) AS DoanhThuNgay,
-    COUNT(hd.MaHoaDon) AS SoLuongDonHang,
-    AVG(CAST(dg.DiemChatLuongDichVu AS FLOAT)) AS DiemDanhGiaTB 
-FROM HOA_DON hd
-JOIN PHIEU_DICH_VU pdv ON hd.MaPhieuDichVu = pdv.MaPhieuDichVu
-JOIN CHI_NHANH cn ON pdv.MaChiNhanh = cn.MaChiNhanh
-LEFT JOIN DANH_GIA dg ON hd.MaHoaDon = dg.MaHoaDon AND hd.NgayLap = dg.NgayLap
-GROUP BY cn.MaChiNhanh, cn.TenChiNhanh, CAST(hd.NgayLap AS DATE);
 GO
