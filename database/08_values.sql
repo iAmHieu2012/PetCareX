@@ -428,27 +428,27 @@ INSERT INTO HOA_DON (MaHoaDon, NgayLap, TongTienThanhToan, KhuyenMai, HinhThucTh
 GO
 
 -- 27. ĐÁNH GIÁ
-INSERT INTO DANH_GIA (MaHoaDon, NgayLap, DiemChatLuongDichVu, ThaiDoNhanVien, MucDoHaiLong, BinhLuan) VALUES
-('HD00000001', '2025-01-05', 5, 5, 5, N'Dịch vụ rất tốt, bác sĩ nhiệt tình'),
-('HD00000002', '2025-01-06', 4, 5, 4, N'Nhân viên thân thiện, tiêm nhanh'),
-('HD00000003', '2025-01-07', 5, 4, 5, N'Khám kỹ càng, tư vấn chi tiết'),
-('HD00000004', '2025-01-08', 4, 4, 4, N'Dịch vụ ổn, giá cả hợp lý'),
-('HD00000005', '2025-02-09', 5, 5, 5, N'Rất hài lòng với gói tiêm'),
-('HD00000006', '2025-04-10', 3, 4, 3, N'Thời gian chờ hơi lâu'),
-('HD00000007', '2025-05-11', 4, 4, 4, N'Chẩn đoán chính xác'),
-('HD00000008', '2025-06-12', 5, 5, 5, N'Mua hàng thuận lợi, tư vấn tốt'),
-('HD00000009', '2025-07-13', 4, 5, 4, N'Sản phẩm chất lượng'),
-('HD00000010', '2025-08-14', 5, 4, 5, N'Giá tốt, nhiều khuyến mãi'),
-('HD00000011', '2025-09-15', 4, 4, 4, N'Bác sĩ giỏi, khám nhanh'),
-('HD00000012', '2025-10-16', 5, 5, 5, N'Tiêm phòng an toàn'),
-('HD00000013', '2025-11-17', 3, 3, 3, N'Bình thường'),
-('HD00000014', '2025-12-18', 4, 5, 4, N'Nhân viên chu đáo'),
-('HD00000015', '2025-01-19', 5, 5, 5, N'Cơ sở vật chất tốt'),
-('HD00000016', '2025-02-20', 4, 4, 4, N'Sạch sẽ, gọn gàng'),
-('HD00000017', '2025-03-21', 5, 4, 5, N'Sản phẩm đa dạng'),
-('HD00000018', '2025-04-22', 4, 5, 4, N'Phục vụ nhanh chóng'),
-('HD00000019', '2025-05-23', 5, 5, 5, N'Rất hài lòng, sẽ quay lại'),
-('HD00000020', '2025-06-24', 4, 4, 4, N'Tốt, đáng tin cậy');
+INSERT INTO DANH_GIA (MaHoaDon, NgayLap, DiemChatLuongDichVu, ThaiDoNhanVien, MucDoHaiLong, BinhLuan, PhanHoi) VALUES
+('HD00000001', '2025-01-05', 5, 5, 5, N'Dịch vụ rất tốt, bác sĩ nhiệt tình', N'Cảm ơn nhận xét của quý khách'),
+('HD00000002', '2025-01-06', 4, 5, 4, N'Nhân viên thân thiện, tiêm nhanh', N'Cảm ơn nhận xét của quý khách'),
+('HD00000003', '2025-01-07', 5, 4, 5, N'Khám kỹ càng, tư vấn chi tiết', N'Cảm ơn nhận xét của quý khách'),
+('HD00000004', '2025-01-08', 4, 4, 4, N'Dịch vụ ổn, giá cả hợp lý', N'Cảm ơn nhận xét của quý khách'),
+('HD00000005', '2025-02-09', 5, 5, 5, N'Rất hài lòng với gói tiêm', N'Cảm ơn nhận xét của quý khách'),
+('HD00000006', '2025-04-10', 3, 4, 3, N'Thời gian chờ hơi lâu', N'Cảm ơn nhận xét của quý khách'),
+('HD00000007', '2025-05-11', 4, 4, 4, N'Chẩn đoán chính xác', N'Cảm ơn nhận xét của quý khách'),
+('HD00000008', '2025-06-12', 5, 5, 5, N'Mua hàng thuận lợi, tư vấn tốt', N'Cảm ơn nhận xét của quý khách'),
+('HD00000009', '2025-07-13', 4, 5, 4, N'Sản phẩm chất lượng', N'Cảm ơn nhận xét của quý khách'),
+('HD00000010', '2025-08-14', 5, 4, 5, N'Giá tốt, nhiều khuyến mãi', N'Cảm ơn nhận xét của quý khách'),
+('HD00000011', '2025-09-15', 4, 4, 4, N'Bác sĩ giỏi, khám nhanh', N'Cảm ơn nhận xét của quý khách'),
+('HD00000012', '2025-10-16', 5, 5, 5, N'Tiêm phòng an toàn', N'Cảm ơn nhận xét của quý khách'),
+('HD00000013', '2025-11-17', 3, 3, 3, N'Bình thường', N'Cảm ơn nhận xét của quý khách'),
+('HD00000014', '2025-12-18', 4, 5, 4, N'Nhân viên chu đáo', N'Cảm ơn nhận xét của quý khách'),
+('HD00000015', '2025-01-19', 5, 5, 5, N'Cơ sở vật chất tốt', N'Cảm ơn nhận xét của quý khách'),
+('HD00000016', '2025-02-20', 4, 4, 4, N'Sạch sẽ, gọn gàng', N'Cảm ơn nhận xét của quý khách'),
+('HD00000017', '2025-03-21', 5, 4, 5, N'Sản phẩm đa dạng', N'Cảm ơn nhận xét của quý khách'),
+('HD00000018', '2025-04-22', 4, 5, 4, N'Phục vụ nhanh chóng', N'Cảm ơn nhận xét của quý khách'),
+('HD00000019', '2025-05-23', 5, 5, 5, N'Rất hài lòng, sẽ quay lại', N'Cảm ơn nhận xét của quý khách'),
+('HD00000020', '2025-06-24', 4, 4, 4, N'Tốt, đáng tin cậy', N'Cảm ơn nhận xét của quý khách');
 GO
 
 --==============================================================
