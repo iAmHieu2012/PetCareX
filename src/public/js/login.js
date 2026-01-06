@@ -1,10 +1,10 @@
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault(); // Ngăn trang web tải lại
 
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-    const messageDiv = document.getElementById('message');
-    const btnLogin = document.getElementById('btnLogin');
+    const username = document.getElementById('login_username').value;
+    const password = document.getElementById('login_password').value;
+    const messageDiv = document.getElementById('login_message');
+    const btnLogin = document.getElementById('login_btn');
 
     // Hiện trạng thái đang xử lý
     messageDiv.innerText = "";
