@@ -8,12 +8,13 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(response => {
             if (response.ok) {
                 statusBadge.textContent = 'Đã kết nối tới Server thành công!';
-                statusBadge.style.background = '#008888ff';
+                statusBadge.style.background = '#27ae60';
+                renderContent();
             }
         })
         .catch(err => {
             statusBadge.textContent = 'Không thể kết nối tới Server';
-            statusBadge.style.background = '#008888ff';
+            statusBadge.style.background = '#c0392b';
         });
 });
 
