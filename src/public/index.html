@@ -5,15 +5,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PetCareX - Hệ thống quản lý chăm sóc thú cưng toàn diện</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
+    <div id="status-badge">Đang kiểm tra kết nối...</div>
+
     <header>
         <div class="navbar">
             <div class="logo"><i class="fas fa-paw"></i> PetCareX</div>
-            <div id="status-badge" style="padding: 8px 12px; border-radius: 4px; color: white; font-size: 20px;">
-                Kiểm tra kết nối...
-            </div>
+            <nav>
+                <a href="#services">Dịch vụ</a>
+                <a href="#branches">Chi nhánh</a>
+                <a href="#membership">Thành viên</a>
+            </nav>
             <div class="auth-buttons">
                 <a href="login.html" class="login-btn">Đăng nhập</a>
                 <a href="register.html" class="register-btn">Đăng ký</a>
@@ -21,7 +30,123 @@
         </div>
     </header>
 
-    
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Chăm sóc thú cưng bằng cả trái tim 🐾</h1>
+            <p>Hệ thống quản lý y tế và dịch vụ thú cưng hàng đầu Việt Nam. Quy trình chuyên nghiệp, bác sĩ tận tâm,
+                công nghệ hiện đại.</p>
+            <div class="hero-buttons">
+                <a href="#" class="btn btn-primary">Bắt đầu ngay</a>
+                <a href="#services" class="btn btn-secondary">Xem dịch vụ</a>
+            </div>
+        </div>
+    </section>
+
+    <div class="container">
+        <div class="stats">
+            <div class="stat-box">
+                <h3>8+</h3>
+                <p>Chi nhánh</p>
+            </div>
+            <div class="stat-box">
+                <h3>5000+</h3>
+                <p>Khách hàng</p>
+            </div>
+            <div class="stat-box">
+                <h3>50+</h3>
+                <p>Bác sĩ giỏi</p>
+            </div>
+            <div class="stat-box">
+                <h3>24/7</h3>
+                <p>Hỗ trợ tận tâm</p>
+            </div>
+        </div>
+    </div>
+
+    <section id="services" class="container">
+        <div class="section-title"><h2>Dịch vụ chính</h2></div>
+        <div class="slider-wrapper">
+            <button class="slide-btn prev" onclick="moveSlide('services-grid', -1)">&#10094;</button>
+            <div class="slider-container">
+                <div id="services-grid" class="services-track"></div>
+            </div>
+            <button class="slide-btn next" onclick="moveSlide('services-grid', 1)">&#10095;</button>
+        </div>
+    </section>
+
+    <section id="branches" class="container">
+        <div class="section-title"><h2>Hệ thống chi nhánh</h2></div>
+        <div class="slider-wrapper">
+            <button class="slide-btn prev" onclick="moveSlide('branches-grid', -1)">&#10094;</button>
+            <div class="slider-container">
+                <div id="branches-grid" class="branches-track"></div>
+            </div>
+            <button class="slide-btn next" onclick="moveSlide('branches-grid', 1)">&#10095;</button>
+        </div>
+    </section>
+
+    <section id="membership" class="membership">
+        <div class="container">
+            <div class="section-title">
+                <h2>Đặc quyền thành viên</h2>
+            </div>
+            <div class="membership-grid">
+                <div class="membership-card">
+                    <span class="badge">Silver</span>
+                    <h3 style="margin-top:1rem">Cơ bản</h3>
+                    <p style="font-size: 1.5rem; font-weight: 700; margin: 1rem 0;">Miễn phí</p>
+                    <ul style="list-style:none; text-align: left; color: var(--text-light)">
+                        <li><i class="fas fa-check-circle" style="color: green"></i> Tích điểm 50k = 1đ</li>
+                        <li><i class="fas fa-check-circle" style="color: green"></i> Quản lý hồ sơ online</li>
+                    </ul>
+                </div>
+                <div class="membership-card vip">
+                    <span class="badge">Gold VIP</span>
+                    <h3 style="margin-top:1rem">Thành viên VIP</h3>
+                    <p style="font-size: 1.5rem; font-weight: 700; margin: 1rem 0; color: var(--accent)">12M VNĐ / năm
+                    </p>
+                    <ul style="list-style:none; text-align: left; color: var(--text-light)">
+                        <li><i class="fas fa-star" style="color: var(--accent)"></i> Ưu tiên khám không chờ</li>
+                        <li><i class="fas fa-star" style="color: var(--accent)"></i> Giảm 15% gói tiêm</li>
+                    </ul>
+                </div>
+                <div class="membership-card">
+                    <span class="badge">Bronze</span>
+                    <h3 style="margin-top:1rem">Thân thiết</h3>
+                    <p style="font-size: 1.5rem; font-weight: 700; margin: 1rem 0;">5M VNĐ / năm</p>
+                    <ul style="list-style:none; text-align: left; color: var(--text-light)">
+                        <li><i class="fas fa-check-circle" style="color: green"></i> Ưu đãi tiêm phòng 5%</li>
+                        <li><i class="fas fa-check-circle" style="color: green"></i> Quà tặng sinh nhật</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-grid">
+            <div class="footer-section">
+                <h5>PetCareX</h5>
+                <p>Đồng hành cùng sức khỏe thú cưng.</p>
+            </div>
+            <div class="footer-section">
+                <h5>Liên kết</h5>
+                <ul>
+                    <li><a href="#">Về chúng tôi</a></li>
+                    <li><a href="#">Dịch vụ</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h5>Liên hệ</h5>
+                <p>contact@petcarex.com</p>
+                <p>1800-PETCARE</p>
+            </div>
+        </div>
+        <hr style="margin: 3rem 0; border: 0; border-top: 1px solid #444;">
+        <p style="text-align: center; font-size: 0.9rem; color: #636e72;">&copy; 2026 PetCareX. Developed with ❤️ for
+            Pets.</p>
+    </footer>
+
     <script type="module" src="js/main.js"></script>
 </body>
 

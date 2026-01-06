@@ -4,6 +4,7 @@ const path = require('path');
 require('dotenv').config();
 
 const authRoutes = require('./routes/authRoutes');
+const branchRoutes = require('./routes/branchRoutes');
 
 const app = express();
 
@@ -14,6 +15,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // 2. Định nghĩa API Routes (Phải đặt TRƯỚC static và catch-all)
 app.use('/api/auth', authRoutes);
+app.use('/api/branches', branchRoutes);
 
 // 3. Cấu hình thư mục tĩnh
 // Khi bạn vào localhost:5000/css/style.css, nó sẽ tìm trong thư mục public
