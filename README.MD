@@ -98,9 +98,7 @@ PetCareX/
 ├── package.json              # Dependencies
 ├── .env                      # Environment variables
 ├── README.md                 # This file
-├── database/
-│   ├── tables.sql           # Database schema
-│   └── records.sql          # Sample data
+├── database/                 # Database configuration
 ├── src/
 │   ├── app.js               # Express app configuration
 │   ├── config/
@@ -172,18 +170,15 @@ npm install
 ```
 
 ### 4. Create Database
-```bash
-# Connect to SQL Server
-sqlcmd -S localhost -U sa -P your_password
-
-# Run the schema
-> :r database/tables.sql
-> GO
-
-# Optional: Load sample data
-> :r database/records.sql
-> GO
-```
+Use Microsoft SQL Server Management Studio to execute all files in database folder
+- 01_init_db.sql
+- 02_tables.sql
+- 03_indexes.sql
+- 04_views.sql
+- 05_functions.sql
+- 06_procedures.sql
+- 07_triggers.sql
+- 08_values.sql
 
 ### 5. Start Development Server
 ```bash
