@@ -2,16 +2,16 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
     e.preventDefault();
 
     // 1. Lấy dữ liệu từ các ID đã có trong HTML của bạn
-    const fullName = document.getElementById('reg_fullname').value;
-    const phone = document.getElementById('reg_phone').value;
-    const username = document.getElementById('reg_username').value;
-    const email = document.getElementById('reg_email').value;
-    const cccd = document.getElementById('reg_cccd').value;
-    const gender = document.getElementById('reg_gender').value;
-    const password = document.getElementById('password').value; // ID này phải khớp với HTML
+    const fullName = document.getElementById('register_fullname').value;
+    const phone = document.getElementById('register_phone').value;
+    const username = document.getElementById('register_username').value;
+    const email = document.getElementById('register_email').value;
+    const cccd = document.getElementById('register_cccd').value;
+    const gender = document.getElementById('register_gender').value;
+    const password = document.getElementById('register_password').value;
     
-    const messageDiv = document.getElementById('reg_message');
-    const btn = document.getElementById('btnRegister');
+    const messageDiv = document.getElementById('register_message');
+    const btn = document.getElementById('register_btn');
 
     // Reset thông báo
     messageDiv.innerText = "Đang xử lý...";

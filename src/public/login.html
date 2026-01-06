@@ -15,22 +15,22 @@
             
             <div class="input-group">
                 <label>Tên đăng nhập hoặc Email</label>
-                <input type="text" id="username" placeholder="Nhập username hoặc email" required>
+                <input type="text" id="login_username" placeholder="Nhập username hoặc email" required>
             </div>
 
             <div class="input-group">
                 <label>Mật khẩu</label>
                 <div class="password-group">
-                    <input type="password" id="password" placeholder="••••••••" required>
-                    <i class="fas fa-eye toggle-btn" id="toggleIconLogin" onclick="togglePass('password', 'toggleIconLogin')"></i>
+                    <input type="password" id="login_password" placeholder="••••••••" required>
+                    <i class="fas fa-eye toggle-btn" id="login_toggleIcon" onclick="togglePass('login_password', 'login_toggleIcon')"></i>
                 </div>
             </div>
 
-            <button type="submit" id="btnLogin">Đăng Nhập</button>
-            <div id="message" class="error-msg"></div>
+            <button type="submit" id="login_btn">Đăng Nhập</button>
+            <div id="login_message" class="error-msg"></div>
             <p style="margin-top: 20px;">Chưa có tài khoản? <a href="register.html">Đăng ký ngay</a></p>
         </form>
     </div>
-    <script src="js/auth.js"></script>
+    <script src="js/login.js"></script>
 </body>
 </html>
