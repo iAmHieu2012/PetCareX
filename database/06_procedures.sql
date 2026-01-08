@@ -558,18 +558,244 @@ GO
 -- Chạy thử: EXEC SP_TiepNhanLichHen 'LH00000002', 'CN00000001', 'PDV0000001', 'KH00000001'
 -- GO
 
--- Ghi nhận kết quả khám bệnh (Dành cho bác sĩ)
-CREATE OR ALTER PROCEDURE SP_GhiNhanPhieuKhamBenh
+-- Tạo phiếu khám bệnh mới (Tiếp tân tạo sau khi tiếp nhận lịch hẹn + phân công bác sĩ)
+CREATE OR ALTER PROCEDURE SP_TaoPhieuKhamBenh
     @MaPhieuDichVu CHAR(10),
-    @TrieuChung NVARCHAR(50),
-    @ChuanDoan NVARCHAR(50),
-    @NgayHenTaiKham DATE,
-    @MaBacSi CHAR(10),
-    @MaThuCung CHAR(10)
+    @MaThuCung CHAR(10),
+    @MaBacSi CHAR(10)
 AS
 BEGIN
-    INSERT INTO PHIEU_KHAM_BENH(MaPhieuDichVu, TrieuChung, ChuanDoan, NgayHenTaiKham, MaBacSi, MaThuCung)
-    VALUES (@MaPhieuDichVu, @TrieuChung, @ChuanDoan, @NgayHenTaiKham, @MaBacSi, @MaThuCung);
+    SET NOCOUNT ON;
+    BEGIN TRY
+        -- Kiểm tra phiếu dịch vụ có tồn tại không
+        IF NOT EXISTS (SELECT 1 FROM PHIEU_DICH_VU WHERE MaPhieuDichVu = @MaPhieuDichVu)
+        BEGIN
+            RAISERROR(N'Lỗi: Không tìm thấy phiếu dịch vụ %s.', 16, 1, @MaPhieuDichVu);
+            RETURN;
+        END
+
+        -- Kiểm tra bác sĩ có tồn tại không
+        IF NOT EXISTS (SELECT 1 FROM BAC_SI_THU_Y WHERE MaNhanVien = @MaBacSi)
+        BEGIN
+            RAISERROR(N'Lỗi: Mã bác sĩ %s không tồn tại.', 16, 1, @MaBacSi);
+            RETURN;
+        END
+
+        -- Kiểm tra thú cưng có tồn tại không
+        IF NOT EXISTS (SELECT 1 FROM THU_CUNG WHERE MaThuCung = @MaThuCung)
+        BEGIN
+            RAISERROR(N'Lỗi: Mã thú cưng %s không tồn tại.', 16, 1, @MaThuCung);
+            RETURN;
+        END
+
+        -- Kiểm tra phiếu khám bệnh chưa tồn tại
+        IF EXISTS (SELECT 1 FROM PHIEU_KHAM_BENH WHERE MaPhieuDichVu = @MaPhieuDichVu)
+        BEGIN
+            RAISERROR(N'Lỗi: Phiếu khám bệnh cho phiếu dịch vụ %s đã tồn tại.', 16, 1, @MaPhieuDichVu);
+            RETURN;
+        END
+
+        -- Tạo phiếu khám bệnh mới (Tiếp tân tạo, bác sĩ được phân công, chờ bác sĩ nhập liệu kết quả)
+        INSERT INTO PHIEU_KHAM_BENH (MaPhieuDichVu, TrieuChung, ChuanDoan, NgayHenTaiKham, MaBacSi, MaThuCung)
+        VALUES (@MaPhieuDichVu, NULL, NULL, NULL, @MaBacSi, @MaThuCung);
+
+        PRINT N'Tiếp tân đã tạo phiếu khám bệnh và phân công bác sĩ thành công.';
+    END TRY
+    BEGIN CATCH
+        DECLARE @ErrMsg NVARCHAR(4000) = ERROR_MESSAGE();
+        RAISERROR(@ErrMsg, 16, 1);
+    END CATCH
+END;
+GO
+-- Chạy thử: EXEC SP_TaoPhieuKhamBenh 'PDV0000001', 'TC00000001', 'NV00000001'
+-- GO
+
+-- Cập nhật thông tin phiếu khám bệnh (Bác sĩ nhập liệu kết quả khám)
+CREATE OR ALTER PROCEDURE SP_CapNhatPhieuKhamBenh
+    @MaPhieuDichVu CHAR(10),
+    @TrieuChung NVARCHAR(100),
+    @ChuanDoan NVARCHAR(100),
+    @NgayHenTaiKham DATE = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        -- Kiểm tra phiếu khám bệnh có tồn tại không
+        IF NOT EXISTS (SELECT 1 FROM PHIEU_KHAM_BENH WHERE MaPhieuDichVu = @MaPhieuDichVu)
+        BEGIN
+            RAISERROR(N'Lỗi: Không tìm thấy phiếu khám bệnh cho phiếu dịch vụ %s.', 16, 1, @MaPhieuDichVu);
+            RETURN;
+        END
+
+        -- Cập nhật thông tin khám
+        UPDATE PHIEU_KHAM_BENH
+        SET TrieuChung = @TrieuChung,
+            ChuanDoan = @ChuanDoan,
+            NgayHenTaiKham = ISNULL(@NgayHenTaiKham, NgayHenTaiKham)
+        WHERE MaPhieuDichVu = @MaPhieuDichVu;
+
+        PRINT N'Cập nhật phiếu khám bệnh thành công.';
+    END TRY
+    BEGIN CATCH
+        DECLARE @ErrMsg NVARCHAR(4000) = ERROR_MESSAGE();
+        RAISERROR(@ErrMsg, 16, 1);
+    END CATCH
+END;
+GO
+-- Chạy thử: EXEC SP_CapNhatPhieuKhamBenh 'PDV0000001', N'Ho, sốt, mệt', N'Viêm đường hô hấp', '2026-02-15'
+-- GO
+
+-- Tạo phiếu tiêm phòng mới (Tiếp tân tạo sau khi tiếp nhận lịch hẹn + phân công bác sĩ)
+CREATE OR ALTER PROCEDURE SP_TaoPhieuTiemPhong
+    @MaPhieuDichVu CHAR(10),
+    @MaThuCung CHAR(10),
+    @MaBacSi CHAR(10),
+    @MaGoiTiem CHAR(10)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        -- 1. KIỂM TRA THAM SỐ ĐẦU VÀO
+        IF @MaGoiTiem IS NULL OR LTRIM(RTRIM(@MaGoiTiem)) = ''
+        BEGIN
+            RAISERROR(N'Lỗi: Mã gói tiêm là bắt buộc (bao gồm cả gói tiêm lẻ).', 16, 1);
+            RETURN;
+        END
+
+        -- 2. KIỂM TRA SỰ TỒN TẠI CỦA CÁC THỰC THỂ
+        IF NOT EXISTS (SELECT 1 FROM PHIEU_DICH_VU WHERE MaPhieuDichVu = @MaPhieuDichVu)
+        BEGIN
+            RAISERROR(N'Lỗi: Không tìm thấy phiếu dịch vụ %s.', 16, 1, @MaPhieuDichVu);
+            RETURN;
+        END
+
+        IF NOT EXISTS (SELECT 1 FROM BAC_SI_THU_Y WHERE MaNhanVien = @MaBacSi)
+        BEGIN
+            RAISERROR(N'Lỗi: Mã bác sĩ %s không tồn tại.', 16, 1, @MaBacSi);
+            RETURN;
+        END
+
+        IF NOT EXISTS (SELECT 1 FROM THU_CUNG WHERE MaThuCung = @MaThuCung)
+        BEGIN
+            RAISERROR(N'Lỗi: Mã thú cưng %s không tồn tại.', 16, 1, @MaThuCung);
+            RETURN;
+        END
+
+        -- 3. KIỂM TRA GÓI TIÊM VÀ QUYỀN SỞ HỮU
+        IF NOT EXISTS (SELECT 1 FROM GOI_TIEM WHERE MaGoiTiem = @MaGoiTiem)
+        BEGIN
+            RAISERROR(N'Lỗi: Mã gói tiêm %s không tồn tại trong danh mục.', 16, 1, @MaGoiTiem);
+            RETURN;
+        END
+
+        -- Ràng buộc: Thú cưng phải có phiếu đăng ký gói tiêm này trước đó
+        IF NOT EXISTS (
+            SELECT 1 FROM PHIEU_DANG_KY_GOI_TIEM 
+            WHERE MaThuCung = @MaThuCung AND MaGoiTiem = @MaGoiTiem
+        )
+        BEGIN
+            RAISERROR(N'Lỗi: Thú cưng %s chưa đăng ký/mua gói tiêm %s.', 16, 1, @MaThuCung, @MaGoiTiem);
+            RETURN;
+        END
+
+        -- 4. KIỂM TRA TÍNH DUY NHẤT (QUY TẮC XOR)
+        -- Một Phiếu dịch vụ chỉ được là một loại phiếu con
+        IF EXISTS (SELECT 1 FROM PHIEU_TIEM_PHONG WHERE MaPhieuDichVu = @MaPhieuDichVu)
+        BEGIN
+            RAISERROR(N'Lỗi: Phiếu tiêm phòng này đã tồn tại.', 16, 1);
+            RETURN;
+        END
+        
+        IF EXISTS (SELECT 1 FROM PHIEU_KHAM_BENH WHERE MaPhieuDichVu = @MaPhieuDichVu)
+        BEGIN
+            RAISERROR(N'Lỗi: Phiếu dịch vụ này đã được sử dụng làm Phiếu khám bệnh.', 16, 1);
+            RETURN;
+        END
+
+        -- 5. THỰC THI INSERT
+        INSERT INTO PHIEU_TIEM_PHONG (MaPhieuDichVu, NgayTiem, MaVacxin, LieuLuong, MaGoiTiem, MaThuCung, MaBacSi)
+        VALUES (@MaPhieuDichVu, NULL, NULL, NULL, @MaGoiTiem, @MaThuCung, @MaBacSi);
+
+        PRINT N'Thành công: Đã tạo phiếu tiêm phòng với gói tiêm ' + @MaGoiTiem;
+    END TRY
+    BEGIN CATCH
+        DECLARE @ErrMsg NVARCHAR(4000) = ERROR_MESSAGE();
+        RAISERROR(@ErrMsg, 16, 1);
+    END CATCH
+END;
+GO
+-- Chạy thử: EXEC SP_TaoPhieuTiemPhong 'PDV0000001', 'TC00000001', 'NV00000001', 'GT00000001'
+-- GO
+
+-- Cập nhật thông tin phiếu tiêm phòng (Bác sĩ nhập liệu chi tiết tiêm)
+CREATE OR ALTER PROCEDURE SP_CapNhatPhieuTiemPhong
+    @MaPhieuDichVu CHAR(10),
+    @NgayTiem DATE,
+    @MaVacxin CHAR(10),
+    @LieuLuong INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        -- Kiểm tra phiếu tiêm phòng có tồn tại không
+        IF NOT EXISTS (SELECT 1 FROM PHIEU_TIEM_PHONG WHERE MaPhieuDichVu = @MaPhieuDichVu)
+        BEGIN
+            RAISERROR(N'Lỗi: Không tìm thấy phiếu tiêm phòng cho phiếu dịch vụ %s.', 16, 1, @MaPhieuDichVu);
+            RETURN;
+        END
+
+        -- Kiểm tra vaccine có tồn tại không
+        IF NOT EXISTS (SELECT 1 FROM VACXIN WHERE MaVacxin = @MaVacxin)
+        BEGIN
+            RAISERROR(N'Lỗi: Mã vaccine %s không tồn tại.', 16, 1, @MaVacxin);
+            RETURN;
+        END
+
+        -- Cập nhật thông tin tiêm
+        UPDATE PHIEU_TIEM_PHONG
+        SET NgayTiem = @NgayTiem,
+            MaVacxin = @MaVacxin,
+            LieuLuong = @LieuLuong
+        WHERE MaPhieuDichVu = @MaPhieuDichVu;
+
+        PRINT N'Cập nhật phiếu tiêm phòng thành công.';
+    END TRY
+    BEGIN CATCH
+        DECLARE @ErrMsg NVARCHAR(4000) = ERROR_MESSAGE();
+        RAISERROR(@ErrMsg, 16, 1);
+    END CATCH
+END;
+GO
+-- Chạy thử: EXEC SP_CapNhatPhieuTiemPhong 'PDV0000001', '2026-02-01', 'VX00000001', 1
+-- GO
+
+-- Ghi nhận kết quả khám bệnh (Cũ - giữ lại để tương thích)
+CREATE OR ALTER PROCEDURE SP_GhiNhanPhieuKhamBenh
+    @MaPhieuDichVu CHAR(10),
+    @TrieuChung NVARCHAR(100),
+    @ChuanDoan NVARCHAR(100),
+    @NgayHenTaiKham DATE = NULL,
+    @MaBacSi CHAR(10) = NULL,
+    @MaThuCung CHAR(10) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    -- Nếu phiếu chưa tồn tại thì tạo mới, nếu có rồi thì chỉ cập nhật
+    IF NOT EXISTS (SELECT 1 FROM PHIEU_KHAM_BENH WHERE MaPhieuDichVu = @MaPhieuDichVu)
+    BEGIN
+        INSERT INTO PHIEU_KHAM_BENH(MaPhieuDichVu, TrieuChung, ChuanDoan, NgayHenTaiKham, MaBacSi, MaThuCung)
+        VALUES (@MaPhieuDichVu, @TrieuChung, @ChuanDoan, @NgayHenTaiKham, @MaBacSi, @MaThuCung);
+    END
+    ELSE
+    BEGIN
+        UPDATE PHIEU_KHAM_BENH
+        SET TrieuChung = ISNULL(@TrieuChung, TrieuChung),
+            ChuanDoan = ISNULL(@ChuanDoan, ChuanDoan),
+            NgayHenTaiKham = ISNULL(@NgayHenTaiKham, NgayHenTaiKham),
+            MaBacSi = ISNULL(@MaBacSi, MaBacSi),
+            MaThuCung = ISNULL(@MaThuCung, MaThuCung)
+        WHERE MaPhieuDichVu = @MaPhieuDichVu;
+    END
 END;
 GO
 -- Chạy thử: EXEC SP_GhiNhanPhieuKhamBenh 'PDV0000001', N'Ho, sốt', N'Viêm phổi nhẹ', '2026-02-15', 'NV00000001', 'TC00000001'
@@ -589,19 +815,35 @@ GO
 -- Chạy thử: EXEC SP_ThemThuocVaoToa 'PDV0000001', 'SP00000002', 10
 -- GO
 
--- Ghi nhận một mũi tiêm phòng (Lẻ hoặc theo gói)
+-- Ghi nhận một mũi tiêm phòng (Cũ - giữ lại để tương thích)
 CREATE OR ALTER PROCEDURE SP_GhiNhanTiemPhong
     @MaPhieuDichVu CHAR(10),
-    @NgayTiem DATE,
-    @MaVacxin CHAR(10),
-    @LieuLuong INT,
-    @MaGoiTiem CHAR(10),
-    @MaThuCung CHAR(10),
-    @MaBacSi CHAR(10)
+    @NgayTiem DATE = NULL,
+    @MaVacxin CHAR(10) = NULL,
+    @LieuLuong INT = NULL,
+    @MaGoiTiem CHAR(10) = NULL,
+    @MaThuCung CHAR(10) = NULL,
+    @MaBacSi CHAR(10) = NULL
 AS
 BEGIN
-    INSERT INTO PHIEU_TIEM_PHONG(MaPhieuDichVu, NgayTiem, MaVacxin, LieuLuong, MaGoiTiem, MaThuCung, MaBacSi)
-    VALUES (@MaPhieuDichVu, @NgayTiem, @MaVacxin, @LieuLuong, @MaGoiTiem, @MaThuCung, @MaBacSi);
+    SET NOCOUNT ON;
+    -- Nếu phiếu chưa tồn tại thì tạo mới, nếu có rồi thì chỉ cập nhật
+    IF NOT EXISTS (SELECT 1 FROM PHIEU_TIEM_PHONG WHERE MaPhieuDichVu = @MaPhieuDichVu)
+    BEGIN
+        INSERT INTO PHIEU_TIEM_PHONG(MaPhieuDichVu, NgayTiem, MaVacxin, LieuLuong, MaGoiTiem, MaThuCung, MaBacSi)
+        VALUES (@MaPhieuDichVu, @NgayTiem, @MaVacxin, @LieuLuong, @MaGoiTiem, @MaThuCung, @MaBacSi);
+    END
+    ELSE
+    BEGIN
+        UPDATE PHIEU_TIEM_PHONG
+        SET NgayTiem = ISNULL(@NgayTiem, NgayTiem),
+            MaVacxin = ISNULL(@MaVacxin, MaVacxin),
+            LieuLuong = ISNULL(@LieuLuong, LieuLuong),
+            MaGoiTiem = ISNULL(@MaGoiTiem, MaGoiTiem),
+            MaThuCung = ISNULL(@MaThuCung, MaThuCung),
+            MaBacSi = ISNULL(@MaBacSi, MaBacSi)
+        WHERE MaPhieuDichVu = @MaPhieuDichVu;
+    END
 END;
 GO
 -- Chạy thử: EXEC SP_GhiNhanTiemPhong 'PDV0000001', '2026-02-01', 'VX00000001', 1, 'GT00000001', 'TC00000001', 'NV00000001'

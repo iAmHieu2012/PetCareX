@@ -302,3 +302,31 @@ BEGIN
     END 
 END;
 GO
+
+--==============================================================
+-- 5. NHÓM TRIGGER PHIẾU TIÊM PHÒNG
+--==============================================================
+-- kiểm tra thú cưng phải sở hữu gói tiêm trước khi lập phiếu tiêm
+CREATE OR ALTER TRIGGER TRG_PHIEU_TIEM_PHONG_CheckSoHuuGoi
+ON PHIEU_TIEM_PHONG
+AFTER INSERT, UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    -- Kiểm tra nếu phiếu tiêm có gắn MaGoiTiem (không phải tiêm lẻ)
+    IF EXISTS (
+        SELECT 1 FROM inserted i
+        WHERE i.MaGoiTiem IS NOT NULL
+        AND NOT EXISTS (
+            -- Kiểm tra xem thú cưng này đã có phiếu đăng ký gói tiêm đó chưa
+            SELECT 1 FROM PHIEU_DANG_KY_GOI_TIEM pdk
+            WHERE pdk.MaThuCung = i.MaThuCung 
+            AND pdk.MaGoiTiem = i.MaGoiTiem
+        )
+    )
+    BEGIN
+        RAISERROR(N'Lỗi: Thú cưng này chưa đăng ký/mua gói tiêm đã chọn.', 16, 1);
+        ROLLBACK TRANSACTION;
+    END
+END;
+GO
