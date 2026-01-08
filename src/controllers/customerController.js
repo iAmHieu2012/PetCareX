@@ -208,7 +208,7 @@ const customerController = {
 
             // Create booking
             const now = new Date();
-            await pool.request()
+            const bookingResult = await pool.request()
                 .input('MaLH', sql.Char(10), maLichHen)
                 .input('ThoiGian', sql.DateTime, new Date(ThoiGian))
                 .input('TrangThai', sql.NVarChar(15), 'Chờ xác nhận')
@@ -217,8 +217,8 @@ const customerController = {
                 .input('MaTC', sql.Char(10), MaThuCung)
                 .input('MaCN', sql.Char(10), MaChiNhanh)
                 .query(`
-                    INSERT INTO LICH_HEN (MaLichHen, ThoiGian, TrangThai, LoaiLichHen, MaKhachHang, MaThuCung, MaChiNhanh)
-                    VALUES (@MaLH, @ThoiGian, @TrangThai, @LoaiLichHen, @MaKH, @MaTC, @MaCN)
+                    INSERT INTO LICH_HEN (MaLichHen, ThoiGian, TrangThai, LoaiLichHen, MaKhachHang, MaThuCung, MaChiNhanh, MaNhanVienXacNhan, MaPhieuDichVu)
+                    VALUES (@MaLH, @ThoiGian, @TrangThai, @LoaiLichHen, @MaKH, @MaTC, @MaCN, NULL, NULL)
                 `);
 
             res.status(201).json({
@@ -261,6 +261,52 @@ const customerController = {
             res.json({
                 success: true,
                 message: 'Hủy lịch hẹn thành công'
+            });
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    },
+    // Xem lịch sử y tế của thú cưng
+    getPetMedicalHistory: async (req, res) => {
+        try {
+            const { maThuCung } = req.params;
+            const pool = await connectDB();
+
+            // 1. Lấy lịch sử khám bệnh
+            const checkups = await pool.request()
+                .input('MaTC', sql.Char(10), maThuCung)
+                .query(`
+                    SELECT DISTINCT 
+                        MaPhieuDichVu, 
+                        ChuanDoan, 
+                        NgayHenTaiKham 
+                    FROM VW_LichSuKhamBenh 
+                    WHERE MaThuCung = @MaTC 
+                    ORDER BY NgayHenTaiKham DESC
+                `);
+
+            // 2. Lấy lịch sử tiêm phòng
+            const vaccinations = await pool.request()
+                .input('MaTC', sql.Char(10), maThuCung)
+                .query(`SELECT * FROM PHIEU_TIEM_PHONG ptp 
+                        JOIN VACXIN v ON ptp.MaVacxin = v.MaVacxin 
+                        WHERE MaThuCung = @MaTC ORDER BY NgayTiem DESC`);
+
+            // 3. Lấy các gói tiêm đã đăng ký
+            const packages = await pool.request()
+                .input('MaTC', sql.Char(10), maThuCung)
+                .query(`SELECT pdk.MaGoiTiem, gt.LoaiGoiTiem, pdk.NgayDangKy 
+                        FROM PHIEU_DANG_KY_GOI_TIEM pdk
+                        JOIN GOI_TIEM gt ON pdk.MaGoiTiem = gt.MaGoiTiem
+                        WHERE MaThuCung = @MaTC ORDER BY NgayDangKy DESC`);
+
+            res.json({
+                success: true,
+                data: {
+                    checkups: checkups.recordset,
+                    vaccinations: vaccinations.recordset,
+                    packages: packages.recordset
+                }
             });
         } catch (err) {
             res.status(500).json({ error: err.message });

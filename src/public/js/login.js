@@ -39,10 +39,11 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
             
             if (role === 'KhachHang') {
                 window.location.href = '/customer-dashboard.html';
+            } else if (role === 'TiepTan') {
+                window.location.href = '/staff-dashboard-receptionist.html';
             } else if (role === 'Admin') {
-                window.location.href = '/dashboard.html'; // Admin dashboard
+                window.location.href = '/dashboard.html';
             } else {
-                // Default fallback
                 window.location.href = '/staff-booking.html';
             }
         } else {

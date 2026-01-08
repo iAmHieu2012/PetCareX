@@ -11,11 +11,11 @@ const api = {
         fetch(`/api/bookings/branch/${maChiNhanh}`)
             .then(res => res.json()),
     
-    confirmBooking: (maLichHen, maChiNhanh) =>
+    confirmBooking: (maLichHen, maChiNhanh, maKhachHang) =>
         fetch('/api/bookings/confirm', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ maLichHen, maChiNhanh })
+            body: JSON.stringify({ maLichHen, maChiNhanh, maKhachHang })
         }).then(res => res.json()),
     
     cancelBooking: (maLichHen, maChiNhanh) =>
@@ -180,7 +180,7 @@ function displayStaffBookings(bookings) {
             
             <div class="booking-actions">
                 ${booking.TrangThai === 'Chờ xác nhận' ? `
-                    <button class="btn btn-small btn-success" onclick="confirmBooking('${booking.MaLichHen}', '${booking.MaChiNhanh}')">
+                    <button class="btn btn-small btn-success" onclick="confirmBooking('${booking.MaLichHen}', '${booking.MaChiNhanh}', '${booking.MaKhachHang}')">
                         ✓ Xác Nhận
                     </button>
                 ` : ''}
@@ -195,11 +195,11 @@ function displayStaffBookings(bookings) {
 }
 
 // Confirm booking
-async function confirmBooking(maLichHen, maChiNhanh) {
+async function confirmBooking(maLichHen, maChiNhanh, maKhachHang) {
     if (!confirm('Bạn có chắc muốn xác nhận lịch hẹn này?')) return;
     
     try {
-        const response = await api.confirmBooking(maLichHen, maChiNhanh);
+        const response = await api.confirmBooking(maLichHen, maChiNhanh, maKhachHang);
         
         if (response.success) {
             showSuccess('Xác nhận lịch hẹn thành công');

@@ -75,18 +75,59 @@ exports.getAllBookings = async (req, res) => {
     }
 };
 
-exports.confirmBooking = async (req, res) => {
+exports.confirmAndCreateMedicalForm = async (req, res) => {
     try {
-        const { maLichHen, maChiNhanh } = req.body;
+        const { maLichHen, maChiNhanh, maKhachHang, maThuCung, maBacSi } = req.body;
         
-        if (!maLichHen || !maChiNhanh) {
+        if (!maLichHen || !maChiNhanh || !maKhachHang || !maThuCung || !maBacSi) {
             return res.status(400).json({
                 success: false,
-                message: 'Mã lịch hẹn và chi nhánh không hợp lệ'
+                message: 'Mã lịch hẹn, chi nhánh, khách hàng, thú cưng và bác sĩ là bắt buộc'
             });
         }
         
-        const result = await BookingModel.updateBookingStatus(maLichHen, maChiNhanh, 'Đã xác nhận');
+        const result = await BookingModel.confirmAndCreateMedicalForm(maLichHen, maChiNhanh, maKhachHang, maThuCung, maBacSi);
+        res.status(200).json(result);
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+    }
+};
+
+exports.confirmAndCreateVaccinationForm = async (req, res) => {
+    try {
+        const { maLichHen, maChiNhanh, maKhachHang, maThuCung, maBacSi, maGoiTiem } = req.body;
+        
+        if (!maLichHen || !maChiNhanh || !maKhachHang || !maThuCung || !maBacSi) {
+            return res.status(400).json({
+                success: false,
+                message: 'Mã lịch hẹn, chi nhánh, khách hàng, thú cưng và bác sĩ là bắt buộc'
+            });
+        }
+        
+        const result = await BookingModel.confirmAndCreateVaccinationForm(maLichHen, maChiNhanh, maKhachHang, maThuCung, maBacSi, maGoiTiem || null);
+        res.status(200).json(result);
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+    }
+};
+
+exports.confirmBooking = async (req, res) => {
+    try {
+        const { maLichHen, maChiNhanh, maKhachHang } = req.body;
+        
+        if (!maLichHen || !maChiNhanh || !maKhachHang) {
+            return res.status(400).json({
+                success: false,
+                message: 'Mã lịch hẹn, chi nhánh và khách hàng là bắt buộc'
+            });
+        }
+        const result = await BookingModel.confirmBooking(maLichHen, maChiNhanh, maKhachHang);
         res.status(200).json(result);
     } catch (err) {
         res.status(500).json({
@@ -103,7 +144,7 @@ exports.cancelBooking = async (req, res) => {
         if (!maLichHen || !maChiNhanh) {
             return res.status(400).json({
                 success: false,
-                message: 'Mã lịch hẹn và chi nhánh không hợp lệ'
+                message: 'Mã lịch hẹn và chi nhánh là bắt buộc'
             });
         }
         

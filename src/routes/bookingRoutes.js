@@ -9,7 +9,13 @@ router.post('/', bookingController.createBooking);
 // GET - Lấy lịch hẹn của khách hàng
 router.get('/customer/:maKhachHang', bookingController.getMyBookings);
 
-// PUT - Xác nhận lịch hẹn
+// PUT - Xác nhận lịch hẹn + tạo phiếu khám bệnh (specific TRƯỚC generic)
+router.put('/confirm/medical', bookingController.confirmAndCreateMedicalForm);
+
+// PUT - Xác nhận lịch hẹn + tạo phiếu tiêm phòng (specific TRƯỚC generic)
+router.put('/confirm/vaccination', bookingController.confirmAndCreateVaccinationForm);
+
+// PUT - Xác nhận lịch hẹn (PHẢI TRƯỚC các route GET khác)
 router.put('/confirm', bookingController.confirmBooking);
 
 // PUT - Hủy lịch hẹn
@@ -19,10 +25,10 @@ router.put('/cancel', bookingController.cancelBooking);
 // POST - Nhân viên tiếp tân tạo lịch hẹn
 router.post('/staff/create', bookingController.createBookingStaff);
 
-// GET - Lấy tất cả lịch hẹn (admin)
-router.get('/', bookingController.getAllBookings);
-
-// GET - Lấy lịch hẹn theo chi nhánh (nhân viên tiếp tân)
+// GET - Lấy lịch hẹn theo chi nhánh (PHẢI TRƯỚC route GET '/' chung)
 router.get('/branch/:maChiNhanh', bookingController.getBookingsByBranch);
+
+// GET - Lấy tất cả lịch hẹn (admin) - CUỐI CÙNG
+router.get('/', bookingController.getAllBookings);
 
 module.exports = router;

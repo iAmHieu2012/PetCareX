@@ -8,12 +8,17 @@ const branchRoutes = require('./routes/branchRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const customerRoutes = require('./routes/customerRoutes');
 
+// 0. Middleware hiện lỗi
+const logger = require('./middlewares/loggerMiddleware'); 
+const { notFound, errorHandler } = require('./middlewares/errorMiddleware');
+
 const app = express();
 
 // 1. Middlewares hệ thống
 app.use(cors()); 
 app.use(express.json()); 
 app.use(express.urlencoded({ extended: true }));
+app.use(logger);
 
 // 2. Định nghĩa API Routes (Phải đặt TRƯỚC static và catch-all)
 app.use('/api/auth', authRoutes);
@@ -37,9 +42,7 @@ app.get(/.*/, (req, res) => {
 });
 
 // 5. Xử lý lỗi toàn cục
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({ message: 'Đã có lỗi xảy ra từ phía Server!' });
-});
+app.use(notFound);      // Bắt lỗi 404 nếu sai đường dẫn
+app.use(errorHandler);  // Bắt lỗi 500 nếu server crash
 
 module.exports = app;

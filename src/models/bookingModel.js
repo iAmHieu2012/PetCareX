@@ -110,6 +110,107 @@ const BookingModel = {
         }
     },
 
+    // Xác nhận lịch hẹn và tạo phiếu dịch vụ (gọi SP_TiepNhanLichHen)
+    confirmBooking: async (maLichHen, maChiNhanh, maKhachHang) => {
+        try {
+            const pool = await connectDB();
+            
+            // Generate mã Phiếu dịch vụ
+            const resultId = await pool.request()
+                .query('SELECT COUNT(*) as count FROM PHIEU_DICH_VU');
+            const maPhieuDichVu = 'PDV' + String(resultId.recordset[0].count + 1).padStart(7, '0');
+                       
+            // Gọi SP_TiepNhanLichHen để xác nhận lịch hẹn và tạo phiếu dịch vụ
+            const result = await pool.request()
+                .input('MaLH', sql.Char(10), maLichHen)
+                .input('MaCN', sql.Char(10), maChiNhanh)
+                .input('MaPDV_Moi', sql.Char(10), maPhieuDichVu)
+                .input('MaKH', sql.Char(10), maKhachHang)
+                .execute('SP_TiepNhanLichHen');
+                       
+            return {
+                success: true,
+                message: 'Xác nhận lịch hẹn và tạo phiếu dịch vụ thành công',
+                maPhieuDichVu: maPhieuDichVu
+            };
+        } catch (err) {
+            throw new Error('Lỗi xác nhận lịch hẹn: ' + err.message);
+        }
+    },
+
+    // Xác nhận lịch hẹn + tạo phiếu khám bệnh
+    confirmAndCreateMedicalForm: async (maLichHen, maChiNhanh, maKhachHang, maThuCung, maBacSi) => {
+        try {
+            const pool = await connectDB();
+            
+            const resultId = await pool.request()
+                .query('SELECT COUNT(*) as count FROM PHIEU_DICH_VU');
+            const maPhieuDichVu = 'PDV' + String(resultId.recordset[0].count + 1).padStart(7, '0');
+            
+            // 1. SP_TiepNhanLichHen
+            await pool.request()
+                .input('MaLH', sql.Char(10), maLichHen)
+                .input('MaCN', sql.Char(10), maChiNhanh)
+                .input('MaPDV_Moi', sql.Char(10), maPhieuDichVu)
+                .input('MaKH', sql.Char(10), maKhachHang)
+                .execute('SP_TiepNhanLichHen');
+            
+            // 2. SP_TaoPhieuKhamBenh
+            await pool.request()
+                .input('MaPhieuDichVu', sql.Char(10), maPhieuDichVu)
+                .input('MaThuCung', sql.Char(10), maThuCung)
+                .input('MaBacSi', sql.Char(10), maBacSi)
+                .execute('SP_TaoPhieuKhamBenh');
+            
+            return {
+                success: true,
+                message: 'Xác nhận lịch hẹn, tạo phiếu dịch vụ và phân công bác sĩ khám bệnh thành công',
+                maPhieuDichVu: maPhieuDichVu
+            };
+        } catch (err) {
+            throw new Error('Lỗi xác nhận lịch hẹn và tạo phiếu khám bệnh: ' + err.message);
+        }
+    },
+
+    // Xác nhận lịch hẹn + tạo phiếu tiêm phòng
+    confirmAndCreateVaccinationForm: async (maLichHen, maChiNhanh, maKhachHang, maThuCung, maBacSi, maGoiTiem = null) => {
+        try {
+            const pool = await connectDB();
+            
+            const resultId = await pool.request()
+                .query('SELECT COUNT(*) as count FROM PHIEU_DICH_VU');
+            const maPhieuDichVu = 'PDV' + String(resultId.recordset[0].count + 1).padStart(7, '0');
+            
+            // 1. SP_TiepNhanLichHen
+            await pool.request()
+                .input('MaLH', sql.Char(10), maLichHen)
+                .input('MaCN', sql.Char(10), maChiNhanh)
+                .input('MaPDV_Moi', sql.Char(10), maPhieuDichVu)
+                .input('MaKH', sql.Char(10), maKhachHang)
+                .execute('SP_TiepNhanLichHen');
+            
+            // 2. SP_TaoPhieuTiemPhong
+            const request = pool.request()
+                .input('MaPhieuDichVu', sql.Char(10), maPhieuDichVu)
+                .input('MaThuCung', sql.Char(10), maThuCung)
+                .input('MaBacSi', sql.Char(10), maBacSi);
+            
+            if (maGoiTiem) {
+                request.input('MaGoiTiem', sql.Char(10), maGoiTiem);
+            }
+            
+            await request.execute('SP_TaoPhieuTiemPhong');
+            
+            return {
+                success: true,
+                message: 'Xác nhận lịch hẹn, tạo phiếu dịch vụ và phân công bác sĩ tiêm phòng thành công',
+                maPhieuDichVu: maPhieuDichVu
+            };
+        } catch (err) {
+            throw new Error('Lỗi xác nhận lịch hẹn và tạo phiếu tiêm phòng: ' + err.message);
+        }
+    },
+
     // Cập nhật trạng thái lịch hẹn (gọi SP_CapNhatTrangThaiLichHen)
     updateBookingStatus: async (maLichHen, maChiNhanh, trangThai) => {
         try {
@@ -158,7 +259,7 @@ const BookingModel = {
             const result = await pool.request()
                 .input('MaChiNhanh', sql.Char(10), maChiNhanh)
                 .query(`SELECT 
-                    LH.MaLichHen, LH.ThoiGian, LH.TrangThai, LH.LoaiLichHen,
+                    LH.MaLichHen, LH.MaKhachHang, LH.MaThuCung, LH.ThoiGian, LH.TrangThai, LH.LoaiLichHen, LH.MaChiNhanh,
                     TC.TenThuCung, TC.Loai,
                     CN.TenChiNhanh,
                     KH.TenKhachHang, KH.SoDienThoai

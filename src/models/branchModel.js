@@ -15,6 +15,21 @@ const BranchModel = {
         const result = await pool.request().query('SELECT COUNT(*) as count FROM NHAN_VIEN');
         return result.recordset[0].count;
     },
+    
+    getDoctorsByBranch: async (maChiNhanh) => {
+        const pool = await connectDB();
+        const result = await pool.request()
+            .input('MaChiNhanh', sql.Char(10), maChiNhanh)
+            .query(`
+                SELECT nv.MaNhanVien, nv.HoTen, nv.ChucVu
+                FROM NHAN_VIEN nv
+                JOIN BAC_SI_THU_Y bs ON nv.MaNhanVien = bs.MaNhanVien
+                WHERE nv.MaChiNhanh = @MaChiNhanh
+                ORDER BY nv.HoTen
+            `);
+        return result.recordset;
+    },
+    
     getCustomersCount: async () => {
         const pool = await connectDB();
         const result = await pool.request().query('SELECT COUNT(*) as count FROM KHACH_HANG');

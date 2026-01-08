@@ -24,6 +24,31 @@ exports.getStaffCount = async (req, res) => {
         res.status(500).json({ message: "Lỗi Server", error: err.message });
     }
 };
+
+exports.getDoctorsByBranch = async (req, res) => {
+    try {
+        const { maChiNhanh } = req.params;
+        
+        if (!maChiNhanh) {
+            return res.status(400).json({
+                success: false,
+                message: 'Mã chi nhánh là bắt buộc'
+            });
+        }
+        
+        const doctors = await BranchModel.getDoctorsByBranch(maChiNhanh);
+        res.status(200).json({
+            success: true,
+            data: doctors
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+    }
+};
+
 exports.getCustomersCount = async (req, res) => {
     try {
         const count = await BranchModel.getCustomersCount();

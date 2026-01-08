@@ -91,6 +91,41 @@ async function apiCall(endpoint, options = {}) {
         return null;
     }
 }
+// Thêm vào script xử lý dashboard
+async function loadPetHistory(maThuCung) {
+    const historyContent = document.getElementById('history-content');
+    if (!maThuCung) {
+        historyContent.innerHTML = '<p style="color: #999;">Chọn thú cưng để xem lịch sử...</p>';
+        return;
+    }
+
+    try {
+        historyContent.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang tải...';
+        const response = await fetch(`/api/customer/pets/history/${maThuCung}`).then(res => res.json());
+        
+        if (response.success) {
+            const { checkups, vaccinations, packages } = response.data;
+            let html = '';
+
+            // Render Gói tiêm đã mua
+            html += '<strong>Gói tiêm đã mua:</strong>';
+            html += packages.length ? packages.map(p => `<div class="history-item">${p.MaGoiTiem} - ${p.LoaiGoiTiem} (${new Date(p.NgayDangKy).toLocaleDateString()})</div>`).join('') : '<p>Chưa mua gói</p>';
+
+            // Render Khám bệnh
+            html += '<hr><strong>Khám bệnh gần nhất:</strong>';
+            html += checkups.length ? checkups.map(c => `<div class="history-item">📅 ${new Date(c.NgayHenTaiKham).toLocaleDateString()}: ${c.ChuanDoan}</div>`).join('') : '<p>Chưa có dữ liệu</p>';
+
+            // Render Tiêm phòng
+            html += '<hr><strong>Tiêm phòng gần nhất:</strong>';
+            html += vaccinations.length ? vaccinations.map(v => `<div class="history-item">💉 ${v.TenVacxin} (${new Date(v.NgayTiem).toLocaleDateString()})</div>`).join('') : '<p>Chưa có dữ liệu</p>';
+
+            historyContent.innerHTML = html;
+        }
+    } catch (err) {
+        historyContent.innerHTML = '<p style="color: red;">Lỗi tải dữ liệu</p>';
+    }
+}
+
 
 // ==================== MAIN APP ====================
 class CustomerDashboard {
@@ -99,6 +134,7 @@ class CustomerDashboard {
         this.pets = [];
         this.bookings = [];
         this.branches = [];
+        this.customerData = null;
         this.init();
     }
 
@@ -117,56 +153,56 @@ class CustomerDashboard {
         this.loadBranches();
     }
 
-    setupEventListeners() {
-        // Logout button
-        document.getElementById('logout-btn').addEventListener('click', () => {
-            if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
-                localStorage.clear();
-                window.location.href = '/login.html';
-            }
-        });
+    // setupEventListeners() {
+    //     // Logout button
+    //     document.getElementById('logout-btn').addEventListener('click', () => {
+    //         if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+    //             localStorage.clear();
+    //             window.location.href = '/login.html';
+    //         }
+    //     });
 
-        // Pet management
-        document.getElementById('add-pet-btn').addEventListener('click', () => {
-            this.showModal('add-pet-modal');
-        });
+    //     // Pet management
+    //     document.getElementById('add-pet-btn').addEventListener('click', () => {
+    //         this.showModal('add-pet-modal');
+    //     });
 
-        document.getElementById('add-pet-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.addPet();
-        });
+    //     document.getElementById('add-pet-form').addEventListener('submit', (e) => {
+    //         e.preventDefault();
+    //         this.addPet();
+    //     });
 
-        document.getElementById('cancel-pet-btn').addEventListener('click', () => {
-            this.hideModal('add-pet-modal');
-        });
+    //     document.getElementById('cancel-pet-btn').addEventListener('click', () => {
+    //         this.hideModal('add-pet-modal');
+    //     });
 
-        // Booking management
-        document.getElementById('new-booking-btn').addEventListener('click', async () => {
-            // Refresh pets list trước khi mở modal để đảm bảo thú cưng mới tạo hiện lên
-            await this.loadPets();
-            this.populateBookingPets();
-            this.showModal('booking-modal');
-        });
+    //     // Booking management
+    //     document.getElementById('new-booking-btn').addEventListener('click', async () => {
+    //         // Refresh pets list trước khi mở modal để đảm bảo thú cưng mới tạo hiện lên
+    //         await this.loadPets();
+    //         this.populateBookingPets();
+    //         this.showModal('booking-modal');
+    //     });
 
-        document.getElementById('booking-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.createBooking();
-        });
+    //     document.getElementById('booking-form').addEventListener('submit', (e) => {
+    //         e.preventDefault();
+    //         this.createBooking();
+    //     });
 
-        document.getElementById('cancel-booking-btn').addEventListener('click', () => {
-            this.hideModal('booking-modal');
-        });
+    //     document.getElementById('cancel-booking-btn').addEventListener('click', () => {
+    //         this.hideModal('booking-modal');
+    //     });
 
-        // Booking filters
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                e.target.classList.add('active');
-                this.currentFilter = e.target.dataset.filter;
-                this.renderBookings();
-            });
-        });
-    }
+    //     // Booking filters
+    //     document.querySelectorAll('.filter-btn').forEach(btn => {
+    //         btn.addEventListener('click', (e) => {
+    //             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    //             e.target.classList.add('active');
+    //             this.currentFilter = e.target.dataset.filter;
+    //             this.renderBookings();
+    //         });
+    //     });
+    // }
 
     setupTabNavigation() {
         document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -189,28 +225,151 @@ class CustomerDashboard {
         });
     }
 
-    setupModals() {
-        // Modal close buttons
-        document.getElementById('close-pet-modal').addEventListener('click', () => {
-            this.hideModal('add-pet-modal');
-        });
-
-        document.getElementById('close-pet-detail-modal').addEventListener('click', () => {
-            this.hideModal('pet-detail-modal');
-        });
-
-        document.getElementById('close-booking-modal').addEventListener('click', () => {
-            this.hideModal('booking-modal');
-        });
-
-        // Close modal on background click
-        document.querySelectorAll('.modal').forEach(modal => {
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    modal.classList.remove('active');
+    setupEventListeners() {
+        // Logout
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+                    localStorage.clear();
+                    window.location.href = '/login.html';
                 }
             });
+        }
+
+        // Pet management
+        const addPetBtn = document.getElementById('add-pet-btn');
+        if (addPetBtn) addPetBtn.addEventListener('click', () => this.showModal('add-pet-modal'));
+
+        const addPetForm = document.getElementById('add-pet-form');
+        if (addPetForm) addPetForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.addPet();
         });
+
+        const cancelPetBtn = document.getElementById('cancel-pet-btn');
+        if (cancelPetBtn) cancelPetBtn.addEventListener('click', () => this.hideModal('add-pet-modal'));
+
+        // Booking management
+        const newBookingBtn = document.getElementById('new-booking-btn');
+        if (newBookingBtn) {
+            newBookingBtn.addEventListener('click', async () => {
+                await this.loadPets();
+                this.populateBookingPets();
+                this.showModal('booking-modal');
+            });
+        }
+
+        const bookingForm = document.getElementById('booking-form');
+        if (bookingForm) {
+            bookingForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.createBooking();
+            });
+        }
+
+        const cancelBookingBtn = document.getElementById('cancel-booking-btn');
+        if (cancelBookingBtn) cancelBookingBtn.addEventListener('click', () => this.hideModal('booking-modal'));
+
+        // TÍCH HỢP: Lắng nghe chọn thú cưng để hiện lịch sử
+        const bookingPetSelect = document.getElementById('booking-pet');
+        if (bookingPetSelect) {
+            bookingPetSelect.addEventListener('change', (e) => {
+                this.loadPetHistoryIntoModal(e.target.value);
+            });
+        }
+    }
+
+    setupModals() {
+        // CÁCH SỬA LỖI: Kiểm tra phần tử có tồn tại trước khi add event
+        const modalIds = ['close-pet-modal', 'close-pet-detail-modal', 'close-booking-modal'];
+        modalIds.forEach(id => {
+            const btn = document.getElementById(id);
+            if (btn) {
+                btn.addEventListener('click', () => {
+                    const modal = btn.closest('.modal');
+                    if (modal) modal.classList.remove('active');
+                });
+            }
+        });
+
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.classList.remove('active');
+            });
+        });
+    }
+
+    // Hàm lấy lịch sử y tế tích hợp vào Dashboard
+    async loadPetHistoryIntoModal(maThuCung) {
+        const historyContent = document.getElementById('history-content');
+        if (!historyContent) return;
+
+        if (!maThuCung) {
+            historyContent.innerHTML = '<p style="color: #999; text-align: center;">Chọn thú cưng để xem lịch sử...</p>';
+            return;
+        }
+
+        try {
+            historyContent.innerHTML = '<div style="text-align:center; padding: 20px;"><i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu y tế...</div>';
+            
+            // Gọi API lấy lịch sử y tế (Hàm đã được định nghĩa trong controller)
+            const response = await apiCall(`/api/customer/pets/history/${maThuCung}`);
+            
+            if (response && response.success) {
+                const { checkups, vaccinations, packages } = response.data;
+
+                let html = '';
+
+                // 1. Render Gói tiêm đã mua
+                html += '<p style="font-weight:700; color:var(--primary); margin-bottom:10px;"><i class="fas fa-box"></i> Gói tiêm đã sở hữu:</p>';
+                if (packages && packages.length > 0) {
+                    html += packages.map(p => `
+                        <div class="history-item" style="border-left: 3px solid var(--success); background: #f0fdf4;">
+                            <strong>${p.TenGoiTiem}</strong>
+                            <div style="font-size: 12px; color: #666;">Ngày mua: ${new Date(p.NgayDangKy).toLocaleDateString('vi-VN')}</div>
+                        </div>
+                    `).join('');
+                } else {
+                    html += '<p style="font-size: 13px; color: #999; margin-bottom: 15px;">Chưa có gói tiêm nào.</p>';
+                }
+
+                // 2. Render Khám bệnh gần nhất
+                html += '<p style="font-weight:700; color:var(--primary); margin: 15px 0 10px;"><i class="fas fa-stethoscope"></i> Lịch sử khám bệnh:</p>';
+                if (checkups && checkups.length > 0) {
+                    html += checkups.map(c => `
+                        <div class="history-item" style="border-left: 3px solid var(--primary);">
+                            <strong>Chẩn đoán: ${c.ChuanDoan}</strong>
+                            <div style="font-size: 12px; color: #666;">
+                                Hẹn tái khám: ${c.NgayHenTaiKham ? new Date(c.NgayHenTaiKham).toLocaleDateString('vi-VN') : 'Không có'}
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    html += '<p style="font-size: 13px; color: #999; margin-bottom: 15px;">Chưa có lịch sử khám.</p>';
+                }
+
+                // 3. Render Tiêm phòng gần nhất
+                html += '<p style="font-weight:700; color:var(--primary); margin: 15px 0 10px;"><i class="fas fa-syringe"></i> Lịch sử tiêm chủng:</p>';
+                if (vaccinations && vaccinations.length > 0) {
+                    html += vaccinations.map(v => `
+                        <div class="history-item" style="border-left: 3px solid var(--warning);">
+                            <strong>Vắc-xin: ${v.TenVacxin}</strong>
+                            <div style="font-size: 12px; color: #666;">Ngày tiêm: ${new Date(v.NgayTiem).toLocaleDateString('vi-VN')}</div>
+                        </div>
+                    `).join('');
+                } else {
+                    html += '<p style="font-size: 13px; color: #999;">Chưa có lịch sử tiêm phòng.</p>';
+                }
+
+                historyContent.innerHTML = html;
+            } else {
+                historyContent.innerHTML = '<p style="color: #ef4444; text-align: center;">Không thể lấy dữ liệu lịch sử.</p>';
+            }
+        } catch (err) {
+            console.error('Lỗi tải lịch sử:', err);
+            historyContent.innerHTML = '<p style="color: #ef4444; text-align: center;">Lỗi kết nối máy chủ.</p>';
+        }
     }
 
     showModal(modalId) {
