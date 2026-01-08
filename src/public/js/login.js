@@ -35,14 +35,15 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
             alert(`Chào mừng ${data.user.name} (${data.user.role}) quay trở lại!`);
             
             // 3. Chuyển tới trang phù hợp theo role
-            const isStaff = data.user.role === 'NhanVien';
+            const role = data.user.role;
             
-            if (isStaff) {
-                window.location.href = '/staff-booking.html';
-            } else if (data.user.role === 'KhachHang') {
+            if (role === 'KhachHang') {
                 window.location.href = '/customer-dashboard.html';
+            } else if (role === 'Admin') {
+                window.location.href = '/dashboard.html'; // Admin dashboard
             } else {
-                window.location.href = '/customer-booking.html';
+                // Default fallback
+                window.location.href = '/staff-booking.html';
             }
         } else {
             messageDiv.innerText = data.message || "Đăng nhập thất bại!";
