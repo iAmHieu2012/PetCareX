@@ -843,7 +843,8 @@ BEGIN
     FROM NHAN_VIEN nv 
     JOIN BANG_LUONG bl ON nv.ChucVu = bl.ChucVu
     JOIN CHI_NHANH cn ON nv.MaChiNhanh = cn.MaChiNhanh
-    WHERE (@MaNV IS NULL OR nv.MaNhanVien = @MaNV);
+    WHERE (@MaNV IS NULL OR nv.MaNhanVien = @MaNV)
+    ORDER BY nv.ChucVu;
 END;
 GO
 -- Chạy thử: EXEC SP_LayHoSoNhanVien 'NV00000001'

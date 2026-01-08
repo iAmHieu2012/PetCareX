@@ -66,7 +66,9 @@ exports.login = async (req, res) => {
         res.json({
             message: "Đăng nhập thành công!",
             token,
-            user: { name: user.HoTen, role: user.VaiTro }
+            user: { name: user.HoTen, role: user.VaiTro },
+            maKhachHang: user.MaKhachHang || '',
+            maNhanVien: user.MaNhanVien || ''
         });
     } catch (err) {
         res.status(500).json({ error: err.message });

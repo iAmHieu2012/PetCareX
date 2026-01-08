@@ -27,15 +27,21 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
             // 1. Lưu Token và thông tin User vào LocalStorage
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
+            localStorage.setItem('userRole', data.user.role);
+            localStorage.setItem('maKhachHang', data.maKhachHang || '');
+            localStorage.setItem('maNhanVien', data.maNhanVien || '');
 
             // 2. Thông báo và chuyển hướng
             alert(`Chào mừng ${data.user.name} (${data.user.role}) quay trở lại!`);
             
-            // Tùy vào vai trò mà chuyển đến trang tương ứng
-            if (data.user.role === 'Admin' || data.user.role === 'QuanLi') {
-                window.location.href = '/dashboard.html';
+            // 3. Chuyển tới trang phù hợp theo role
+            const isStaff = data.user.role === 'NhanVien' || data.user.role === 'Tiếp tân' || 
+                           data.user.role === 'BacSiThuY' || data.user.role === 'NhanVienBanHang';
+            
+            if (isStaff) {
+                window.location.href = '/staff-booking.html';
             } else {
-                window.location.href = '/user-profile.html';
+                window.location.href = '/customer-booking.html';
             }
         } else {
             messageDiv.innerText = data.message || "Đăng nhập thất bại!";
