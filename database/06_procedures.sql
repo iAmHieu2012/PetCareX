@@ -558,36 +558,6 @@ GO
 -- Chạy thử: EXEC SP_TiepNhanLichHen 'LH00000002', 'CN00000001', 'PDV0000001', 'KH00000001'
 -- GO
 
--- Quản trị xác nhận lịch hẹn (Phiên bản rút gọn tự động tạo mã PDV)
-CREATE OR ALTER PROCEDURE SP_QuanTriXacNhanLichHen
-    @MaLichHen CHAR(10),
-    @MaNhanVienXacNhan CHAR(10)
-AS
-BEGIN
-    BEGIN TRANSACTION;
-    DECLARE @MaPhieuDichVu CHAR(10);
-    DECLARE @MaKhachHang CHAR(10);
-    DECLARE @MaChiNhanh CHAR(10);
-    
-    SELECT @MaKhachHang = MaKhachHang, @MaChiNhanh = MaChiNhanh FROM LICH_HEN WHERE MaLichHen = @MaLichHen;
-    
-    SET @MaPhieuDichVu = 'PDV' + REPLACE(CONVERT(VARCHAR, GETDATE(), 112), '-', '') + RIGHT('0000' + CAST((SELECT COUNT(*) + 1 FROM PHIEU_DICH_VU) AS VARCHAR), 4);
-
-    INSERT INTO PHIEU_DICH_VU(MaPhieuDichVu, TongTien, MaChiNhanh, MaKhachHang)
-    VALUES (@MaPhieuDichVu, 0, @MaChiNhanh, @MaKhachHang);
-    
-    UPDATE LICH_HEN
-    SET TrangThai = N'Đã xác nhận',
-        MaNhanVienXacNhan = @MaNhanVienXacNhan,
-        MaPhieuDichVu = @MaPhieuDichVu
-    WHERE MaLichHen = @MaLichHen;
-    
-    COMMIT TRANSACTION;
-END;
-GO
--- Chạy thử: EXEC SP_QuanTriXacNhanLichHen 'LH00000001', 'NV00000001'
--- GO
-
 -- Ghi nhận kết quả khám bệnh (Dành cho bác sĩ)
 CREATE OR ALTER PROCEDURE SP_GhiNhanPhieuKhamBenh
     @MaPhieuDichVu CHAR(10),

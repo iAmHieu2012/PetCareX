@@ -367,12 +367,12 @@ CREATE TABLE TAI_KHOAN (
     TenDangNhap VARCHAR(50) NOT NULL UNIQUE,
     MatKhau VARCHAR(255) NOT NULL, -- Lưu Hash Password
     Email VARCHAR(50) NOT NULL UNIQUE,
-    VaiTro NVARCHAR(20) NOT NULL, -- 'KhachHang', 'NhanVien', 'Admin'
+    VaiTro NVARCHAR(20) NOT NULL, -- 'Admin', 'BanHang', 'TiepTan', 'QuanLi', 'BacSi', 'KhachHang'
     MaKhachHang CHAR(10) NULL,    -- Link tới bảng KHACH_HANG
     MaNhanVien CHAR(10) NULL,     -- Link tới bảng NHAN_VIEN
     TrangThai NVARCHAR(20) DEFAULT N'Hoạt động',
     NgayTao DATETIME DEFAULT GETDATE(),
-    CONSTRAINT CHK_TaiKhoan_VaiTro CHECK (VaiTro IN (N'Admin', N'QuanLi', N'NhanVien', N'KhachHang')),
+    CONSTRAINT CHK_TaiKhoan_VaiTro CHECK (VaiTro IN (N'Admin', N'BanHang', N'TiepTan', N'QuanLi', N'BacSi', N'KhachHang')),
     CONSTRAINT CHK_TaiKhoan_LienKet CHECK (
         (MaKhachHang IS NOT NULL AND MaNhanVien IS NULL) OR 
         (MaNhanVien IS NOT NULL AND MaKhachHang IS NULL) OR

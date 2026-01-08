@@ -478,7 +478,7 @@ INSERT INTO TAI_KHOAN (TenDangNhap, MatKhau, Email, VaiTro, MaKhachHang, MaNhanV
 VALUES ('admin_root', 'admin123', 'admin@petcarex.com', N'Admin', NULL, NULL);
 
 -- =============================================================
--- PHẦN 2: TÀI KHOẢN QUẢN LÝ (VAI TRÒ: QUANLI) - Liên kết NV01-NV04
+-- PHẦN 2: TÀI KHOẢN QUẢN LÝ (VAI TRÒ: QuanLi) - Liên kết NV01-NV04
 -- =============================================================
 INSERT INTO TAI_KHOAN (TenDangNhap, MatKhau, Email, VaiTro, MaNhanVien) VALUES
 ('an.nguyen',   'ql123', 'an.nguyen@petcarex.com',   N'QuanLi', 'NV00000001'),
@@ -487,33 +487,36 @@ INSERT INTO TAI_KHOAN (TenDangNhap, MatKhau, Email, VaiTro, MaNhanVien) VALUES
 ('dung.pham',   'ql123', 'dung.pham@petcarex.com',   N'QuanLi', 'NV00000004');
 
 -- =============================================================
--- PHẦN 3: TÀI KHOẢN NHÂN VIÊN (VAI TRÒ: NHANVIEN) - Liên kết NV05-NV18
+-- PHẦN 3: TÀI KHOẢN BÁC SĨ (VAI TRÒ: BacSi) - Liên kết NV05-NV10
 -- =============================================================
--- Bác sĩ thú y (NV05 - NV10)
 INSERT INTO TAI_KHOAN (TenDangNhap, MatKhau, Email, VaiTro, MaNhanVien) VALUES
-('em.hoang',    'nv123', 'em.hoang@petcarex.com',    N'NhanVien', 'NV00000005'),
-('phuong.vo',   'nv123', 'phuong.vo@petcarex.com',   N'NhanVien', 'NV00000006'),
-('giang.dang',  'nv123', 'giang.dang@petcarex.com',  N'NhanVien', 'NV00000007'),
-('hoa.bui',     'nv123', 'hoa.bui@petcarex.com',     N'NhanVien', 'NV00000008'),
-('inh.truong',  'nv123', 'inh.truong@petcarex.com',  N'NhanVien', 'NV00000009'),
-('kim.ly',      'nv123', 'kim.ly@petcarex.com',      N'NhanVien', 'NV00000010');
-
--- Tiếp tân (NV11 - NV14)
-INSERT INTO TAI_KHOAN (TenDangNhap, MatKhau, Email, VaiTro, MaNhanVien) VALUES
-('long.phan',   'nv123', 'long.phan@petcarex.com',   N'NhanVien', 'NV00000011'),
-('mai.ngo',     'nv123', 'mai.ngo@petcarex.com',     N'NhanVien', 'NV00000012'),
-('nam.do',      'nv123', 'nam.do@petcarex.com',      N'NhanVien', 'NV00000013'),
-('oanh.nguyen', 'nv123', 'oanh.nguyen@petcarex.com', N'NhanVien', 'NV00000014');
-
--- Nhân viên bán hàng (NV15 - NV18)
-INSERT INTO TAI_KHOAN (TenDangNhap, MatKhau, Email, VaiTro, MaNhanVien) VALUES
-('phuc.huynh',  'nv123', 'phuc.huynh@petcarex.com',  N'NhanVien', 'NV00000015'),
-('quynh.cao',   'nv123', 'quynh.cao@petcarex.com',   N'NhanVien', 'NV00000016'),
-('rong.lam',    'nv123', 'rong.lam@petcarex.com',    N'NhanVien', 'NV00000017'),
-('suong.dinh',  'nv123', 'suong.dinh@petcarex.com',  N'NhanVien', 'NV00000018');
+('em.hoang',    'bs123', 'em.hoang@petcarex.com',    N'BacSi', 'NV00000005'),
+('phuong.vo',   'bs123', 'phuong.vo@petcarex.com',   N'BacSi', 'NV00000006'),
+('giang.dang',  'bs123', 'giang.dang@petcarex.com',  N'BacSi', 'NV00000007'),
+('hoa.bui',     'bs123', 'hoa.bui@petcarex.com',     N'BacSi', 'NV00000008'),
+('inh.truong',  'bs123', 'inh.truong@petcarex.com',  N'BacSi', 'NV00000009'),
+('kim.ly',      'bs123', 'kim.ly@petcarex.com',      N'BacSi', 'NV00000010');
 
 -- =============================================================
--- PHẦN 4: TÀI KHOẢN KHÁCH HÀNG (VAI TRÒ: KHACHHANG) - Liên kết KH01-KH10
+-- PHẦN 4: TÀI KHOẢN TIẾP TÂN (VAI TRÒ: TiepTan) - Liên kết NV11-NV14
+-- =============================================================
+INSERT INTO TAI_KHOAN (TenDangNhap, MatKhau, Email, VaiTro, MaNhanVien) VALUES
+('long.phan',   'tt123', 'long.phan@petcarex.com',   N'TiepTan', 'NV00000011'),
+('mai.ngo',     'tt123', 'mai.ngo@petcarex.com',     N'TiepTan', 'NV00000012'),
+('nam.do',      'tt123', 'nam.do@petcarex.com',      N'TiepTan', 'NV00000013'),
+('oanh.nguyen', 'tt123', 'oanh.nguyen@petcarex.com', N'TiepTan', 'NV00000014');
+
+-- =============================================================
+-- PHẦN 5: TÀI KHOẢN BÁN HÀNG (VAI TRÒ: BanHang) - Liên kết NV15-NV18
+-- =============================================================
+INSERT INTO TAI_KHOAN (TenDangNhap, MatKhau, Email, VaiTro, MaNhanVien) VALUES
+('phuc.huynh',  'bh123', 'phuc.huynh@petcarex.com',  N'BanHang', 'NV00000015'),
+('quynh.cao',   'bh123', 'quynh.cao@petcarex.com',   N'BanHang', 'NV00000016'),
+('rong.lam',    'bh123', 'rong.lam@petcarex.com',    N'BanHang', 'NV00000017'),
+('suong.dinh',  'bh123', 'suong.dinh@petcarex.com',  N'BanHang', 'NV00000018');
+
+-- =============================================================
+-- PHẦN 6: TÀI KHOẢN KHÁCH HÀNG (VAI TRÒ: KhachHang) - Liên kết KH01-KH10
 -- =============================================================
 INSERT INTO TAI_KHOAN (TenDangNhap, MatKhau, Email, VaiTro, MaKhachHang) VALUES
 ('kh_lan',      'kh123', 'lan.nguyen@email.com',   N'KhachHang', 'KH00000001'),
