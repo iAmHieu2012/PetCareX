@@ -35,11 +35,12 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
             alert(`Chào mừng ${data.user.name} (${data.user.role}) quay trở lại!`);
             
             // 3. Chuyển tới trang phù hợp theo role
-            const isStaff = data.user.role === 'NhanVien' || data.user.role === 'Tiếp tân' || 
-                           data.user.role === 'BacSiThuY' || data.user.role === 'NhanVienBanHang';
+            const isStaff = data.user.role === 'NhanVien';
             
             if (isStaff) {
                 window.location.href = '/staff-booking.html';
+            } else if (data.user.role === 'KhachHang') {
+                window.location.href = '/customer-dashboard.html';
             } else {
                 window.location.href = '/customer-booking.html';
             }

@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Khách Hàng - PetCareX</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/customer-dashboard.css">
+</head>
+<body>
+    <!-- Header/Navigation -->
+    <header class="header">
+        <div class="header-container">
+            <div class="logo">
+                <i class="fas fa-paw"></i>
+                <span>PetCareX</span>
+            </div>
+            <div class="header-right">
+                <div class="user-info">
+                    <span id="user-name">Xin chào, Khách hàng</span>
+                    <span id="user-points" class="loyalty-points"></span>
+                </div>
+                <button id="logout-btn" class="btn-logout">
+                    <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="dashboard-container">
+        <!-- Welcome Banner -->
+        <div class="welcome-banner">
+            <div class="banner-content">
+                <h1 id="greeting-message">Chào mừng bạn trở lại!</h1>
+                <p>Quản lý thú cưng và đặt lịch hẹn dịch vụ của bạn</p>
+            </div>
+            <div class="banner-icon">
+                <i class="fas fa-heart"></i>
+            </div>
+        </div>
+
+        <!-- Tabs Navigation -->
+        <div class="tabs-navigation">
+            <div class="tabs-header">
+                <button class="tab-btn active" data-tab="pets">
+                    <i class="fas fa-cat"></i>
+                    <span>Thú Cưng Của Tôi</span>
+                </button>
+                <button class="tab-btn" data-tab="bookings">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Lịch Hẹn</span>
+                </button>
+                <button class="tab-btn" data-tab="profile">
+                    <i class="fas fa-user"></i>
+                    <span>Thông Tin Cá Nhân</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Tabs Content -->
+        <div class="tabs-content">
+            <!-- Tab 1: Pets Management -->
+            <div class="tab-pane active" id="pets-tab">
+                <div class="tab-header">
+                    <h2><i class="fas fa-paw"></i> Thú Cưng Của Tôi</h2>
+                    <button id="add-pet-btn" class="btn-primary">
+                        <i class="fas fa-plus"></i> Thêm Thú Cưng
+                    </button>
+                </div>
+
+                <div id="pets-container" class="pets-grid">
+                    <!-- Pets will be loaded here -->
+                    <div class="loading-message">
+                        <i class="fas fa-spinner fa-spin"></i> Đang tải thông tin thú cưng...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 2: Bookings -->
+            <div class="tab-pane" id="bookings-tab">
+                <div class="tab-header">
+                    <h2><i class="fas fa-calendar-alt"></i> Lịch Hẹn</h2>
+                    <button id="new-booking-btn" class="btn-primary">
+                        <i class="fas fa-plus"></i> Đặt Lịch Hẹn Mới
+                    </button>
+                </div>
+
+                <div class="bookings-filters">
+                    <button class="filter-btn active" data-filter="all">
+                        Tất Cả
+                    </button>
+                    <button class="filter-btn" data-filter="pending">
+                        Chờ Xác Nhận
+                    </button>
+                    <button class="filter-btn" data-filter="confirmed">
+                        Đã Xác Nhận
+                    </button>
+                    <button class="filter-btn" data-filter="completed">
+                        Hoàn Thành
+                    </button>
+                </div>
+
+                <div id="bookings-container" class="bookings-list">
+                    <!-- Bookings will be loaded here -->
+                    <div class="loading-message">
+                        <i class="fas fa-spinner fa-spin"></i> Đang tải lịch hẹn...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 3: Profile -->
+            <div class="tab-pane" id="profile-tab">
+                <div class="tab-header">
+                    <h2><i class="fas fa-user"></i> Thông Tin Cá Nhân</h2>
+                </div>
+
+                <div class="profile-content">
+                    <div class="profile-section">
+                        <h3>Thông Tin Tài Khoản</h3>
+                        <div class="profile-info">
+                            <div class="info-row">
+                                <label>Tên Khách Hàng:</label>
+                                <span id="profile-name">-</span>
+                            </div>
+                            <div class="info-row">
+                                <label>Email:</label>
+                                <span id="profile-email">-</span>
+                            </div>
+                            <div class="info-row">
+                                <label>Số Điện Thoại:</label>
+                                <span id="profile-phone">-</span>
+                            </div>
+                            <div class="info-row">
+                                <label>Số CCCD:</label>
+                                <span id="profile-cccd">-</span>
+                            </div>
+                            <div class="info-row">
+                                <label>Giới Tính:</label>
+                                <span id="profile-gender">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="profile-section">
+                        <h3>Điểm Tích Lũy</h3>
+                        <div class="loyalty-info">
+                            <div class="loyalty-badge">
+                                <span id="profile-points" class="points-number">0</span>
+                                <span class="points-label">Điểm</span>
+                            </div>
+                            <p id="loyalty-tier" class="loyalty-tier">Cơ bản</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add Pet Modal -->
+    <div id="add-pet-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Thêm Thú Cưng Mới</h2>
+                <button class="modal-close" id="close-pet-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="add-pet-form" class="modal-body">
+                <div class="form-group">
+                    <label for="pet-name">Tên Thú Cưng <span class="required">*</span></label>
+                    <input type="text" id="pet-name" name="petName" required placeholder="Nhập tên thú cưng">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="pet-type">Loại Thú Cưng <span class="required">*</span></label>
+                        <select id="pet-type" name="petType" required>
+                            <option value="">-- Chọn loại --</option>
+                            <option value="Chó">Chó</option>
+                            <option value="Mèo">Mèo</option>
+                            <option value="Thỏ">Thỏ</option>
+                            <option value="Chim">Chim</option>
+                            <option value="Chuột">Chuột</option>
+                            <option value="Khác">Khác</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="pet-breed">Giống Loài</label>
+                        <input type="text" id="pet-breed" name="petBreed" placeholder="Nhập giống">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="pet-dob">Ngày Sinh <span class="required">*</span></label>
+                        <input type="date" id="pet-dob" name="petDOB" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="pet-gender">Giới Tính</label>
+                        <select id="pet-gender" name="petGender">
+                            <option value="">-- Chọn giới tính --</option>
+                            <option value="Đực">Đực</option>
+                            <option value="Cái">Cái</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="pet-health">Tình Trạng Sức Khỏe</label>
+                    <textarea id="pet-health" name="petHealth" placeholder="Mô tả tình trạng sức khỏe hiện tại" rows="3"></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" id="cancel-pet-btn">Hủy</button>
+                    <button type="submit" class="btn-primary">Thêm Thú Cưng</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Pet Detail Modal -->
+    <div id="pet-detail-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="pet-detail-name">Chi Tiết Thú Cưng</h2>
+                <button class="modal-close" id="close-pet-detail-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body pet-detail-body">
+                <!-- Pet details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- New Booking Modal -->
+    <div id="booking-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Đặt Lịch Hẹn Mới</h2>
+                <button class="modal-close" id="close-booking-modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="booking-form" class="modal-body">
+                <div class="form-group">
+                    <label for="booking-pet">Chọn Thú Cưng <span class="required">*</span></label>
+                    <select id="booking-pet" name="pet" required>
+                        <option value="">-- Chọn thú cưng --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="booking-service">Dịch Vụ <span class="required">*</span></label>
+                    <select id="booking-service" name="service" required>
+                        <option value="">-- Chọn dịch vụ --</option>
+                        <option value="Khám">Khám Tổng Hợp</option>
+                        <option value="Tắm">Tắm</option>
+                        <option value="Cắt Móng">Cắt Móng</option>
+                        <option value="Tích Chủng">Tích Chủng</option>
+                        <option value="Khác">Khác</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="booking-branch">Chi Nhánh <span class="required">*</span></label>
+                    <select id="booking-branch" name="branch" required>
+                        <option value="">-- Chọn chi nhánh --</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="booking-date">Ngày Hẹn <span class="required">*</span></label>
+                        <input type="date" id="booking-date" name="date" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="booking-time">Giờ Hẹn <span class="required">*</span></label>
+                        <input type="time" id="booking-time" name="time" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="booking-notes">Ghi Chú</label>
+                    <textarea id="booking-notes" name="notes" placeholder="Ghi chú thêm nếu cần..." rows="3"></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" id="cancel-booking-btn">Hủy</button>
+                    <button type="submit" class="btn-primary">Đặt Lịch</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Alert/Notification -->
+    <div id="alert-container"></div>
+
+    <script type="module" src="js/customer-dashboard.js"></script>
+</body>
+</html>
