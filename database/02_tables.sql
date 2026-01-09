@@ -70,7 +70,7 @@ CREATE TABLE NHAN_VIEN (
     GioiTinh NVARCHAR(3) NOT NULL,
     NgayVaoLam DATE NOT NULL,
     ChucVu NVARCHAR(20) NOT NULL,
-    NguoiQuanLi CHAR(10), -- Có thể NULL cho người quản lý cấp cao nhất
+    NguoiQuanLi CHAR(10), -- Có thể NULL cho người quản lí cấp cao nhất
     MaChiNhanh CHAR(10) NOT NULL,
     CONSTRAINT CHK_NhanVien_GioiTinh CHECK (GioiTinh IN (N'Nam', N'Nữ')),
     CONSTRAINT CHK_NhanVien_ChucVu CHECK (ChucVu IN (N'Bác sĩ thú y', N'Nhân viên bán hàng', N'Quản lí', N'Tiếp tân')),
@@ -95,7 +95,7 @@ CREATE TABLE LICH_SU_DIEU_DONG (
     NgayKetThuc DATE,
     ViTri NVARCHAR(20) NOT NULL,
     PRIMARY KEY (MaNhanVien, MaChiNhanh, NgayBatDau),
-    CONSTRAINT CHK_LichSuDieuDong_ViTri CHECK (ViTri IN (N'Bác sĩ thú y', N'Nhân viên bán hàng', N'Quản lý', N'Tiếp tân')),
+    CONSTRAINT CHK_LichSuDieuDong_ViTri CHECK (ViTri IN (N'Bác sĩ thú y', N'Nhân viên bán hàng', N'Quản lí', N'Tiếp tân')),
 	CONSTRAINT CHK_LichSuDieuDong_NgayBatDau_NgayKetThuc CHECK (NgayKetThuc IS NULL OR NgayBatDau < NgayKetThuc)
 );
 GO
