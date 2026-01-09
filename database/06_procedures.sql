@@ -558,6 +558,55 @@ GO
 -- Chạy thử: EXEC SP_TiepNhanLichHen 'LH00000002', 'CN00000001', 'PD00000001', 'KH00000001'
 -- GO
 
+-- Tạo phiếu dịch vụ từ lịch hẹn (Tiếp tân gọi khi xác nhận lịch hẹn)
+CREATE OR ALTER PROCEDURE SP_TaoPhieuDichVuTuLichHen
+    @MaLichHen CHAR(10),
+    @MaChiNhanh CHAR(10),
+    @MaPhieuDichVu CHAR(10) OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRY
+        -- Kiểm tra lịch hẹn có tồn tại không
+        IF NOT EXISTS (SELECT 1 FROM LICH_HEN WHERE MaLichHen = @MaLichHen AND MaChiNhanh = @MaChiNhanh)
+        BEGIN
+            RAISERROR(N'Lỗi: Không tìm thấy lịch hẹn %s tại chi nhánh %s.', 16, 1, @MaLichHen, @MaChiNhanh);
+            RETURN;
+        END
+
+        -- Kiểm tra lịch hẹn đã có phiếu dịch vụ chưa
+        DECLARE @ExistingPDV CHAR(10);
+        SELECT @ExistingPDV = MaPhieuDichVu FROM LICH_HEN WHERE MaLichHen = @MaLichHen AND MaChiNhanh = @MaChiNhanh;
+        
+        IF @ExistingPDV IS NOT NULL
+        BEGIN
+            SET @MaPhieuDichVu = @ExistingPDV;
+            PRINT N'Lịch hẹn đã có phiếu dịch vụ: ' + @MaPhieuDichVu;
+            RETURN;
+        END
+
+        -- Lấy thông tin lịch hẹn
+        DECLARE @MaKhachHang CHAR(10);
+        SELECT @MaKhachHang = MaKhachHang FROM LICH_HEN WHERE MaLichHen = @MaLichHen AND MaChiNhanh = @MaChiNhanh;
+
+        -- Tạo phiếu dịch vụ mới
+        INSERT INTO PHIEU_DICH_VU (MaPhieuDichVu, TongTien, MaChiNhanh, MaKhachHang)
+        VALUES (@MaPhieuDichVu, 0.00, @MaChiNhanh, @MaKhachHang);
+
+        -- Update lịch hẹn với mã phiếu dịch vụ
+        UPDATE LICH_HEN 
+        SET MaPhieuDichVu = @MaPhieuDichVu, TrangThai = N'Đã xác nhận'
+        WHERE MaLichHen = @MaLichHen AND MaChiNhanh = @MaChiNhanh;
+
+        PRINT N'Đã tạo phiếu dịch vụ ' + @MaPhieuDichVu + ' cho lịch hẹn ' + @MaLichHen;
+    END TRY
+    BEGIN CATCH
+        DECLARE @ErrMsg NVARCHAR(4000) = ERROR_MESSAGE();
+        RAISERROR(@ErrMsg, 16, 1);
+    END CATCH
+END;
+GO
+
 -- Tạo phiếu khám bệnh mới (Tiếp tân tạo sau khi tiếp nhận lịch hẹn + phân công bác sĩ)
 CREATE OR ALTER PROCEDURE SP_TaoPhieuKhamBenh
     @MaPhieuDichVu CHAR(10),
@@ -1463,11 +1512,10 @@ BEGIN
 END;
 GO
 
--- 3. Tạo Hóa đơn (Nhân viên xác nhận thu tiền)
+-- 3. Tạo Hóa đơn (Tự động tạo với HinhThucThanhToan = NULL để chờ xác nhận)
 CREATE OR ALTER PROCEDURE SP_ThemHoaDon
     @MaHoaDon CHAR(10),
     @NgayLap DATE,
-    @HinhThucThanhToan NVARCHAR(20),
     @MaPhieuDichVu CHAR(10),
     @MaNhanVien CHAR(10)
 AS
@@ -1479,7 +1527,8 @@ BEGIN
     SELECT @TongTienPDV = TongTien FROM PHIEU_DICH_VU WHERE MaPhieuDichVu = @MaPhieuDichVu;
 
     -- MaThuCung để NULL cho đơn hàng bán lẻ thuần túy
+    -- HinhThucThanhToan = NULL để biểu thị trạng thái "Chờ thanh toán"
     INSERT INTO HOA_DON (MaHoaDon, NgayLap, TongTienThanhToan, KhuyenMai, HinhThucThanhToan, MaPhieuDichVu, MaNhanVien, MaThuCung)
-    VALUES (@MaHoaDon, @NgayLap, @TongTienPDV, 0.00, @HinhThucThanhToan, @MaPhieuDichVu, @MaNhanVien, NULL);
+    VALUES (@MaHoaDon, @NgayLap, @TongTienPDV, 0.00, NULL, @MaPhieuDichVu, @MaNhanVien, NULL);
 END;
 GO

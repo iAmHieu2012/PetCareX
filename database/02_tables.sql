@@ -203,13 +203,14 @@ CREATE TABLE HOA_DON (
     NgayLap DATE,
     TongTienThanhToan DECIMAL(11, 2) NOT NULL, -- Cột phi chuẩn hóa
     KhuyenMai FLOAT,
-    HinhThucThanhToan NVARCHAR(20),
+    HinhThucThanhToan NVARCHAR(20), -- NULL = Chờ thanh toán, 'Đã hủy' = Hủy, Khác = Đã thanh toán
     MaPhieuDichVu CHAR(10) NOT NULL,
     MaNhanVien CHAR(10) NOT NULL,
     MaThuCung CHAR(10), -- Cột phi chuẩn hóa
     CONSTRAINT PK_HOA_DON PRIMARY KEY CLUSTERED (MaHoaDon, NgayLap),
 	CONSTRAINT CHK_HoaDon_TongTienThanhToan CHECK (TongTienThanhToan >= 0),
-    CONSTRAINT CHK_HoaDon_KhuyenMai CHECK (KhuyenMai >= 0)
+    CONSTRAINT CHK_HoaDon_KhuyenMai CHECK (KhuyenMai >= 0),
+    CONSTRAINT CHK_HoaDon_HinhThucThanhToan CHECK (HinhThucThanhToan IS NULL OR HinhThucThanhToan IN (N'Tiền mặt', N'Thẻ tín dụng', N'Chuyển khoản', N'Đã hủy'))
 ) ON PS_HoaDon_TheoQuy(NgayLap);
 GO
 
