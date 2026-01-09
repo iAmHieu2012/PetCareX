@@ -1353,3 +1353,133 @@ END;
 GO
 -- Chạy thử: EXEC SP_NhanVienTraLoi 'HD00000001', '2026-01-01', N'Cảm ơn quý khách!'
 -- GO
+
+CREATE OR ALTER PROCEDURE SP_Report_Comprehensive
+    @MaCN CHAR(10),
+    @Loai NVARCHAR(10), -- 'Ngay', 'Thang', 'Quy', 'Nam'
+    @GiaTri INT,
+    @Nam INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- TẬP KẾT QUẢ 1: CÁC CHỈ SỐ KPI TỔNG HỢP
+    SELECT 
+        -- 1. Tổng doanh thu (Tất cả hóa đơn)
+        ISNULL(SUM(HD.TongTienThanhToan), 0) AS TongDoanhThu,
+        
+        -- 2. Doanh thu Dịch vụ (Khám hoặc Tiêm)
+        ISNULL(SUM(CASE 
+            WHEN PKB.MaPhieuDichVu IS NOT NULL OR PTP.MaPhieuDichVu IS NOT NULL 
+            THEN HD.TongTienThanhToan ELSE 0 END), 0) AS DoanhThuDichVu,
+        
+        -- 3. Doanh thu Sản phẩm (Từ phiếu mua hàng)
+        ISNULL(SUM(CASE 
+            WHEN PMH.MaPhieuDichVu IS NOT NULL 
+            THEN HD.TongTienThanhToan ELSE 0 END), 0) AS DoanhThuSanPham,
+        
+        -- 4. Số lượt khám (Số hóa đơn thuộc loại Dịch vụ)
+        COUNT(DISTINCT CASE 
+            WHEN PKB.MaPhieuDichVu IS NOT NULL OR PTP.MaPhieuDichVu IS NOT NULL 
+            THEN HD.MaHoaDon END) AS SoLuotKham
+            
+    FROM HOA_DON HD
+    JOIN PHIEU_DICH_VU PDV ON HD.MaPhieuDichVu = PDV.MaPhieuDichVu
+    -- Thay vì dùng EXISTS trong SUM, ta LEFT JOIN để kiểm tra sự tồn tại
+    LEFT JOIN PHIEU_MUA_HANG PMH ON PDV.MaPhieuDichVu = PMH.MaPhieuDichVu
+    LEFT JOIN PHIEU_KHAM_BENH PKB ON PDV.MaPhieuDichVu = PKB.MaPhieuDichVu
+    LEFT JOIN PHIEU_TIEM_PHONG PTP ON PDV.MaPhieuDichVu = PTP.MaPhieuDichVu
+    WHERE (@MaCN = 'ALL' OR PDV.MaChiNhanh = @MaCN)
+      AND (
+          (@Loai = 'Ngay' AND (MONTH(HD.NgayLap) * 100 + DAY(HD.NgayLap)) = @GiaTri AND YEAR(HD.NgayLap) = @Nam) OR
+          (@Loai = 'Thang' AND MONTH(HD.NgayLap) = @GiaTri AND YEAR(HD.NgayLap) = @Nam) OR
+          (@Loai = 'Quy' AND DATEPART(QUARTER, HD.NgayLap) = @GiaTri AND YEAR(HD.NgayLap) = @Nam) OR
+          (@Loai = 'Nam' AND YEAR(HD.NgayLap) = @Nam)
+      );
+
+    -- TẬP KẾT QUẢ 2: HIỆU SUẤT BÁC SĨ (Performance)
+    SELECT 
+        NV.HoTen,
+        SUM(HD.TongTienThanhToan) AS DoanhThuTaoRa
+    FROM (
+        SELECT MaPhieuDichVu, MaBacSi FROM PHIEU_KHAM_BENH
+        UNION ALL
+        SELECT MaPhieuDichVu, MaBacSi FROM PHIEU_TIEM_PHONG
+    ) AS CongViec
+    JOIN NHAN_VIEN NV ON CongViec.MaBacSi = NV.MaNhanVien
+    JOIN PHIEU_DICH_VU PDV ON CongViec.MaPhieuDichVu = PDV.MaPhieuDichVu
+    JOIN HOA_DON HD ON PDV.MaPhieuDichVu = HD.MaPhieuDichVu
+    WHERE (@MaCN = 'ALL' OR PDV.MaChiNhanh = @MaCN)
+      AND YEAR(HD.NgayLap) = @Nam
+      AND (@Loai <> 'Thang' OR MONTH(HD.NgayLap) = @GiaTri)
+    GROUP BY NV.HoTen;
+END;
+GO
+
+--==============================================================
+-- Phần 9: QUẢN LÝ BÁN LẺ & HÓA ĐƠN
+--==============================================================
+
+-- 1. Tạo Phiếu dịch vụ & Phiếu mua hàng (Khách nhấn Thanh toán)
+CREATE OR ALTER PROCEDURE SP_ThemPhieuDichVu
+    @MaPhieuDichVu CHAR(10),
+    @MaKhachHang CHAR(10),
+    @MaChiNhanh CHAR(10)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    -- Thêm vào PHIEU_DICH_VU trước
+    INSERT INTO PHIEU_DICH_VU (MaPhieuDichVu, TongTien, MaChiNhanh, MaKhachHang)
+    VALUES (@MaPhieuDichVu, 0.00, @MaChiNhanh, @MaKhachHang);
+
+    -- PHẢI thêm vào PHIEU_MUA_HANG vì CHI_TIET_MUA_HANG tham chiếu tới bảng này
+    INSERT INTO PHIEU_MUA_HANG (MaPhieuDichVu)
+    VALUES (@MaPhieuDichVu);
+END;
+GO
+
+-- 2. Thêm chi tiết mua hàng
+CREATE OR ALTER PROCEDURE SP_ThemChiTietMuaHang
+    @MaPhieuDichVu CHAR(10),
+    @SoThuTu INT,
+    @SoLuong INT,
+    @MaSanPham CHAR(10)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @GiaBan DECIMAL(11, 2);
+    
+    -- Lấy giá từ bảng SAN_PHAM để cập nhật cột TongTien phi chuẩn hóa
+    SELECT @GiaBan = GiaBan FROM SAN_PHAM WHERE MaSanPham = @MaSanPham;
+
+    INSERT INTO CHI_TIET_MUA_HANG (MaPhieuDichVu, SoThuTu, SoLuong, MaSanPham)
+    VALUES (@MaPhieuDichVu, @SoThuTu, @SoLuong, @MaSanPham);
+
+    -- Cập nhật cột TongTien trong PHIEU_DICH_VU
+    UPDATE PHIEU_DICH_VU 
+    SET TongTien = TongTien + (@GiaBan * @SoLuong)
+    WHERE MaPhieuDichVu = @MaPhieuDichVu;
+END;
+GO
+
+-- 3. Tạo Hóa đơn (Nhân viên xác nhận thu tiền)
+CREATE OR ALTER PROCEDURE SP_ThemHoaDon
+    @MaHoaDon CHAR(10),
+    @NgayLap DATE,
+    @HinhThucThanhToan NVARCHAR(20),
+    @MaPhieuDichVu CHAR(10),
+    @MaNhanVien CHAR(10)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    DECLARE @TongTienPDV DECIMAL(11, 2);
+
+    -- Lấy TongTien từ Phiếu dịch vụ
+    SELECT @TongTienPDV = TongTien FROM PHIEU_DICH_VU WHERE MaPhieuDichVu = @MaPhieuDichVu;
+
+    -- MaThuCung để NULL cho đơn hàng bán lẻ thuần túy
+    INSERT INTO HOA_DON (MaHoaDon, NgayLap, TongTienThanhToan, KhuyenMai, HinhThucThanhToan, MaPhieuDichVu, MaNhanVien, MaThuCung)
+    VALUES (@MaHoaDon, @NgayLap, @TongTienPDV, 0.00, @HinhThucThanhToan, @MaPhieuDichVu, @MaNhanVien, NULL);
+END;
+GO
