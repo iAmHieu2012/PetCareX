@@ -221,7 +221,7 @@ CREATE TABLE DANH_GIA (
     ThaiDoNhanVien INT,
     MucDoHaiLong INT,
     BinhLuan NVARCHAR(100),
-    PhanHoi NVARCHAR(100)
+    PhanHoi NVARCHAR(100),
     CONSTRAINT PK_DANH_GIA PRIMARY KEY (MaHoaDon, NgayLap),
     CONSTRAINT CHK_DanhGia_DiemChatLuong CHECK (DiemChatLuongDichVu IN (1, 2, 3, 4, 5)),
     CONSTRAINT CHK_DanhGia_ThaiDo CHECK (ThaiDoNhanVien IN (1, 2, 3, 4, 5)),

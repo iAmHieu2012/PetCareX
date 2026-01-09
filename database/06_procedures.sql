@@ -555,7 +555,7 @@ BEGIN
     END CATCH
 END;
 GO
--- Chạy thử: EXEC SP_TiepNhanLichHen 'LH00000002', 'CN00000001', 'PDV0000001', 'KH00000001'
+-- Chạy thử: EXEC SP_TiepNhanLichHen 'LH00000002', 'CN00000001', 'PD00000001', 'KH00000001'
 -- GO
 
 -- Tạo phiếu khám bệnh mới (Tiếp tân tạo sau khi tiếp nhận lịch hẹn + phân công bác sĩ)
@@ -607,7 +607,7 @@ BEGIN
     END CATCH
 END;
 GO
--- Chạy thử: EXEC SP_TaoPhieuKhamBenh 'PDV0000001', 'TC00000001', 'NV00000001'
+-- Chạy thử: EXEC SP_TaoPhieuKhamBenh 'PD00000001', 'TC00000001', 'NV00000001'
 -- GO
 
 -- Cập nhật thông tin phiếu khám bệnh (Bác sĩ nhập liệu kết quả khám)
@@ -642,7 +642,7 @@ BEGIN
     END CATCH
 END;
 GO
--- Chạy thử: EXEC SP_CapNhatPhieuKhamBenh 'PDV0000001', N'Ho, sốt, mệt', N'Viêm đường hô hấp', '2026-02-15'
+-- Chạy thử: EXEC SP_CapNhatPhieuKhamBenh 'PD00000001', N'Ho, sốt, mệt', N'Viêm đường hô hấp', '2026-02-15'
 -- GO
 
 -- Tạo phiếu tiêm phòng mới (Tiếp tân tạo sau khi tiếp nhận lịch hẹn + phân công bác sĩ)
@@ -724,7 +724,7 @@ BEGIN
     END CATCH
 END;
 GO
--- Chạy thử: EXEC SP_TaoPhieuTiemPhong 'PDV0000001', 'TC00000001', 'NV00000001', 'GT00000001'
+-- Chạy thử: EXEC SP_TaoPhieuTiemPhong 'PD00000001', 'TC00000001', 'NV00000001', 'GT00000001'
 -- GO
 
 -- Cập nhật thông tin phiếu tiêm phòng (Bác sĩ nhập liệu chi tiết tiêm)
@@ -766,7 +766,7 @@ BEGIN
     END CATCH
 END;
 GO
--- Chạy thử: EXEC SP_CapNhatPhieuTiemPhong 'PDV0000001', '2026-02-01', 'VX00000001', 1
+-- Chạy thử: EXEC SP_CapNhatPhieuTiemPhong 'PD00000001', '2026-02-01', 'VX00000001', 1
 -- GO
 
 -- Ghi nhận kết quả khám bệnh (Cũ - giữ lại để tương thích)
@@ -798,7 +798,7 @@ BEGIN
     END
 END;
 GO
--- Chạy thử: EXEC SP_GhiNhanPhieuKhamBenh 'PDV0000001', N'Ho, sốt', N'Viêm phổi nhẹ', '2026-02-15', 'NV00000001', 'TC00000001'
+-- Chạy thử: EXEC SP_GhiNhanPhieuKhamBenh 'PD00000001', N'Ho, sốt', N'Viêm phổi nhẹ', '2026-02-15', 'NV00000001', 'TC00000001'
 -- GO
 
 -- Thêm thuốc vào toa thuốc của phiếu khám bệnh
@@ -812,7 +812,7 @@ BEGIN
     VALUES(@MaPhieuKhamBenh, @MaThuoc, @SoLuong);
 END;
 GO
--- Chạy thử: EXEC SP_ThemThuocVaoToa 'PDV0000001', 'SP00000002', 10
+-- Chạy thử: EXEC SP_ThemThuocVaoToa 'PD00000001', 'SP00000002', 10
 -- GO
 
 -- Ghi nhận một mũi tiêm phòng (Cũ - giữ lại để tương thích)
@@ -846,7 +846,7 @@ BEGIN
     END
 END;
 GO
--- Chạy thử: EXEC SP_GhiNhanTiemPhong 'PDV0000001', '2026-02-01', 'VX00000001', 1, 'GT00000001', 'TC00000001', 'NV00000001'
+-- Chạy thử: EXEC SP_GhiNhanTiemPhong 'PD00000001', '2026-02-01', 'VX00000001', 1, 'GT00000001', 'TC00000001', 'NV00000001'
 -- GO
 
 -- Xem lịch sử tiêm phòng của một thú cưng
@@ -958,7 +958,7 @@ BEGIN
     END CATCH
 END;
 GO
--- Chạy thử: EXEC SP_LapHoaDonTongHop 'HD00000001', 'PDV0000001', 'NV00000001', 0.05, N'Tiền mặt', 0
+-- Chạy thử: EXEC SP_LapHoaDonTongHop 'HD00000001', 'PD00000001', 'NV00000001', 0.05, N'Tiền mặt', 0
 -- GO
 
 --==============================================================
