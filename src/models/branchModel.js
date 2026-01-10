@@ -80,12 +80,21 @@ const BranchModel = {
         const result = await request.execute('SP_ThongKeHieuSuat_NhanVien');
         return result.recordset;
     },
-    getPetDetails: async (maThuCung) => {
+    getStaffByBranch: async (maChiNhanh) => {
         const pool = await connectDB();
-        const request = pool.request();
-        request.input('MaThuCung', sql.Char(10), maThuCung);
-        const result = await request.execute('SP_TraCuuThuCung_ChiTiet');
-        return result.recordset[0] || null;
+        const result = await pool.request()
+            .input('MaChiNhanh', sql.Char(10), maChiNhanh)
+            .query(`
+                SELECT 
+                    MaNhanVien,
+                    HoTen,
+                    ChucVu AS viTriLamViec,
+                    NgayVaoLam
+                FROM NHAN_VIEN
+                WHERE MaChiNhanh = @MaChiNhanh
+                ORDER BY HoTen
+            `);
+        return result.recordset;
     }
 };
 

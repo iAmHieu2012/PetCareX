@@ -20,10 +20,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function renderContent() {
     try {
-        const [branches, services] = await Promise.all([
+        const [branchesRes, servicesRes] = await Promise.all([
             api.getBranches(),
             api.getServices()
         ]);
+
+        // Unwrap response data
+        const branches = (branchesRes && branchesRes.data) ? branchesRes.data : (Array.isArray(branchesRes) ? branchesRes : []);
+        const services = (servicesRes && servicesRes.data) ? servicesRes.data : (Array.isArray(servicesRes) ? servicesRes : []);
 
         const timeFormatter = new Intl.DateTimeFormat('vi-VN', {
             hour: '2-digit', minute: '2-digit', hour12: false

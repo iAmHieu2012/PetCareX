@@ -34,7 +34,7 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
 
         const data = await response.json();
 
-        if (response.ok) {
+        if (response.ok && data.success) {
             messageDiv.style.color = "green";
             messageDiv.innerText = "Đăng ký thành công! Đang chuyển hướng...";
             setTimeout(() => window.location.href = 'index.html', 2000);

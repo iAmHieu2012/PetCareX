@@ -7,6 +7,13 @@ const authRoutes = require('./routes/authRoutes');
 const branchRoutes = require('./routes/branchRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const customerRoutes = require('./routes/customerRoutes');
+const productRoutes = require('./routes/productRoutes');
+const reportRoutes = require('./routes/reportRoutes');
+const retailRoutes = require('./routes/retailRoutes');
+const petRoutes = require('./routes/petRoutes');
+const medicalFormRoutes = require('./routes/medicalFormRoutes');
+const vaccinationRoutes = require('./routes/vaccinationRoutes');
+const invoiceRoutes = require('./routes/invoiceRoutes');
 
 // 0. Middleware hiện lỗi
 const logger = require('./middlewares/loggerMiddleware'); 
@@ -25,6 +32,13 @@ app.use('/api/auth', authRoutes);
 app.use('/api/branches', branchRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/customer', customerRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/retail', retailRoutes);
+app.use('/api/pets', petRoutes);
+app.use('/api/medical-forms', medicalFormRoutes);
+app.use('/api/vaccinations', vaccinationRoutes);
+app.use('/api/invoices', invoiceRoutes);
 
 // 3. Cấu hình thư mục tĩnh
 // Khi bạn vào localhost:5000/css/style.css, nó sẽ tìm trong thư mục public

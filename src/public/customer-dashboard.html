@@ -53,9 +53,21 @@
                     <i class="fas fa-calendar-alt"></i>
                     <span>Lịch Hẹn</span>
                 </button>
+                <button class="tab-btn" data-tab="vaccination">
+                    <i class="fas fa-syringe"></i>
+                    <span>Gói Tiêm</span>
+                </button>
+                <button class="tab-btn" data-tab="invoices">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <span>Hóa Đơn</span>
+                </button>
                 <button class="tab-btn" data-tab="profile">
                     <i class="fas fa-user"></i>
                     <span>Thông Tin Cá Nhân</span>
+                </button>
+                <button class="tab-btn" data-tab="shop">
+                    <i class="fas fa-shopping-bag"></i>
+                    <span>Cửa hàng</span>
                 </button>
             </div>
         </div>
@@ -111,7 +123,110 @@
                 </div>
             </div>
 
-            <!-- Tab 3: Profile -->
+            <!-- Tab 3: Vaccination Packages -->
+            <div class="tab-pane" id="vaccination-tab">
+                <div class="tab-header">
+                    <h2><i class="fas fa-syringe"></i> Gói Tiêm Phòng</h2>
+                    <p style="color: #666; margin-top: 5px; font-size: 14px;">Đăng ký các gói tiêm chủng để bảo vệ sức khỏe thú cưng của bạn</p>
+                </div>
+
+                <div style="background: white; border-radius: 12px; padding: 20px; margin-top: 20px;">
+                    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 30px;">
+                        <!-- Phần chọn thú cưng và gói tiêm -->
+                        <div>
+                            <div style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 10px; font-weight: 600; color: #333;">Chọn Thú Cưng</label>
+                                <select id="vaccination-pet-select" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
+                                    <option value="">-- Chọn thú cưng --</option>
+                                </select>
+                            </div>
+
+                            <div style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 10px; font-weight: 600; color: #333;">Chọn Chi Nhánh</label>
+                                <select id="vaccination-branch-select" style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
+                                    <option value="">-- Chọn chi nhánh --</option>
+                                </select>
+                            </div>
+
+                            <div id="vaccination-packages-list" style="background: #f8f9fa; border-radius: 8px; padding: 15px; max-height: 500px; overflow-y: auto;">
+                                <p style="color: #999; text-align: center;">Chọn thú cưng để xem gói tiêm</p>
+                            </div>
+                        </div>
+
+                        <!-- Phần hiển thị chi tiết gói tiêm -->
+                        <div>
+                            <div id="vaccination-package-details" style="background: #f8f9fa; border-radius: 8px; padding: 20px; min-height: 300px;">
+                                <p style="color: #999; text-align: center;">Chọn gói tiêm để xem chi tiết</p>
+                            </div>
+
+                            <!-- Phần thanh toán -->
+                            <div style="background: white; border: 2px solid #e0e0e0; border-radius: 8px; padding: 20px; margin-top: 20px;">
+                                <div style="margin-bottom: 15px;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                                        <span style="color: #666;">Giá gốc:</span>
+                                        <span id="vaccination-original-price" style="font-weight: 600;">0 VNĐ</span>
+                                    </div>
+                                    <div style="border-top: 1px solid #ddd; padding-top: 10px; display: flex; justify-content: space-between; font-size: 18px; color: var(--primary); font-weight: 700;">
+                                        <span>Tổng cộng:</span>
+                                        <span id="vaccination-total-price">0 VNĐ</span>
+                                    </div>
+                                </div>
+
+                                <button id="vaccination-register-btn" onclick="vaccinationRegisterPackage()" disabled style="width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin-bottom: 10px;" onmouseover="this.style.background='#5568d3'" onmouseout="this.style.background='var(--primary)'">>
+                                    Đăng Ký Gói
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 4: Hóa Đơn -->
+            <div class="tab-pane" id="invoices-tab">
+                <div class="tab-header">
+                    <h2><i class="fas fa-file-invoice-dollar"></i> Hóa Đơn & Phiếu Dịch Vụ</h2>
+                </div>
+
+                <div style="padding: 20px;">
+                    <!-- Thống kê điểm tích lũy -->
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <p style="margin: 0; font-size: 14px; opacity: 0.9;">Điểm Tích Lũy Hiện Tại</p>
+                            <h3 style="margin: 8px 0 0 0; font-size: 28px;" id="current-points">0</h3>
+                        </div>
+                        <div style="text-align: right;">
+                            <p style="margin: 0; font-size: 12px; opacity: 0.9;">1 điểm = 1,000 VNĐ</p>
+                            <p style="margin: 5px 0 0 0; font-size: 14px;">Có thể tiết kiệm được</p>
+                        </div>
+                    </div>
+
+                    <!-- Sub-tabs để phân loại phiếu dịch vụ -->
+                    <div style="display: flex; gap: 8px; margin-bottom: 20px; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; flex-wrap: wrap;">
+                        <button class="invoice-sub-tab active" data-type="all" onclick="filterInvoicesByType('all')" style="padding: 10px 16px; background: white; border: 2px solid #667eea; color: #667eea; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s;">
+                            <i class="fas fa-list"></i> Tất cả phiếu
+                        </button>
+                        <button class="invoice-sub-tab" data-type="exam" onclick="filterInvoicesByType('exam')" style="padding: 10px 16px; background: white; border: 2px solid #e5e7eb; color: #666; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s;">
+                            <i class="fas fa-stethoscope"></i> Khám bệnh
+                        </button>
+                        <button class="invoice-sub-tab" data-type="vaccine" onclick="filterInvoicesByType('vaccine')" style="padding: 10px 16px; background: white; border: 2px solid #e5e7eb; color: #666; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s;">
+                            <i class="fas fa-syringe"></i> Tiêm phòng
+                        </button>
+                        <button class="invoice-sub-tab" data-type="package" onclick="filterInvoicesByType('package')" style="padding: 10px 16px; background: white; border: 2px solid #e5e7eb; color: #666; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s;">
+                            <i class="fas fa-gift"></i> Gói tiêm
+                        </button>
+                        <button class="invoice-sub-tab" data-type="retail" onclick="filterInvoicesByType('retail')" style="padding: 10px 16px; background: white; border: 2px solid #e5e7eb; color: #666; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s;">
+                            <i class="fas fa-shopping-bag"></i> Mua hàng
+                        </button>
+                    </div>
+
+                    <!-- Danh sách hóa đơn chưa thanh toán -->
+                    <div id="invoices-list-container" style="display: flex; flex-direction: column; gap: 15px;">
+                        <p style="color: #999; text-align: center; padding: 40px 20px;">Đang tải hóa đơn...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 5: Profile -->
             <div class="tab-pane" id="profile-tab">
                 <div class="tab-header">
                     <h2><i class="fas fa-user"></i> Thông Tin Cá Nhân</h2>
@@ -152,6 +267,56 @@
                                 <span class="points-label">Điểm</span>
                             </div>
                             <p id="loyalty-tier" class="loyalty-tier">Cơ bản</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane" id="shop-tab">
+                <div class="shop-layout" style="display: grid; grid-template-columns: 1fr 350px; gap: 20px;">
+                    <div class="shop-main">
+                        <div class="branch-selector-box" style="margin-bottom: 20px; background: #fdfdfd; padding: 15px; border-radius: 12px; border: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h3 style="margin: 0; font-size: 1rem; color: var(--text-dark);">
+                                    <i class="fas fa-map-marker-alt" style="color: var(--primary);"></i> Chi nhánh mua hàng
+                                </h3>
+                                <p style="margin: 4px 0 0 0; font-size: 0.8rem; color: #777;">Vui lòng chọn chi nhánh để xem tồn kho chính xác</p>
+                            </div>
+                            <div style="width: 200px;">
+                                <select id="shop-branch-select" style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ddd; font-family: inherit;">
+                                    <option value="">-- Chọn chi nhánh --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="tab-header" style="margin-bottom: 20px;">
+                            <h2><i class="fas fa-store"></i> PetCareX Shop</h2>
+                            <div class="filter-bar">
+                                <select id="dashboard-shop-filter" onchange="filterDashboardShop()" style="padding: 8px; border-radius: 8px; border: 1px solid #ddd;">
+                                    <option value="all">Tất cả sản phẩm</option>
+                                    <option value="Thức ăn">Thức ăn</option>
+                                    <option value="Phụ kiện">Phụ kiện</option>
+                                    <option value="Thuốc">Y tế/Thuốc</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="dashboard-products-grid" class="pets-grid">
+                            </div>
+                    </div>
+
+                    <div class="cart-sidebar" style="background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); height: fit-content; position: sticky; top: 100px;">
+                        <h3 style="border-bottom: 2px solid var(--primary); padding-bottom: 10px; margin-bottom: 15px;">
+                            <i class="fas fa-cart-shopping"></i> Giỏ hàng của bạn
+                        </h3>
+                        <div id="dashboard-cart-items" style="max-height: 300px; overflow-y: auto; margin-bottom: 20px;">
+                            <p style="text-align: center; color: #999;">Chưa có sản phẩm nào</p>
+                        </div>
+                        <div class="cart-summary" style="border-top: 1px solid #eee; padding-top: 15px;">
+                            <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 1.1rem; margin-bottom: 20px;">
+                                <span>Tổng cộng:</span>
+                                <span id="dashboard-cart-total">0 đ</span>
+                            </div>
+                            <button onclick="checkoutDashboardShop()" class="btn-primary" style="width: 100%; padding: 12px;">
+                                <i class="fas fa-credit-card"></i> Thanh toán ngay
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -301,6 +466,127 @@
                     <div id="history-content">
                         <p style="text-align: center; color: #94a3b8; margin-top: 20px;">Vui lòng chọn thú cưng để xem lịch sử...</p>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="payment-modal" class="modal">
+        <div class="modal-content" style="max-width: 450px; text-align: center;">
+            <div class="modal-header">
+                <h2>Xác Nhận Mua Hàng</h2>
+                <button class="modal-close" id="close-payment-modal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body" style="padding: 20px;">
+                <i class="fas fa-shopping-bag fa-3x" style="color: var(--primary); margin-bottom: 15px;"></i>
+                <p>Bạn đang chọn mua sản phẩm:</p>
+                <h3 id="payment-product-name" style="margin: 10px 0;"></h3>
+                <h3 id="payment-amount" style="color: var(--secondary); margin-bottom: 25px;"></h3>
+                
+                <p style="font-size: 0.9rem; color: #666; margin-bottom: 20px;">
+                    Nhấn xác nhận để tạo đơn hàng. Nhân viên sẽ liên hệ với bạn để hoàn tất thanh toán.
+                </p>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-secondary" style="flex: 1;" onclick="window.dashboard.hideModal('payment-modal')">Hủy</button>
+                    <button id="confirm-pay-btn" class="btn-primary" style="flex: 2;">
+                        <i class="fas fa-check"></i> Xác nhận mua
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invoice Payment Modal -->
+    <div id="invoice-payment-modal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 600px; width: 95%;">
+            <div class="modal-header">
+                <h2>Thanh Toán Hóa Đơn</h2>
+                <button class="modal-close" onclick="closeInvoicePaymentModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div style="padding: 25px;">
+                <!-- Thông tin hóa đơn -->
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span style="color: #666;">Mã Phiếu Dịch Vụ:</span>
+                        <strong id="invoice-modal-phieu-id">-</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <span style="color: #666;">Tổng Tiền:</span>
+                        <strong style="color: #667eea;" id="invoice-modal-total">0 VNĐ</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: #666;">Điểm Tích Lũy Hiện Có:</span>
+                        <strong style="color: #10b981;" id="invoice-modal-points">0</strong>
+                    </div>
+                </div>
+
+                <!-- Sử dụng điểm tích lũy -->
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 10px; font-weight: 600; color: #333;">
+                        <i class="fas fa-gift"></i> Sử Dụng Điểm Tích Lũy
+                    </label>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="number" id="invoice-modal-points-input" min="0" value="0" 
+                            style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
+                        <button onclick="calculateInvoiceDiscount()" 
+                            style="padding: 10px 15px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                            Tính
+                        </button>
+                    </div>
+                    <p style="font-size: 12px; color: #999; margin-top: 8px;">1 điểm = 1,000 VNĐ</p>
+                </div>
+
+                <!-- Hiển thị giá sau giảm -->
+                <div style="background: #e8f5e9; padding: 12px; border-radius: 8px; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span>Giá gốc:</span>
+                        <span id="invoice-modal-original">0 VNĐ</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span>Giảm từ điểm:</span>
+                        <span style="color: #10b981;" id="invoice-modal-discount">0 VNĐ</span>
+                    </div>
+                    <hr style="margin: 10px 0; border: none; border-top: 1px solid #ddd;">
+                    <div style="display: flex; justify-content: space-between; font-weight: 600; font-size: 16px;">
+                        <span>Thành Tiền:</span>
+                        <span style="color: #10b981;" id="invoice-modal-final">0 VNĐ</span>
+                    </div>
+                </div>
+
+                <!-- Hình thức thanh toán -->
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 12px; font-weight: 600; color: #333;">
+                        Chọn Hình Thức Thanh Toán
+                    </label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <label style="display: flex; align-items: center; padding: 12px; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; transition: all 0.3s;">
+                            <input type="radio" name="invoice-payment-method" value="Tiền mặt" checked style="margin-right: 10px;">
+                            <span><i class="fas fa-money-bill"></i> Tiền mặt</span>
+                        </label>
+                        <label style="display: flex; align-items: center; padding: 12px; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; transition: all 0.3s;">
+                            <input type="radio" name="invoice-payment-method" value="Thẻ tín dụng" style="margin-right: 10px;">
+                            <span><i class="fas fa-credit-card"></i> Thẻ tín dụng</span>
+                        </label>
+                        <label style="display: flex; align-items: center; padding: 12px; border: 2px solid #ddd; border-radius: 8px; cursor: pointer; transition: all 0.3s;">
+                            <input type="radio" name="invoice-payment-method" value="Chuyển khoản" style="margin-right: 10px;">
+                            <span><i class="fas fa-bank"></i> Chuyển khoản</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Action buttons -->
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="closeInvoicePaymentModal()" 
+                        style="flex: 1; padding: 12px; background: #e0e0e0; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                        Hủy
+                    </button>
+                    <button onclick="confirmInvoicePayment()" 
+                        style="flex: 1; padding: 12px; background: #10b981; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                        <i class="fas fa-check"></i> Thanh Toán
+                    </button>
                 </div>
             </div>
         </div>

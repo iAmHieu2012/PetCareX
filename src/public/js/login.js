@@ -23,28 +23,36 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
 
         const data = await response.json();
 
-        if (response.ok) {
+        if (response.ok && data.success) {
+            // successResponse wraps data trong .data property
+            const loginData = data.data;
+            
             // 1. Lưu Token và thông tin User vào LocalStorage
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('user', JSON.stringify(data.user));
-            localStorage.setItem('userRole', data.user.role);
-            localStorage.setItem('maKhachHang', data.maKhachHang || '');
-            localStorage.setItem('maNhanVien', data.maNhanVien || '');
+            localStorage.setItem('token', loginData.token);
+            localStorage.setItem('user', JSON.stringify(loginData.user));
+            localStorage.setItem('userRole', loginData.user.role);
+            localStorage.setItem('maKhachHang', loginData.maKhachHang || '');
+            localStorage.setItem('maNhanVien', loginData.maNhanVien || '');
+            localStorage.setItem('maChiNhanh', loginData.maChiNhanh || '');
 
             // 2. Thông báo và chuyển hướng
-            alert(`Chào mừng ${data.user.name} (${data.user.role}) quay trở lại!`);
+            alert(`Chào mừng ${loginData.user.name} (${loginData.user.role}) quay trở lại!`);
             
             // 3. Chuyển tới trang phù hợp theo role
-            const role = data.user.role;
+            const role = loginData.user.role;
             
             if (role === 'KhachHang') {
                 window.location.href = '/customer-dashboard.html';
             } else if (role === 'TiepTan') {
                 window.location.href = '/staff-dashboard-receptionist.html';
-            } else if (role === 'Admin') {
-                window.location.href = '/dashboard.html';
+            } else if (role === 'BacSi') {
+                window.location.href = '/doctor-dashboard.html';
+            } else if (role === 'BanHang') {
+                window.location.href = '/staff-dashboard-retail.html';
+            } else if (role === 'QuanLi') {
+                window.location.href = '/manager-dashboard.html';
             } else {
-                window.location.href = '/staff-booking.html';
+                window.location.href = '/dashboard.html';
             }
         } else {
             messageDiv.innerText = data.message || "Đăng nhập thất bại!";

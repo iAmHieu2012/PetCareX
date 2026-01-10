@@ -205,7 +205,7 @@ CREATE TABLE HOA_DON (
     KhuyenMai FLOAT,
     HinhThucThanhToan NVARCHAR(20), -- NULL = Chờ thanh toán, 'Đã hủy' = Hủy, Khác = Đã thanh toán
     MaPhieuDichVu CHAR(10) NOT NULL,
-    MaNhanVien CHAR(10) NOT NULL,
+    MaNhanVien CHAR(10),
     MaThuCung CHAR(10), -- Cột phi chuẩn hóa
     CONSTRAINT PK_HOA_DON PRIMARY KEY CLUSTERED (MaHoaDon, NgayLap),
 	CONSTRAINT CHK_HoaDon_TongTienThanhToan CHECK (TongTienThanhToan >= 0),
@@ -352,8 +352,8 @@ GO
 -- Bảng: PHIEU_TIEM_PHONG
 CREATE TABLE PHIEU_TIEM_PHONG (
     MaPhieuDichVu CHAR(10) PRIMARY KEY,
-    NgayTiem DATE NOT NULL,
-    MaVacxin CHAR(10) NOT NULL,
+    NgayTiem DATE,
+    MaVacxin CHAR(10),
     LieuLuong INT,
     MaGoiTiem CHAR(10) NOT NULL,
     MaThuCung CHAR(10) NOT NULL,

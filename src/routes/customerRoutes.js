@@ -2,18 +2,19 @@ const express = require('express');
 const router = express.Router();
 const customerController = require('../controllers/customerController');
 
+// Get all customers (for manager dashboard)
+router.get('/all', customerController.getAllCustomers);
+
+// Search customers
+router.get('/search', customerController.searchCustomers);
+
 // Specific routes TRƯỚC generic routes để tránh conflict
 router.get('/info/:maKhachHang', customerController.getCustomerInfo);
 
-// Pets routes (specific trước generic)
-router.get('/pets/detail/:maThuCung', customerController.getPetDetail);
-router.get('/pets/history/:maThuCung', customerController.getPetMedicalHistory);
-router.post('/pets', customerController.addPet);
+// Pets routes
 router.get('/pets/:maKhachHang', customerController.getCustomerPets);
 
 // Bookings routes (specific trước generic)
-router.put('/bookings/:maLichHen/cancel', customerController.cancelBooking);
-router.post('/bookings', customerController.createBooking);
 router.get('/bookings/:maKhachHang', customerController.getCustomerBookings);
 
 module.exports = router;

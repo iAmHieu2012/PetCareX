@@ -1,6 +1,8 @@
+const { handleNotFound, handleModelError } = require('../utils');
+
 // 1. Xử lý lỗi 404 (Không tìm thấy đường dẫn)
 const notFound = (req, res, next) => {
-    const error = new Error(`❌ Không tìm thấy đường dẫn: ${req.originalUrl}`);
+    const error = new Error(`Không tìm thấy đường dẫn: ${req.originalUrl}`);
     res.status(404);
     next(error);
 };
@@ -14,6 +16,7 @@ const errorHandler = (err, req, res, next) => {
 
     res.status(statusCode);
     res.json({
+        success: false,
         message: err.message, // Thông báo lỗi
         // Nếu không phải môi trường 'production' thì hiện chi tiết dòng lỗi (stack trace)
         stack: process.env.NODE_ENV === 'production' ? null : err.stack,

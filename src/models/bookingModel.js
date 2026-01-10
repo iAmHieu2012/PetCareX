@@ -1,5 +1,7 @@
-const { connectDB } = require('../config/db');
-const sql = require('mssql');
+const { connectDB, sql } = require('../config/db');
+const { handleModelError } = require('../utils');
+const { generateMaPhieuDichVu, generateMaLichHen } = require('../utils/idGenerator');
+
 
 const BookingModel = {
     // ========== KHÁCH HÀNG ==========
@@ -9,18 +11,16 @@ const BookingModel = {
             const pool = await connectDB();
             
             // Generate MaLichHen
-            const resultId = await pool.request()
-                .query('SELECT COUNT(*) as count FROM LICH_HEN');
-            const maLichHen = 'LH' + String(resultId.recordset[0].count + 1).padStart(8, '0');
+            const maLichHen = await generateMaLichHen(pool);;
             
             // Gọi stored procedure SP_KhachHangDatLichHen
             const result = await pool.request()
-                .input('MaLH', sql.Char(10), maLichHen)
+                .input('MaLichHen', sql.Char(10), maLichHen)
                 .input('ThoiGian', sql.DateTime, new Date(booking.ThoiGian))
-                .input('Loai', sql.NVarChar(10), booking.LoaiLichHen)
-                .input('MaKH', sql.Char(10), booking.MaKhachHang)
-                .input('MaTC', sql.Char(10), booking.MaThuCung)
-                .input('MaCN', sql.Char(10), booking.MaChiNhanh)
+                .input('LoaiLichHen', sql.NVarChar(10), booking.LoaiLichHen)
+                .input('MaKhachHang', sql.Char(10), booking.MaKhachHang)
+                .input('MaThuCung', sql.Char(10), booking.MaThuCung)
+                .input('MaChiNhanh', sql.Char(10), booking.MaChiNhanh)
                 .execute('SP_KhachHangDatLichHen');
             
             return {
@@ -40,9 +40,7 @@ const BookingModel = {
             const pool = await connectDB();
             
             // Generate MaLichHen
-            const resultId = await pool.request()
-                .query('SELECT COUNT(*) as count FROM LICH_HEN');
-            const maLichHen = 'LH' + String(resultId.recordset[0].count + 1).padStart(8, '0');
+            const maLichHen = await generateMaLichHen(pool);
             
             // Gọi SP_ThemLichHen
             const result = await pool.request()
@@ -57,13 +55,14 @@ const BookingModel = {
                 .input('MaPDV', sql.Char(10), null)
                 .execute('SP_ThemLichHen');
             
-            // Nếu trạng thái là "Đã xác nhận", gọi thêm SP_QuanTriXacNhanLichHen để tạo phiếu dịch vụ
             let maPhieuDichVu = null;
             if (booking.TrangThai === 'Đã xác nhận' && booking.MaNhanVienXacNhan) {
+                // Gọi SP_CapNhatTrangThaiLichHen để cập nhật trạng thái thành "Đã xác nhận"
                 const resultPDV = await pool.request()
-                    .input('MaLichHen', sql.Char(10), maLichHen)
-                    .input('MaNhanVienXacNhan', sql.Char(10), booking.MaNhanVienXacNhan)
-                    .execute('SP_QuanTriXacNhanLichHen');
+                    .input('MaLH', sql.Char(10), maLichHen)
+                    .input('MaCN', sql.Char(10), booking.MaChiNhanh)
+                    .input('TrangThaiMoi', sql.NVarChar(15), 'Đã xác nhận')
+                    .execute('SP_CapNhatTrangThaiLichHen');
                 
                 // Lấy MaPhieuDichVu vừa tạo
                 const checkPDV = await pool.request()
@@ -116,9 +115,7 @@ const BookingModel = {
             const pool = await connectDB();
             
             // Generate mã Phiếu dịch vụ
-            const resultId = await pool.request()
-                .query('SELECT COUNT(*) as count FROM PHIEU_DICH_VU');
-            const maPhieuDichVu = 'PDV' + String(resultId.recordset[0].count + 1).padStart(7, '0');
+            const maPhieuDichVu = await generateMaPhieuDichVu(pool);
                        
             // Gọi SP_TiepNhanLichHen để xác nhận lịch hẹn và tạo phiếu dịch vụ
             const result = await pool.request()
@@ -143,9 +140,7 @@ const BookingModel = {
         try {
             const pool = await connectDB();
             
-            const resultId = await pool.request()
-                .query('SELECT COUNT(*) as count FROM PHIEU_DICH_VU');
-            const maPhieuDichVu = 'PDV' + String(resultId.recordset[0].count + 1).padStart(7, '0');
+            const maPhieuDichVu = await generateMaPhieuDichVu(pool);
             
             // 1. SP_TiepNhanLichHen
             await pool.request()
@@ -177,9 +172,7 @@ const BookingModel = {
         try {
             const pool = await connectDB();
             
-            const resultId = await pool.request()
-                .query('SELECT COUNT(*) as count FROM PHIEU_DICH_VU');
-            const maPhieuDichVu = 'PDV' + String(resultId.recordset[0].count + 1).padStart(7, '0');
+            const maPhieuDichVu = await generateMaPhieuDichVu(pool);
             
             // 1. SP_TiepNhanLichHen
             await pool.request()
@@ -304,6 +297,85 @@ const BookingModel = {
             };
         } catch (err) {
             throw new Error('Lỗi hủy lịch hẹn: ' + err.message);
+        }
+    },
+
+    // ========== KIỂM TRA GÓI TIÊM ==========
+    // Kiểm tra thú cưng có gói tiêm chưa (cho lịch tiêm phòng)
+    checkVaccinePackages: async (maThuCung) => {
+        try {
+            const pool = await connectDB();
+            
+            // Lấy danh sách gói tiêm đã mua + hóa đơn đã xác nhận
+            const result = await pool
+                .request()
+                .input('MaThuCung', sql.Char(10), maThuCung)
+                .query(`
+                    SELECT 
+                        pdk.MaPhieuDichVu,
+                        pdk.MaGoiTiem,
+                        gt.ChuKi,
+                        gt.LoaiGoiTiem,
+                        hd.MaHoaDon,
+                        hd.NgayLap,
+                        hd.MaNhanVien,
+                        CASE 
+                            WHEN hd.MaNhanVien IS NOT NULL THEN N'Đã xác nhận'
+                            ELSE N'Chưa xác nhận'
+                        END AS TrangThaiHoaDon
+                    FROM PHIEU_DANG_KY_GOI_TIEM pdk
+                    JOIN GOI_TIEM gt ON pdk.MaGoiTiem = gt.MaGoiTiem
+                    JOIN HOA_DON hd ON pdk.MaPhieuDichVu = hd.MaPhieuDichVu
+                    WHERE pdk.MaThuCung = @MaThuCung
+                    AND hd.MaNhanVien IS NOT NULL
+                    AND hd.HinhThucThanhToan IS NOT NULL
+                    AND hd.HinhThucThanhToan != N'Đã hủy'
+                `);
+            
+            return result.recordset || [];
+        } catch (err) {
+            throw new Error('Lỗi kiểm tra gói tiêm: ' + err.message);
+        }
+    },
+
+    // Kiểm tra thú cưng đã tiêm hết gói chưa (đếm số phiếu tiêm)
+    checkVaccineProgress: async (maThuCung, maGoiTiem) => {
+        try {
+            const pool = await connectDB();
+            
+            // Lấy số lượng vacxin trong gói tiêm
+            const goi = await pool
+                .request()
+                .input('MaGoiTiem', sql.Char(10), maGoiTiem)
+                .query(`
+                    SELECT COUNT(*) AS SoLuongVacxin
+                    FROM CHI_TIET_GOI_TIEM
+                    WHERE MaGoiTiem = @MaGoiTiem
+                `);
+            
+            const soLuongVacxin = goi.recordset[0]?.SoLuongVacxin || 0;
+            
+            // Đếm số phiếu tiêm đã thực hiện cho thú cưng + gói tiêm này
+            const tiem = await pool
+                .request()
+                .input('MaThuCung', sql.Char(10), maThuCung)
+                .input('MaGoiTiem', sql.Char(10), maGoiTiem)
+                .query(`
+                    SELECT COUNT(*) AS SoPhieuTiemDaLam
+                    FROM PHIEU_TIEM_PHONG
+                    WHERE MaThuCung = @MaThuCung
+                    AND MaGoiTiem = @MaGoiTiem
+                `);
+            
+            const soPhieuTiemDaLam = tiem.recordset[0]?.SoPhieuTiemDaLam || 0;
+            
+            return {
+                soLuongVacxin: soLuongVacxin,
+                soPhieuTiemDaLam: soPhieuTiemDaLam,
+                conLai: Math.max(0, soLuongVacxin - soPhieuTiemDaLam)
+            };
+        } catch (err) {
+            throw new Error('Lỗi kiểm tra tiến độ tiêm: ' + err.message);
         }
     }
 };

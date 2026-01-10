@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupTabs();
     await loadInitialData();
     setupEventListeners();
+    await loadAllPendingConfirmationInvoices(); // Load hóa đơn chờ xác nhận khi vào tab
 });
 
 function checkAuth() {
@@ -43,7 +44,7 @@ function checkAuth() {
 
 function setupTabs() {
     document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', async () => {
             const tabId = btn.dataset.tab;
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
@@ -53,20 +54,23 @@ function setupTabs() {
             
             if (tabId === 'customers') loadCustomers();
             if (tabId === 'bookings') loadAllBookings();
+            if (tabId === 'payment-confirmation') await loadAllPendingConfirmationInvoices();
         });
     });
 }
 
 async function loadInitialData() {
     try {
-        const branches = await api.getBranches();
-        const select = document.getElementById('maChiNhanh'); // ID select chi nhánh
-        const data = Array.isArray(branches) ? branches : (branches.data || []);
+        const branchesRes = await api.getBranches();
+        const branches = branchesRes.data || branchesRes;
+        const branchesData = Array.isArray(branches) ? branches : (branchesRes.data || []);
         
-        select.innerHTML = data.map(b => `<option value="${b.MaChiNhanh}">${b.TenChiNhanh}</option>`).join('');
+        const select = document.getElementById('maChiNhanh');
         
-        if (data.length > 0) {
-            state.maChiNhanh = data[0].MaChiNhanh;
+        select.innerHTML = branchesData.map(b => `<option value="${b.MaChiNhanh}">${b.TenChiNhanh}</option>`).join('');
+        
+        if (branchesData.length > 0) {
+            state.maChiNhanh = branchesData[0].MaChiNhanh;
             select.value = state.maChiNhanh;
             await loadAllBookings();
         }
@@ -75,7 +79,8 @@ async function loadInitialData() {
 
 async function loadAllBookings() {
     const res = await api.getBookingsByBranch(state.maChiNhanh);
-    state.bookings = Array.isArray(res) ? res : (res.data || []);
+    const bookingsData = res.data || res || [];
+    state.bookings = Array.isArray(bookingsData) ? bookingsData : [];
     
     updateBannerStats(state.bookings);
     renderBookingCards(state.bookings);
@@ -159,7 +164,7 @@ window.openConfirmModal = async (maLH) => {
         
         try {
             // Lấy lịch sử gói tiêm từ Backend của khách hàng
-            const historyRes = await apiCall(`/api/customer/pets/history/${booking.MaThuCung}`);
+            const historyRes = await apiCall(`/api/pets/history/${booking.MaThuCung}`);
             if (historyRes?.success && historyRes.data.packages.length > 0) {
                 packageSelect.innerHTML = historyRes.data.packages.map(p => 
                     `<option value="${p.MaGoiTiem}">${p.LoaiGoiTiem} (${p.MaGoiTiem})</option>`
@@ -189,7 +194,7 @@ async function handleFinalConfirm() {
     const gt = document.getElementById('maGoiTiem')?.value; 
     
     // Lấy dữ liệu từ state.selectedBooking
-    const { MaLichHen, MaChiNhanh, MaKhachHang, MaThuCung, LoaiLichHen } = state.selectedBooking;
+    const { MaLichHen, MaChiNhanh, MaKhachHang, MaThuCung, LoaiLichHen, ThoiGian } = state.selectedBooking;
 
     // FIX LỖI: Nếu MaChiNhanh từ recordset bị thiếu, dùng mã chi nhánh từ state của dashboard
     const currentBranch = MaChiNhanh || state.maChiNhanh;
@@ -204,10 +209,24 @@ async function handleFinalConfirm() {
         // TỰ ĐỘNG nhận diện loại phiếu dựa trên LoaiLichHen ban đầu
         if (LoaiLichHen.includes("Tiêm")) {
             // Gọi API xác nhận tiêm phòng
-            res = await api.confirmAndCreateVaccinationForm(MaLichHen, currentBranch, MaKhachHang, MaThuCung, bs, gt || null);
+            res = await api.confirmAndCreateVaccinationForm({
+                maLichHen: MaLichHen,
+                maChiNhanh: currentBranch,
+                maKhachHang: MaKhachHang,
+                maThuCung: MaThuCung,
+                maBacSi: bs,
+                goiTiem: gt || null,
+                ngayTiem: ThoiGian
+            });
         } else {
             // Gọi API xác nhận khám bệnh
-            res = await api.confirmAndCreateMedicalForm(MaLichHen, currentBranch, MaKhachHang, MaThuCung, bs);
+            res = await api.confirmAndCreateMedicalForm({
+                maLichHen: MaLichHen,
+                maChiNhanh: currentBranch,
+                maKhachHang: MaKhachHang,
+                maThuCung: MaThuCung,
+                maBacSi: bs
+            });
         }
         
         if (res.success) {
@@ -254,6 +273,92 @@ function setupEventListeners() {
         loadAllBookings();
     });
 }
+
+// Load tất cả hóa đơn chờ xác nhận
+async function loadAllPendingConfirmationInvoices() {
+    try {
+        const res = await fetch('/api/invoices/pending-confirmation').then(r => r.json());
+        const invoices = res.data || res || [];
+        
+        const container = document.getElementById('paymentConfirmationList');
+        
+        if (!invoices.length) {
+            container.innerHTML = '<div class="empty-state" style="grid-column: 1/-1; text-align:center; padding:2rem; color:#999;">Không có hóa đơn chờ xác nhận.</div>';
+            return;
+        }
+
+        container.innerHTML = invoices.map(inv => `
+            <div class="booking-card" style="border-left:5px solid #ff9500;">
+                <div class="booking-header">
+                    <div class="booking-header-left">
+                        <h3 style="color:var(--primary); font-size:1.1rem;">Mã HĐ: ${inv.MaHoaDon}</h3>
+                        <p style="font-size:0.85rem; color:#666;">Khách: ${inv.TenKhachHang} (${inv.MaKhachHang})</p>
+                    </div>
+                    <span class="booking-status status-pending">Chờ Xác Nhận</span>
+                </div>
+                <div class="booking-body" style="grid-template-columns: 1fr 1fr 1fr; gap:15px;">
+                    <div class="booking-info-item">
+                        <div class="booking-info-label">Ngày Lập</div>
+                        <div class="booking-info-value">${new Date(inv.NgayLap).toLocaleDateString('vi-VN')}</div>
+                    </div>
+                    <div class="booking-info-item">
+                        <div class="booking-info-label">Tổng Tiền</div>
+                        <div class="booking-info-value" style="color:#27ae60; font-weight:bold;">${inv.TongTienThanhToan.toLocaleString('vi-VN')} ₫</div>
+                    </div>
+                    <div class="booking-info-item">
+                        <div class="booking-info-label">Hình Thức</div>
+                        <div class="booking-info-value">${inv.HinhThucThanhToan}</div>
+                    </div>
+                    <div class="booking-info-item">
+                        <div class="booking-info-label">Chi Nhánh</div>
+                        <div class="booking-info-value">${inv.TenChiNhanh}</div>
+                    </div>
+                    <div class="booking-info-item">
+                        <div class="booking-info-label">SĐT Khách</div>
+                        <div class="booking-info-value">${inv.SoDienThoai}</div>
+                    </div>
+                    <div class="booking-info-item">
+                        <div class="booking-info-label">CCCD</div>
+                        <div class="booking-info-value">${inv.CCCD}</div>
+                    </div>
+                </div>
+                <div class="booking-actions" style="margin-top:1rem; display:flex; gap:10px;">
+                    <button class="btn-primary" onclick="window.confirmPaymentAction('${inv.MaHoaDon}', '${inv.NgayLap.split('T')[0]}')" style="flex:1;">
+                        <i class="fas fa-check"></i> Xác Nhận Thanh Toán
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    } catch (err) {
+        console.error('Lỗi load hóa đơn:', err);
+        document.getElementById('paymentConfirmationList').innerHTML = '<div class="empty-state" style="grid-column: 1/-1;">Lỗi tải dữ liệu hóa đơn.</div>';
+    }
+}
+
+// Xác nhận thanh toán
+window.confirmPaymentAction = async (maHoaDon, ngayLap) => {
+    try {
+        const res = await fetch('/api/invoices/confirm', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                maHoaDon: maHoaDon,
+                ngayLap: ngayLap,
+                maNhanVien: state.maNhanVien,
+                hinhThucThanhToan: 'Chuyển khoản' // Default payment method
+            })
+        }).then(r => r.json());
+
+        if (res.success) {
+            alert('Xác nhận thanh toán thành công!');
+            await loadAllPendingConfirmationInvoices(); // Tải lại danh sách
+        } else {
+            alert('Lỗi: ' + (res.message || 'Không xác nhận được'));
+        }
+    } catch (err) {
+        alert('Lỗi hệ thống: ' + err.message);
+    }
+};
 
 // Load danh sách khách hàng duy nhất của chi nhánh
 async function loadCustomers() {

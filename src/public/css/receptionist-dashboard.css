@@ -238,3 +238,126 @@ body {
         transform: translateY(0);
     }
 }
+
+/* Form styles cho modal */
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+/* Logo và Header styles */
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25rem;
+}
+
+.user-info .name {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.user-info .loyalty-points {
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+/* Tab header */
+.tab-header {
+    margin-bottom: 1.5rem;
+}
+
+.tab-header h2 {
+    color: var(--text-dark);
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+/* Booking actions */
+.booking-actions {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.booking-actions .btn-primary {
+    flex: 1;
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.booking-actions .btn-primary:hover {
+    opacity: 0.9;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .dashboard-container {
+        padding: 1rem;
+    }
+    
+    .welcome-banner {
+        flex-direction: column;
+        padding: 2rem 1.5rem;
+    }
+    
+    .banner-icon {
+        display: none;
+    }
+    
+    .pets-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .tabs-header {
+        flex-wrap: wrap;
+    }
+    
+    .booking-body {
+        grid-template-columns: 1fr;
+    }
+}

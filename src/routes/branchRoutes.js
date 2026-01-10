@@ -6,9 +6,11 @@ const branchController = require('../controllers/branchController');
 router.get('/', branchController.getAllBranches);
 router.get('/services', branchController.getAllServices);
 
-// Staff routes (specific TRƯỚC generic)
+// PHẢI ĐẶT SPECIFIC ROUTES TRƯỚC GENERIC ROUTES
+// Staff routes (Đặt specific pattern TRƯỚC generic pattern)
 router.get('/staff/count', branchController.getStaffCount);
 router.get('/staff/doctors/:maChiNhanh', branchController.getDoctorsByBranch);
+router.get('/staff/by-branch/:maChiNhanh', branchController.getStaffByBranch);
 router.get('/staff/performance/all', branchController.getAllEmployeesPerformance);
 router.get('/staff/:maNV/transfers', branchController.getTransferHistory);
 router.get('/staff/:maNV/income', branchController.getEmployeeIncome);
@@ -17,8 +19,5 @@ router.get('/staff', branchController.getAllStaff);
 
 // Customers
 router.get('/customers/count', branchController.getCustomersCount);
-
-// Pets
-router.get('/pets/:maThuCung', branchController.getPetDetails);
 
 module.exports = router;

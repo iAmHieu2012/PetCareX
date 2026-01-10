@@ -1,11 +1,17 @@
 const { connectDB } = require('../config/db');
 const sql = require('mssql');
+const { validateId, handleControllerError, successResponse, notFoundResponse } = require('../utils');
 
 const customerController = {
     // Get customer info
     getCustomerInfo: async (req, res) => {
         try {
             const { maKhachHang } = req.params;
+            
+            if (!validateId(maKhachHang)) {
+                return res.status(400).json({ success: false, message: 'Mã khách hàng không hợp lệ' });
+            }
+
             const pool = await connectDB();
 
             const result = await pool.request()
@@ -24,15 +30,12 @@ const customerController = {
                 `);
 
             if (result.recordset.length === 0) {
-                return res.status(404).json({ message: 'Khách hàng không tìm thấy' });
+                return res.status(404).json(notFoundResponse('Khách hàng'));
             }
 
-            res.json({
-                success: true,
-                data: result.recordset[0]
-            });
+            return res.json(successResponse(result.recordset[0], 'Lấy thông tin khách hàng thành công'));
         } catch (err) {
-            res.status(500).json({ error: err.message });
+            return handleControllerError(res, err);
         }
     },
 
@@ -40,6 +43,11 @@ const customerController = {
     getCustomerPets: async (req, res) => {
         try {
             const { maKhachHang } = req.params;
+            
+            if (!validateId(maKhachHang)) {
+                return res.status(400).json({ success: false, message: 'Mã khách hàng không hợp lệ' });
+            }
+
             const pool = await connectDB();
 
             const result = await pool.request()
@@ -59,88 +67,9 @@ const customerController = {
                     ORDER BY TenThuCung
                 `);
 
-            res.json({
-                success: true,
-                data: result.recordset
-            });
+            return res.json(successResponse(result.recordset, 'Lấy danh sách thú cưng thành công'));
         } catch (err) {
-            res.status(500).json({ error: err.message });
-        }
-    },
-
-    // Get pet detail
-    getPetDetail: async (req, res) => {
-        try {
-            const { maThuCung } = req.params;
-            const pool = await connectDB();
-
-            const result = await pool.request()
-                .input('MaTC', sql.Char(10), maThuCung)
-                .query(`
-                    SELECT 
-                        MaThuCung,
-                        TenThuCung,
-                        Loai,
-                        Giong,
-                        NgaySinh,
-                        GioiTinh,
-                        TinhTrang,
-                        MaKhachHang
-                    FROM THU_CUNG
-                    WHERE MaThuCung = @MaTC
-                `);
-
-            if (result.recordset.length === 0) {
-                return res.status(404).json({ message: 'Thú cưng không tìm thấy' });
-            }
-
-            res.json({
-                success: true,
-                data: result.recordset[0]
-            });
-        } catch (err) {
-            res.status(500).json({ error: err.message });
-        }
-    },
-
-    // Add new pet
-    addPet: async (req, res) => {
-        try {
-            const { MaKhachHang, TenThuCung, Loai, Giong, NgaySinh, GioiTinh, TinhTrang } = req.body;
-            
-            if (!MaKhachHang || !TenThuCung || !Loai) {
-                return res.status(400).json({ message: 'Thông tin không đầy đủ' });
-            }
-
-            const pool = await connectDB();
-
-            // Generate MaThuCung
-            const resultId = await pool.request()
-                .query('SELECT COUNT(*) as count FROM THU_CUNG');
-            const maThuCung = 'TC' + String(resultId.recordset[0].count + 1).padStart(8, '0');
-
-            // Add pet
-            await pool.request()
-                .input('MaTC', sql.Char(10), maThuCung)
-                .input('TenTC', sql.NVarChar(30), TenThuCung)
-                .input('Loai', sql.NVarChar(20), Loai)
-                .input('Giong', sql.NVarChar(20), Giong || null)
-                .input('NgaySinh', sql.Date, NgaySinh || null)
-                .input('GioiTinh', sql.NVarChar(3), GioiTinh || null)
-                .input('TinhTrang', sql.NVarChar(20), TinhTrang || 'Bình thường')
-                .input('MaKH', sql.Char(10), MaKhachHang)
-                .query(`
-                    INSERT INTO THU_CUNG (MaThuCung, TenThuCung, Loai, Giong, NgaySinh, GioiTinh, TinhTrang, MaKhachHang)
-                    VALUES (@MaTC, @TenTC, @Loai, @Giong, @NgaySinh, @GioiTinh, @TinhTrang, @MaKH)
-                `);
-
-            res.status(201).json({
-                success: true,
-                message: 'Thêm thú cưng thành công',
-                maThuCung: maThuCung
-            });
-        } catch (err) {
-            res.status(500).json({ error: err.message });
+            return handleControllerError(res, err);
         }
     },
 
@@ -148,6 +77,11 @@ const customerController = {
     getCustomerBookings: async (req, res) => {
         try {
             const { maKhachHang } = req.params;
+            
+            if (!validateId(maKhachHang)) {
+                return res.status(400).json({ success: false, message: 'Mã khách hàng không hợp lệ' });
+            }
+
             const pool = await connectDB();
 
             const result = await pool.request()
@@ -171,145 +105,63 @@ const customerController = {
                     ORDER BY LH.ThoiGian DESC
                 `);
 
-            res.json({
-                success: true,
-                data: result.recordset
-            });
+            return res.json(successResponse(result.recordset, 'Lấy danh sách lịch hẹn thành công'));
         } catch (err) {
-            res.status(500).json({ error: err.message });
+            return handleControllerError(res, err);
         }
     },
 
-    // Create booking
-    createBooking: async (req, res) => {
+    // Search customers
+    searchCustomers: async (req, res) => {
         try {
-            const { MaKhachHang, MaThuCung, MaChiNhanh, ThoiGian, LoaiLichHen, GhiChu } = req.body;
+            const { keyword } = req.query;
 
-            if (!MaKhachHang || !MaThuCung || !MaChiNhanh || !ThoiGian || !LoaiLichHen) {
-                return res.status(400).json({ message: 'Thông tin không đầy đủ' });
+            if (!keyword || keyword.length < 2) {
+                return res.json(successResponse([], 'Từ khóa tìm kiếm phải có ít nhất 2 ký tự'));
             }
 
             const pool = await connectDB();
 
-            // Check if pet belongs to customer
-            const petCheck = await pool.request()
-                .input('MaTC', sql.Char(10), MaThuCung)
-                .input('MaKH', sql.Char(10), MaKhachHang)
-                .query('SELECT * FROM THU_CUNG WHERE MaThuCung = @MaTC AND MaKhachHang = @MaKH');
-
-            if (petCheck.recordset.length === 0) {
-                return res.status(403).json({ message: 'Thú cưng không tồn tại hoặc không thuộc về bạn' });
-            }
-
-            // Generate MaLichHen
-            const resultId = await pool.request()
-                .query('SELECT COUNT(*) as count FROM LICH_HEN');
-            const maLichHen = 'LH' + String(resultId.recordset[0].count + 1).padStart(8, '0');
-
-            // Create booking
-            const now = new Date();
-            const bookingResult = await pool.request()
-                .input('MaLH', sql.Char(10), maLichHen)
-                .input('ThoiGian', sql.DateTime, new Date(ThoiGian))
-                .input('TrangThai', sql.NVarChar(15), 'Chờ xác nhận')
-                .input('LoaiLichHen', sql.NVarChar(10), LoaiLichHen)
-                .input('MaKH', sql.Char(10), MaKhachHang)
-                .input('MaTC', sql.Char(10), MaThuCung)
-                .input('MaCN', sql.Char(10), MaChiNhanh)
+            const result = await pool.request()
+                .input('Keyword', sql.NVarChar(50), `%${keyword}%`)
                 .query(`
-                    INSERT INTO LICH_HEN (MaLichHen, ThoiGian, TrangThai, LoaiLichHen, MaKhachHang, MaThuCung, MaChiNhanh, MaNhanVienXacNhan, MaPhieuDichVu)
-                    VALUES (@MaLH, @ThoiGian, @TrangThai, @LoaiLichHen, @MaKH, @MaTC, @MaCN, NULL, NULL)
+                    SELECT TOP 10
+                        MaKhachHang,
+                        TenKhachHang,
+                        SoDienThoai AS DienThoai,
+                        Email
+                    FROM KHACH_HANG
+                    WHERE TenKhachHang LIKE @Keyword
+                       OR SoDienThoai LIKE @Keyword
+                    ORDER BY TenKhachHang
                 `);
 
-            res.status(201).json({
-                success: true,
-                message: 'Đặt lịch hẹn thành công',
-                maLichHen: maLichHen
-            });
+            return res.json(successResponse(result.recordset, 'Tìm kiếm khách hàng thành công'));
         } catch (err) {
-            res.status(500).json({ error: err.message });
+            return handleControllerError(res, err);
         }
     },
 
-    // Cancel booking
-    cancelBooking: async (req, res) => {
+    // Get all customers
+    getAllCustomers: async (req, res) => {
         try {
-            const { maLichHen } = req.params;
-            const { maKhachHang } = req.body;
-
             const pool = await connectDB();
+            const result = await pool.request().query(`
+                SELECT 
+                    MaKhachHang,
+                    TenKhachHang,
+                    SoDienThoai,
+                    Email,
+                    GioiTinh,
+                    DiemTichLuy,
+                    (SELECT COUNT(*) FROM THU_CUNG WHERE MaKhachHang = KHACH_HANG.MaKhachHang) AS SoPetCung
+                FROM KHACH_HANG
+                ORDER BY TenKhachHang
+            `);
 
-            // Verify booking belongs to customer
-            const bookingCheck = await pool.request()
-                .input('MaLH', sql.Char(10), maLichHen)
-                .input('MaKH', sql.Char(10), maKhachHang)
-                .query('SELECT * FROM LICH_HEN WHERE MaLichHen = @MaLH AND MaKhachHang = @MaKH');
-
-            if (bookingCheck.recordset.length === 0) {
-                return res.status(403).json({ message: 'Lịch hẹn không tồn tại hoặc không thuộc về bạn' });
-            }
-
-            // Update status to cancelled
-            await pool.request()
-                .input('MaLH', sql.Char(10), maLichHen)
-                .query(`
-                    UPDATE LICH_HEN
-                    SET TrangThai = 'Hủy'
-                    WHERE MaLichHen = @MaLH
-                `);
-
-            res.json({
-                success: true,
-                message: 'Hủy lịch hẹn thành công'
-            });
+            return res.json(successResponse(result.recordset, 'Lấy danh sách khách hàng thành công'));
         } catch (err) {
-            res.status(500).json({ error: err.message });
-        }
-    },
-    // Xem lịch sử y tế của thú cưng
-    getPetMedicalHistory: async (req, res) => {
-        try {
-            const { maThuCung } = req.params;
-            const pool = await connectDB();
-
-            // 1. Lấy lịch sử khám bệnh
-            const checkups = await pool.request()
-                .input('MaTC', sql.Char(10), maThuCung)
-                .query(`
-                    SELECT DISTINCT 
-                        MaPhieuDichVu, 
-                        ChuanDoan, 
-                        NgayHenTaiKham 
-                    FROM VW_LichSuKhamBenh 
-                    WHERE MaThuCung = @MaTC 
-                    ORDER BY NgayHenTaiKham DESC
-                `);
-
-            // 2. Lấy lịch sử tiêm phòng
-            const vaccinations = await pool.request()
-                .input('MaTC', sql.Char(10), maThuCung)
-                .query(`SELECT * FROM PHIEU_TIEM_PHONG ptp 
-                        JOIN VACXIN v ON ptp.MaVacxin = v.MaVacxin 
-                        WHERE MaThuCung = @MaTC ORDER BY NgayTiem DESC`);
-
-            // 3. Lấy các gói tiêm đã đăng ký
-            const packages = await pool.request()
-                .input('MaTC', sql.Char(10), maThuCung)
-                .query(`SELECT pdk.MaGoiTiem, gt.LoaiGoiTiem, pdk.NgayDangKy 
-                        FROM PHIEU_DANG_KY_GOI_TIEM pdk
-                        JOIN GOI_TIEM gt ON pdk.MaGoiTiem = gt.MaGoiTiem
-                        WHERE MaThuCung = @MaTC ORDER BY NgayDangKy DESC`);
-
-            res.json({
-                success: true,
-                data: {
-                    checkups: checkups.recordset,
-                    vaccinations: vaccinations.recordset,
-                    packages: packages.recordset
-                }
-            });
-        } catch (err) {
-            res.status(500).json({ error: err.message });
+            return handleControllerError(res, err);
         }
     }
 };

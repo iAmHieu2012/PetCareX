@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Báo cáo doanh thu - PetCareX</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css"> 
+    <link rel="stylesheet" href="css/product.css">
+</head>
+<body>
+    <header>
+        <div class="navbar">
+            <div class="logo"><i class="fas fa-paw"></i> PetCareX</div>
+            <nav>
+                <a href="index.html">Trang chủ</a>
+                <a href="report.html" class="active">Báo cáo</a>
+            </nav>
+        </div>
+    </header>
+
+    <section class="container" style="margin-top: 50px;">
+        <h2 class="modern-title"><i class="fas fa-chart-pie"></i> Hệ thống báo cáo thông minh</h2>
+
+        <div class="report-toolbar card-panel">
+            <div class="filter-group-modern">
+                <div class="select-wrapper">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <select id="branchSelect">
+                        <option value="ALL">Toàn hệ thống</option>
+                        <option value="CN00000001">Chi nhánh Quận 1</option>
+                        <option value="CN00000002">Chi nhánh Quận 3</option>
+                        <option value="CN00000006">Chi nhánh Quận 7</option>
+                    </select>
+                </div>
+                <div class="select-wrapper">
+                    <i class="fas fa-calendar-alt"></i>
+                    <select id="reportType" onchange="toggleTimeInput()">
+                        <option value="Ngay">Theo Ngày</option>
+                        <option value="Thang" selected>Theo Tháng</option>
+                        <option value="Quy">Theo Quý</option>
+                        <option value="Nam">Theo Năm</option>
+                    </select>
+                </div>
+        
+                <div id="dynamicInputContainer" class="select-wrapper">
+                    <input type="number" id="timeValue" placeholder="Nhập Tháng (1-12)" value="1">
+                </div>
+        
+                <div id="yearInputContainer" class="select-wrapper">
+                    <i class="fas fa-calendar-check" style="color: var(--primary); margin-right: 10px;"></i>
+                    <input type="number" id="timeYear" placeholder="Năm" value="2026">
+                </div>
+        
+                <button class="register-btn" onclick="updateReport()">
+                    <i class="fas fa-sync-alt"></i> Cập nhật dữ liệu
+                </button>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-money-bill-wave"></i></div>
+                <div class="stat-info">
+                    <p>Tổng doanh thu</p>
+                    <h3 id="totalRevenue">0 đ</h3>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: #e0f2fe; color: #0369a1;"><i class="fas fa-stethoscope"></i></div>
+                <div class="stat-info">
+                    <p>Doanh thu Dịch vụ</p>
+                    <h3 id="serviceRevenue">0 đ</h3>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: #fef3c7; color: #b45309;"><i class="fas fa-shopping-bag"></i></div>
+                <div class="stat-info">
+                    <p>Doanh thu Sản phẩm</p>
+                    <h3 id="productRevenue">0 đ</h3>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: #dcfce7; color: #15803d;"><i class="fas fa-user-md"></i></div>
+                <div class="stat-info">
+                    <p>Số lượt khám</p>
+                    <h3 id="visitCount">0</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="retail-layout">
+            <div class="chart-section card-panel">
+                <h4><i class="fas fa-chart-line"></i> Biểu đồ tăng trưởng</h4>
+                <div style="height: 300px;">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-section card-panel">
+                <h4><i class="fas fa-user-check"></i> Doanh thu theo Bác sĩ</h4>
+                <div style="height: 300px;">
+                    <canvas id="doctorChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/report.js" type="module"></script>
+</body>
+</html>

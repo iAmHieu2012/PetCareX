@@ -1,6 +1,11 @@
 import { api } from './api.js';
 
-// Check authentication and role
+// ==================== REPORT JS INTEGRATION ====================
+let revenueChart = null;
+let doctorChart = null;
+
+// Định dạng tiền tệ VND
+const formatVND = (val) => new Intl.NumberFormat('vi-VN').format(val || 0) + ' đ';
 document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('token');
     const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -48,19 +53,23 @@ function displayUserInfo(user) {
 async function loadDashboardData() {
     try {
         // Load branches count
-        const branches = await api.getBranches();
-        document.getElementById('stat-branches').textContent = branches.length || 0;
+        const branchesRes = await api.getBranches();
+        const branches = branchesRes.data || branchesRes;
+        document.getElementById('stat-branches').textContent = (Array.isArray(branches) ? branches.length : 0) || 0;
         
         // Load services count
-        const services = await api.getServices();
-        document.getElementById('stat-services').textContent = services.length || 0;
+        const servicesRes = await api.getServices();
+        const services = servicesRes.data || servicesRes;
+        document.getElementById('stat-services').textContent = (Array.isArray(services) ? services.length : 0) || 0;
         
         // Load staff count
-        const staffData = await api.getStaffCount();
+        const staffRes = await api.getStaffCount();
+        const staffData = staffRes.data || staffRes;
         document.getElementById('stat-staff').textContent = staffData.count || 0;
         
         // Load customers count
-        const customersData = await api.getCustomersCount();
+        const customersRes = await api.getCustomersCount();
+        const customersData = customersRes.data || customersRes;
         document.getElementById('stat-customers').textContent = customersData.count || 0;
         
     } catch (err) {
@@ -78,7 +87,9 @@ function loadSection(section) {
     document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.classList.remove('active');
     });
-    event?.target?.classList.add('active');
+    if (event?.target?.classList) {
+        event.target.classList.add('active');
+    }
     
     const contentSection = document.getElementById('content-section');
     
@@ -152,14 +163,15 @@ async function loadBranchesSection() {
     `;
     
     try {
-        const branches = await api.getBranches();
+        const branchesRes = await api.getBranches();
+        const branches = branchesRes.data || branchesRes || [];
         const timeFormatter = new Intl.DateTimeFormat('vi-VN', {
             hour: '2-digit', 
             minute: '2-digit', 
             hour12: false
         });
         
-        if (branches.length === 0) {
+        if (!Array.isArray(branches) || branches.length === 0) {
             document.getElementById('branches-list').innerHTML = `
                 <div class="empty-state">
                     <i class="fas fa-building"></i>
@@ -220,10 +232,11 @@ async function loadServicesSection() {
     `;
     
     try {
-        const services = await api.getServices();
+        const servicesRes = await api.getServices();
+        const services = servicesRes.data || servicesRes || [];
         const icons = ['fa-stethoscope', 'fa-syringe', 'fa-cut', 'fa-bath', 'fa-tooth', 'fa-wave-square', 'fa-vials', 'fa-heartbeat'];
         
-        if (services.length === 0) {
+        if (!Array.isArray(services) || services.length === 0) {
             document.getElementById('services-list').innerHTML = `
                 <div class="empty-state" style="grid-column: 1/-1;">
                     <i class="fas fa-concierge-bell"></i>
@@ -314,7 +327,7 @@ async function handlePetSearch(event) {
     `;
     
     try {
-        const petDetails = await api.getPetDetails(maThuCung);
+        const petDetails = await api.getPetDetail(maThuCung);
         displayPetDetails(petDetails);
     } catch (err) {
         console.error('Error loading pet details:', err);
@@ -424,14 +437,15 @@ async function loadStaffSection() {
     `;
     
     try {
-        const staff = await api.getAllStaff();
+        const staffRes = await api.getAllStaff();
+        const staff = staffRes.data || staffRes || [];
         const dateFormatter = new Intl.DateTimeFormat('vi-VN', {
             year: 'numeric',
             month: '2-digit',
             day: '2-digit'
         });
         
-        if (staff.length === 0) {
+        if (!Array.isArray(staff) || staff.length === 0) {
             document.getElementById('staff-list').innerHTML = `
                 <div class="empty-state">
                     <i class="fas fa-users"></i>
@@ -555,7 +569,9 @@ async function showEmployeeDetails(maNV, hoTen) {
     
     try {
         // Load transfer history
-        const transfers = await api.getTransferHistory(maNV);
+        const transferResponse = await api.getTransferHistory(maNV);
+        const transfers = Array.isArray(transferResponse) ? transferResponse : 
+                         (transferResponse && Array.isArray(transferResponse.data) ? transferResponse.data : []);
         
         const dateFormatter = new Intl.DateTimeFormat('vi-VN', {
             year: 'numeric',
@@ -843,59 +859,102 @@ async function loadReportsSection() {
     contentSection.innerHTML = `
         <h2><i class="fas fa-chart-bar"></i> Báo cáo & Thống kê</h2>
         
-        <div style="background: white; padding: 1.5rem; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 2rem;">
-            <h3 style="color: var(--primary); margin-bottom: 1rem;">
-                <i class="fas fa-filter"></i> Tìm kiếm & Lọc dữ liệu
-            </h3>
-            <form id="report-filter-form" onsubmit="handleReportFilter(event)" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; align-items: end;">
-                <div>
-                    <label style="display: block; margin-bottom: 0.5rem; color: var(--text-dark); font-weight: 600; font-size: 0.9rem;">
-                        <i class="fas fa-calendar-alt"></i> Tháng
-                    </label>
-                    <input type="number" id="filter-thang" min="1" max="12" value="${currentMonth}" 
-                           style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem; transition: border-color 0.3s;"
-                           onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#e0e0e0'" required>
+        <div class="report-toolbar card-panel">
+            <div class="filter-group-modern">
+                <div class="select-wrapper">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <select id="branchSelect">
+                        <option value="ALL">Toàn hệ thống</option>
+                    </select>
                 </div>
-                <div>
-                    <label style="display: block; margin-bottom: 0.5rem; color: var(--text-dark); font-weight: 600; font-size: 0.9rem;">
-                        <i class="fas fa-calendar"></i> Năm
-                    </label>
-                    <input type="number" id="filter-nam" min="2020" max="2100" value="${currentYear}" 
-                           style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem; transition: border-color 0.3s;"
-                           onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#e0e0e0'" required>
+                <div class="select-wrapper">
+                    <i class="fas fa-calendar-alt"></i>
+                    <select id="reportType" onchange="toggleTimeInput()">
+                        <option value="Ngay">Theo Ngày</option>
+                        <option value="Thang" selected>Theo Tháng</option>
+                        <option value="Quy">Theo Quý</option>
+                        <option value="Nam">Theo Năm</option>
+                    </select>
                 </div>
-                <div>
-                    <label style="display: block; margin-bottom: 0.5rem; color: var(--text-dark); font-weight: 600; font-size: 0.9rem;">
-                        <i class="fas fa-user"></i> Mã Nhân viên (Tùy chọn)
-                    </label>
-                    <input type="text" id="filter-manv" placeholder="VD: NV00000001" maxlength="10"
-                           style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem; transition: border-color 0.3s;"
-                           onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#e0e0e0'">
-                    <small style="color: var(--text-light); font-size: 0.8rem;">Để trống để xem tất cả nhân viên</small>
+        
+                <div id="dynamicInputContainer" class="select-wrapper">
+                    <input type="number" id="timeValue" placeholder="Nhập Tháng (1-12)" value="${currentMonth}">
                 </div>
-                <div>
-                    <button type="submit" style="width: 100%; padding: 0.75rem; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s;"
-                            onmouseover="this.style.background='var(--secondary)'; this.style.transform='translateY(-2px)'"
-                            onmouseout="this.style.background='var(--primary)'; this.style.transform='translateY(0)'">
-                        <i class="fas fa-search"></i> Tìm kiếm
-                    </button>
+        
+                <div id="yearInputContainer" class="select-wrapper">
+                    <i class="fas fa-calendar-check" style="color: var(--primary); margin-right: 10px;"></i>
+                    <input type="number" id="timeYear" placeholder="Năm" value="${currentYear}">
                 </div>
-            </form>
-            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e0e0e0;">
-                <button onclick="loadDefaultReports()" style="padding: 0.5rem 1rem; background: #f8faff; color: var(--primary); border: 2px solid var(--primary); border-radius: 8px; font-size: 0.9rem; cursor: pointer; transition: all 0.3s;"
-                        onmouseover="this.style.background='var(--primary)'; this.style.color='white'"
-                        onmouseout="this.style.background='#f8faff'; this.style.color='var(--primary)'">
-                    <i class="fas fa-redo"></i> Xem 12 tháng gần nhất
+        
+                <button class="register-btn" onclick="updateReport()">
+                    <i class="fas fa-sync-alt"></i> Cập nhật dữ liệu
                 </button>
             </div>
         </div>
-        
-        <div id="reports-content" style="margin-top: 2rem;">
-            <p style="text-align: center; color: var(--text-light); padding: 2rem;">
-                <i class="fas fa-info-circle"></i> Vui lòng chọn tháng và năm để xem báo cáo, hoặc nhấn "Xem 12 tháng gần nhất" để xem báo cáo mặc định
-            </p>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-money-bill-wave"></i></div>
+                <div class="stat-info">
+                    <p>Tổng doanh thu</p>
+                    <h3 id="totalRevenue">0 đ</h3>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: #e0f2fe; color: #0369a1;"><i class="fas fa-stethoscope"></i></div>
+                <div class="stat-info">
+                    <p>Doanh thu Dịch vụ</p>
+                    <h3 id="serviceRevenue">0 đ</h3>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: #fef3c7; color: #b45309;"><i class="fas fa-shopping-bag"></i></div>
+                <div class="stat-info">
+                    <p>Doanh thu Sản phẩm</p>
+                    <h3 id="productRevenue">0 đ</h3>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon" style="background: #dcfce7; color: #15803d;"><i class="fas fa-user-md"></i></div>
+                <div class="stat-info">
+                    <p>Số lượt khám</p>
+                    <h3 id="visitCount">0</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="retail-layout">
+            <div class="chart-section card-panel">
+                <h4><i class="fas fa-chart-line"></i> Biểu đồ tăng trưởng</h4>
+                <div style="height: 300px;">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-section card-panel">
+                <h4><i class="fas fa-user-check"></i> Doanh thu theo Bác sĩ</h4>
+                <div style="height: 300px;">
+                    <canvas id="doctorChart"></canvas>
+                </div>
+            </div>
         </div>
     `;
+    
+    // Load branches
+    try {
+        const branchRes = await api.getBranches();
+        const branches = branchRes.data || branchRes || [];
+        const branchSelect = document.getElementById('branchSelect');
+        
+        if (Array.isArray(branches) && branches.length > 0) {
+            branchSelect.innerHTML = '<option value="ALL">Toàn hệ thống</option>' + 
+                branches.map(b => `<option value="${b.MaChiNhanh}">${b.TenChiNhanh}</option>`).join('');
+        }
+    } catch (err) {
+        console.error('Error loading branches:', err);
+    }
+    
+    // Load default report
+    loadDefaultReports();
 }
 
 async function handleReportFilter(event) {
@@ -1010,6 +1069,8 @@ function displayPerformanceReport(performanceData, thang, nam, maNV) {
 
 async function loadDefaultReports() {
     const reportsContent = document.getElementById('reports-content');
+    if (!reportsContent) return;
+    
     reportsContent.innerHTML = `
         <p style="text-align: center; color: var(--text-light); padding: 2rem;">
             <i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu...
@@ -1141,6 +1202,114 @@ async function loadDefaultReports() {
             </div>
         `;
     }
+}
+
+// ==================== REPORT FUNCTIONS ====================
+// 1. Điều khiển hiển thị Input thời gian
+window.toggleTimeInput = () => {
+    const reportTypeEl = document.getElementById('reportType');
+    const container = document.getElementById('dynamicInputContainer');
+    const yearContainer = document.getElementById('yearInputContainer');
+    
+    if (!reportTypeEl || !container || !yearContainer) return;
+    
+    const type = reportTypeEl.value;
+
+    if (type === 'Ngay') {
+        container.innerHTML = '<input type="date" id="dateInput" style="border:none; background:transparent; outline:none; font-weight:600; width:100%;">';
+        yearContainer.style.display = 'none'; 
+    } else {
+        const placeholder = type === 'Quy' ? 'Nhập Quý (1-4)' : 'Nhập Tháng (1-12)';
+        container.innerHTML = `<input type="number" id="timeValue" placeholder="${placeholder}" style="border:none; background:transparent; outline:none; font-weight:600; width:100%;">`;
+        yearContainer.style.display = 'flex';
+    }
+};
+
+// 2. Cập nhật toàn bộ báo cáo
+window.updateReport = async () => {
+    const branchId = document.getElementById('branchSelect')?.value;
+    const type = document.getElementById('reportType')?.value;
+    
+    if (!branchId || !type) return;
+    
+    let value, year;
+
+    // Lấy giá trị thời gian
+    if (type === 'Ngay') {
+        const dateVal = document.getElementById('dateInput')?.value;
+        if (!dateVal) return alert("Vui lòng chọn ngày!");
+        const dateObj = new Date(dateVal);
+        value = (dateObj.getMonth() + 1) * 100 + dateObj.getDate(); 
+        year = dateObj.getFullYear();
+    } else {
+        value = document.getElementById('timeValue')?.value;
+        year = document.getElementById('timeYear')?.value;
+        if (!value || !year) return alert("Vui lòng nhập đủ Tháng/Quý và Năm!");
+    }
+
+    try {
+        const response = await api.getAdvancedReport(branchId, value, year, type);
+        const responseData = response.data || response;
+        const { stats, doctors } = responseData;
+
+        document.getElementById('totalRevenue').innerText = formatVND(stats.TongDoanhThu);
+        document.getElementById('serviceRevenue').innerText = formatVND(stats.DoanhThuDichVu);
+        document.getElementById('productRevenue').innerText = formatVND(stats.DoanhThuSanPham);
+        document.getElementById('visitCount').innerText = stats.SoLuotKham;
+
+        renderRevenueChart([{ ThoiGian: 'Kỳ này', TongDoanhThu: stats.TongDoanhThu }], type, branchId);
+        renderDoctorChart(doctors);
+
+    } catch (err) {
+        console.error("Lỗi khi hiển thị báo cáo:", err);
+    }
+};
+
+// Vẽ biểu đồ doanh thu
+function renderRevenueChart(data, type, branch) {
+    const ctx = document.getElementById('revenueChart')?.getContext('2d');
+    if (!ctx) return;
+    if (revenueChart) revenueChart.destroy();
+
+    revenueChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.map(i => i.ThoiGian || 'Kỳ này'),
+            datasets: [{
+                label: 'Doanh thu',
+                data: data.map(i => i.TongDoanhThu),
+                borderColor: '#6366f1',
+                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+    });
+}
+
+// Vẽ biểu đồ bác sĩ
+function renderDoctorChart(doctorData) {
+    const ctx = document.getElementById('doctorChart')?.getContext('2d');
+    if (!ctx || !doctorData || !Array.isArray(doctorData) || doctorData.length === 0) return;
+    if (doctorChart) doctorChart.destroy();
+
+    doctorChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: doctorData.map(i => i.HoTen),
+            datasets: [{
+                label: 'Doanh thu đóng góp (VND)',
+                data: doctorData.map(i => i.DoanhThuTaoRa),
+                backgroundColor: '#10b981'
+            }]
+        },
+        options: { 
+            indexAxis: 'y',
+            responsive: true, 
+            maintainAspectRatio: false 
+        }
+    });
 }
 
 // Make loadSection available globally for onclick handlers

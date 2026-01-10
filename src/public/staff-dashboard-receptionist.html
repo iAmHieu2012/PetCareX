@@ -38,6 +38,7 @@
         <div class="tabs-navigation">
             <div class="tabs-header">
                 <button class="tab-btn active" data-tab="bookings"><i class="fas fa-calendar-alt"></i> Quản Lý Lịch Hẹn</button>
+                <button class="tab-btn" data-tab="payment-confirmation"><i class="fas fa-check-circle"></i> Xác Nhận Thanh Toán</button>
                 <button class="tab-btn" data-tab="customers"><i class="fas fa-users"></i> Khách Hàng</button>
                 <button class="tab-btn" data-tab="reports"><i class="fas fa-file-alt"></i> Báo Cáo</button>
             </div>
@@ -53,6 +54,16 @@
                 </div>
                 <div id="bookingList" class="pets-grid">
                     </div>
+            </div>
+
+            <div class="tab-pane" id="payment-confirmation-tab">
+                <div class="tab-header" style="margin-bottom:1.5rem;">
+                    <h2>Xác Nhận Thanh Toán</h2>
+                    <p style="color:#666; font-size:0.95rem;">Danh sách tất cả hóa đơn khách hàng đã thanh toán nhưng chưa xác nhận</p>
+                </div>
+                <div id="paymentConfirmationList" style="display:grid; gap:15px;">
+                    <!-- Danh sách sẽ được load từ API -->
+                </div>
             </div>
 
             <div class="tab-pane" id="customers-tab">

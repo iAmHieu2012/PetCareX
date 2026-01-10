@@ -17,9 +17,13 @@ export const api = {
             : `/api/branches/staff/performance/all?thang=${thang}&nam=${nam}`;
         return fetch(url).then(res => res.json());
     },
-    getPetDetails: (maThuCung) => fetch(`/api/branches/pets/${maThuCung}`).then(res => res.json()),
-    // Booking APIs (for staff-booking.js)
-    createBookingStaff: (data) => fetch('/api/bookings/staff/create', {
+    // Booking APIs
+    createBooking: (data) => fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    }).then(res => res.json()),
+    createBookingStaff: (data) => fetch('/api/bookings/staff', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -28,16 +32,6 @@ export const api = {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ maLichHen, maChiNhanh, maKhachHang })
-    }).then(res => res.json()),
-    confirmAndCreateMedicalForm: (maLichHen, maChiNhanh, maKhachHang, maThuCung, maBacSi) => fetch('/api/bookings/confirm/medical', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ maLichHen, maChiNhanh, maKhachHang, maThuCung, maBacSi })
-    }).then(res => res.json()),
-    confirmAndCreateVaccinationForm: (maLichHen, maChiNhanh, maKhachHang, maThuCung, maBacSi, maGoiTiem) => fetch('/api/bookings/confirm/vaccination', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ maLichHen, maChiNhanh, maKhachHang, maThuCung, maBacSi, maGoiTiem })
     }).then(res => res.json()),
     cancelBooking: (maLichHen, maChiNhanh) => fetch('/api/bookings/cancel', {
         method: 'PUT',
@@ -48,7 +42,53 @@ export const api = {
     // Customer APIs
     getCustomerInfo: (maKhachHang) => fetch(`/api/customer/info/${maKhachHang}`).then(res => res.json()),
     getCustomerPets: (maKhachHang) => fetch(`/api/customer/pets/${maKhachHang}`).then(res => res.json()),
-    getPetDetail: (maThuCung) => fetch(`/api/customer/pets/detail/${maThuCung}`).then(res => res.json()),
-    getPetMedicalHistory: (maThuCung) => fetch(`/api/customer/pets/history/${maThuCung}`).then(res => res.json()),
-    getCustomerBookings: (maKhachHang) => fetch(`/api/customer/bookings/${maKhachHang}`).then(res => res.json())
+    getCustomerBookings: (maKhachHang) => fetch(`/api/bookings/customer/${maKhachHang}`).then(res => res.json()),
+    // Pet APIs (NEW)
+    getPetDetail: (maThuCung) => fetch(`/api/pets/detail/${maThuCung}`).then(res => res.json()),
+    getPetMedicalHistory: (maThuCung) => fetch(`/api/pets/history/${maThuCung}`).then(res => res.json()),
+    addPet: (data) => fetch('/api/pets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    }).then(res => res.json()),
+    // Medical Form APIs (NEW)
+    confirmAndCreateMedicalForm: (data) => fetch('/api/medical-forms/confirm', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    }).then(res => res.json()),
+    // Vaccination APIs (NEW)
+    confirmAndCreateVaccinationForm: (data) => fetch('/api/vaccinations/confirm', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    }).then(res => res.json()),
+    // Product APIs
+    getProducts: (type = '') => {
+        const url = type && type !== 'all' ? `/api/products?type=${encodeURIComponent(type)}` : '/api/products';
+        return fetch(url).then(res => res.json());
+    },
+    getProductsByBranch: (branchId, type = '') => {
+        const url = type && type !== 'all' 
+            ? `/api/products/by-branch/${branchId}?type=${encodeURIComponent(type)}` 
+            : `/api/products/by-branch/${branchId}`;
+        return fetch(url).then(res => res.json());
+    },
+    // Report APIs
+    getRevenueReport: (branchId, type, value, year) => {
+        return fetch(`/api/reports/revenue?branchId=${branchId}&type=${type}&value=${value}&year=${year}`)
+            .then(res => res.json());
+    },
+    getAdvancedReport: (branchId, value, year, type) => {
+        return fetch(`/api/reports/advanced?branchId=${branchId}&value=${value}&year=${year}&type=${type}`)
+            .then(res => res.json());
+    },
+    // Retail APIs
+    checkout: (orderData) => {
+        return fetch('/api/retail/checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(orderData)
+        }).then(res => res.json());
+    }
 };

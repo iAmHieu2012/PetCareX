@@ -18,7 +18,7 @@ const userModel = {
     },
 
     registerFullCustomer: async (data) => {
-        const { maKH, fullName, phone, username, password, email, cccd, gender} = data;
+        const { maKH, fullName, phone, username, password, email, cccd, gender } = data;
         const pool = await sql.connect();
         const transaction = new sql.Transaction(pool);
 
@@ -28,23 +28,24 @@ const userModel = {
 
             // Bước A: Thêm vào bảng KHACH_HANG
             await request
-                .input('maKH', sql.Char, maKH)
-                .input('name', sql.NVarChar, fullName)
-                .input('phone', sql.VarChar, phone)
-                .input('email', sql.VarChar, email)
-                .input('cccd', sql.VarChar, cccd)
-                .input('gender', sql.NVarChar, gender)
+                .input('maKH', sql.Char(10), maKH)
+                .input('fullName', sql.NVarChar(30), fullName)
+                .input('phone', sql.Char(10), phone)
+                .input('email', sql.Char(30), email)
+                .input('cccd', sql.Char(12), cccd)
+                .input('gender', sql.NVarChar(3), gender)
                 .query(`INSERT INTO KHACH_HANG (MaKhachHang, TenKhachHang, SoDienThoai, Email, CCCD, GioiTinh, DiemTichLuy) 
-                        VALUES (@maKH, @name, @phone, @email, @cccd, @gender, 0)`);
+                        VALUES (@maKH, @fullName, @phone, @email, @cccd, @gender, 0)`);
 
             // Bước B: Thêm vào bảng TAI_KHOAN
             await request
-                .input('u', sql.VarChar, username)
-                .input('p', sql.VarChar, password)
-                .input('e', sql.VarChar, email)
-                .input('r', sql.NVarChar, 'KhachHang')
+                .input('username', sql.VarChar(50), username)
+                .input('password', sql.VarChar(255), password)
+                .input('emailAccount', sql.VarChar(50), email)
+                .input('role', sql.NVarChar(20), 'KhachHang')
+                .input('maKHAccount', sql.Char(10), maKH)
                 .query(`INSERT INTO TAI_KHOAN (TenDangNhap, MatKhau, Email, VaiTro, MaKhachHang) 
-                        VALUES (@u, @p, @e, @r, @maKH)`);
+                        VALUES (@username, @password, @emailAccount, @role, @maKHAccount)`);
 
             await transaction.commit();
             return true;

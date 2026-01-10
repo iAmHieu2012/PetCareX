@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bác sĩ Dashboard - PetCareX</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/receptionist-dashboard.css">
+    <style>
+        :root { --medical-color: #6366f1; --vaccine-color: #10b981; }
+        .border-medical { border-left: 5px solid var(--medical-color) !important; }
+        .border-vaccine { border-left: 5px solid var(--vaccine-color) !important; }
+        .info-alert { background: #eef2ff; border: 1px solid #c7d2fe; padding: 12px; border-radius: 8px; margin-bottom: 15px; color: #3730a3; font-size: 14px; }
+        .prescription-list { height: 320px; border: 1px solid #e5e7eb; border-radius: 8px; overflow-y: auto; padding: 5px; background: #fff; }
+        .med-item { display: flex; align-items: center; justify-content: space-between; padding: 10px; border-bottom: 1px solid #f3f4f6; transition: background 0.2s; }
+        .med-item:hover { background: #f9fafb; }
+        .med-item label { flex: 1; cursor: pointer; font-weight: 500; font-size: 14px; }
+        .med-qty { width: 65px; padding: 5px; border: 1px solid #ddd; border-radius: 4px; text-align: center; }
+        .status-badge { padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .status-badge.pending { background: #fef3c7; color: #92400e; }
+        .status-badge.success { background: #d1fae5; color: #065f46; }
+        .btn-info { background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px; }
+        .btn-info:hover { background: #2563eb; }
+        
+        .sub-tabs { display: flex; gap: 10px; margin: 20px 0 15px 0; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; }
+        .sub-tab-btn { padding: 10px 16px; background: none; border: none; cursor: pointer; font-weight: 600; color: #6b7280; border-bottom: 3px solid transparent; transition: all 0.3s; }
+        .sub-tab-btn.active { color: var(--medical-color); border-bottom-color: var(--medical-color); }
+        .sub-tab-btn:hover { color: var(--medical-color); }
+        .sub-tab-pane { display: none; }
+        .sub-tab-pane.active { display: block; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-container">
+            <div class="logo"><i class="fas fa-paw"></i> <span>PetCareX Doctor</span></div>
+            <div class="header-right">
+                <div class="user-info">
+                    <span id="userName" class="name">Bác sĩ</span>
+                    <span id="roleName" class="loyalty-points">Chuyên khoa Thú y</span>
+                </div>
+                <button id="logoutBtn" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Đăng xuất</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="dashboard-container">
+        <div class="welcome-banner">
+            <div class="banner-content">
+                <h1 id="welcomeText">Xin chào, Bác sĩ!</h1>
+                <p>Bạn có <strong id="exam-count">0</strong> ca khám và <strong id="vac-count">0</strong> ca tiêm đang chờ hôm nay.</p>
+            </div>
+        </div>
+
+        <div class="tabs" style="display: flex; flex-wrap: wrap; gap: 10px; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px;">
+            <button class="tab-btn active" data-tab="medical-section" style="flex: 1; min-width: 150px; padding: 12px; background: white; border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s;">
+                <i class="fas fa-stethoscope"></i> Khám Bệnh
+            </button>
+            <button class="tab-btn" data-tab="vaccination-section" style="flex: 1; min-width: 150px; padding: 12px; background: white; border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s;">
+                <i class="fas fa-syringe"></i> Tiêm Phòng
+            </button>
+            <button class="tab-btn" data-tab="history-section" style="flex: 1; min-width: 150px; padding: 12px; background: white; border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s;">
+                <i class="fas fa-history"></i> Tra cứu Y tế
+            </button>
+        </div>
+
+        <!-- ===== PHẦN KHÁM BỆNH ===== -->
+        <div id="medical-section-tab" class="tab-pane active">
+            <div class="sub-tabs">
+                <button class="sub-tab-btn active" data-subtab="medical-today"><i class="fas fa-calendar-day"></i> Hôm nay</button>
+                <button class="sub-tab-btn" data-subtab="medical-completed"><i class="fas fa-check-circle"></i> Đã khám</button>
+                <button class="sub-tab-btn" data-subtab="medical-upcoming"><i class="fas fa-clock"></i> Chưa tới ngày khám</button>
+            </div>
+            <div id="medical-today-tab" class="sub-tab-pane active">
+                <div id="medical-today-list" class="booking-grid"></div>
+            </div>
+            <div id="medical-completed-tab" class="sub-tab-pane">
+                <div id="medical-completed-list" class="booking-grid"></div>
+            </div>
+            <div id="medical-upcoming-tab" class="sub-tab-pane">
+                <div id="medical-upcoming-list" class="booking-grid"></div>
+            </div>
+        </div>
+
+        <!-- ===== PHẦN TIÊM PHÒNG ===== -->
+        <div id="vaccination-section-tab" class="tab-pane">
+            <div class="sub-tabs">
+                <button class="sub-tab-btn active" data-subtab="vaccination-today"><i class="fas fa-calendar-day"></i> Hôm nay</button>
+                <button class="sub-tab-btn" data-subtab="vaccination-completed"><i class="fas fa-check-circle"></i> Đã tiêm</button>
+                <button class="sub-tab-btn" data-subtab="vaccination-upcoming"><i class="fas fa-clock"></i> Chưa tới ngày tiêm</button>
+            </div>
+            <div id="vaccination-today-tab" class="sub-tab-pane active">
+                <div id="vaccination-today-list" class="booking-grid"></div>
+            </div>
+            <div id="vaccination-completed-tab" class="sub-tab-pane">
+                <div id="vaccination-completed-list" class="booking-grid"></div>
+            </div>
+            <div id="vaccination-upcoming-tab" class="sub-tab-pane">
+                <div id="vaccination-upcoming-list" class="booking-grid"></div>
+            </div>
+        </div>
+
+        <!-- ===== PHẦN TRA CỨU Y TẾ ===== -->
+        <div id="history-section-tab" class="tab-pane">
+            <div style="background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                <h3 style="margin-top: 0;"><i class="fas fa-search"></i> Tìm kiếm khách hàng & Thú cưng</h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600;">Tìm khách hàng:</label>
+                        <input type="text" id="search-customer-input" class="form-control" placeholder="Nhập tên hoặc số điện thoại khách hàng..." style="padding: 10px;">
+                        <div id="customer-search-results" style="margin-top: 10px; max-height: 250px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; display: none;">
+                            <!-- Danh sách khách hàng sẽ hiển thị ở đây -->
+                        </div>
+                    </div>
+
+                    <div>
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600;">Chọn thú cưng:</label>
+                        <select id="history-pet-select" class="form-control" style="padding: 10px;">
+                            <option value="">-- Chọn thú cưng --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button onclick="searchMedicalHistory()" style="background: #6366f1; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; margin-bottom: 20px;">
+                    <i class="fas fa-search"></i> Tra cứu
+                </button>
+            </div>
+
+            <div id="history-results" style="background: white; border-radius: 12px; padding: 20px;">
+                <div style="color: #999; text-align: center; padding: 40px;">
+                    Chọn khách hàng và thú cưng để xem lịch sử y tế
+                </div>
+            </div>
+
+            <!-- Lịch sử khám bệnh -->
+            <div id="history-exam-section" style="background: white; border-radius: 12px; padding: 20px; margin-top: 20px; display: none;">
+                <h3 style="color: #6366f1; margin-top: 0;">📋 Lịch sử khám bệnh</h3>
+                <div id="history-exam-list" class="booking-grid"></div>
+            </div>
+
+            <!-- Lịch sử tiêm phòng -->
+            <div id="history-vaccine-section" style="background: white; border-radius: 12px; padding: 20px; margin-top: 20px; display: none;">
+                <h3 style="color: #10b981; margin-top: 0;">💉 Lịch sử tiêm phòng</h3>
+                <div id="history-vaccine-list" class="booking-grid"></div>
+            </div>
+        </div>
+    </main>
+
+    <div id="medicalModal" class="modal">
+        <div class="modal-content" style="max-width: 1000px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-file-medical"></i> Chẩn đoán & Kê đơn thuốc</h2>
+                <span class="close-btn" onclick="closeModal('medicalModal')">&times;</span>
+            </div>
+            <form id="medicalForm">
+                <input type="hidden" id="exam-maPDV">
+                <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px;">
+                    <div class="exam-info">
+                        <div id="modal-pet-info" class="info-alert"></div>
+                        
+                        <div class="form-group">
+                            <label style="color: #92400e; font-weight: 700;"><i class="fas fa-hand-holding-usd"></i> Phí khám bệnh (VNĐ):</label>
+                            <input type="number" id="exam-phiKham" class="form-control" value="150000" min="0" step="10000" required style="background: #fffbeb; border: 2px solid #fef3c7;">
+                            <small style="color: #b45309; display: block; margin-top: 5px;">💡 Phí này sẽ được cộng vào tổng hóa đơn</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label><i class="fas fa-clipboard-list"></i> Triệu chứng lâm sàng:</label>
+                            <textarea id="exam-trieuChung" class="form-control" rows="3" required placeholder="VD: Bỏ ăn, mệt mỏi, nôn..."></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label><i class="fas fa-stethoscope"></i> Kết luận chẩn đoán:</label>
+                            <textarea id="exam-chuanDoan" class="form-control" rows="3" required placeholder="VD: Viêm dạ dày cấp, hư hỏng gan..."></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label><i class="fas fa-calendar-check"></i> Hẹn tái khám (Tùy chọn):</label>
+                            <input type="date" id="exam-taiKham" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="prescription-info">
+                        <label style="font-weight:700; color:var(--medical-color); margin-bottom:10px; display:block; font-size:16px;">
+                            <i class="fas fa-pills"></i> Chỉ định thuốc & Dược phẩm
+                        </label>
+                        <input type="text" id="searchMedicine" class="form-control" placeholder="🔍 Tìm tên thuốc..." style="margin-bottom:12px;">
+                        <div id="medicine-selection-list" class="prescription-list"></div>
+                    </div>
+                </div>
+
+                <div class="modal-footer" style="margin-top:20px; border-top:1px solid #eee; padding-top:15px; display:flex; justify-content:flex-end; gap:10px;">
+                    <button type="button" class="btn-secondary" onclick="closeModal('medicalModal')">Đóng</button>
+                    <button type="submit" id="btnSubmitExam" class="btn-primary" style="padding: 12px 30px;">
+                        <i class="fas fa-save"></i> Hoàn tất & Chuyển thanh toán
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="prescriptionModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-pills"></i> Toa Thuốc</h2>
+                <span class="close-btn" onclick="closeModal('prescriptionModal')">&times;</span>
+            </div>
+            <div style="padding: 20px;">
+                <div id="prescription-content" style="min-height: 200px;">
+                    <i class="fas fa-spinner fa-spin"></i> Đang tải...
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeModal('prescriptionModal')">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="vaccinationModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-syringe"></i> Xác nhận tiêm chủng</h2>
+                <span class="close-btn" onclick="closeModal('vaccinationModal')">&times;</span>
+            </div>
+            <form id="vacForm">
+                <input type="hidden" id="vac-maPDV">
+                <div id="modal-vac-pet-info" class="info-alert"></div>
+                <div class="form-group">
+                    <label><i class="fas fa-pills"></i> Loại Vacxin chỉ định:</label>
+                    <select id="vac-maVacxin" class="form-control" required onchange="updateVaccineLimits()">
+                        <option value="">-- Chọn vacxin --</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-droplet"></i> Liều lượng (ml):</label>
+                    <input type="number" id="vac-lieuLuong" class="form-control" value="1" min="1" required onchange="validateDosage()">
+                    <small id="dosage-warning" style="color: #dc2626; display: none; margin-top: 5px;">⚠️ Liều lượng không được vượt quá <span id="max-dosage">0</span>ml</small>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeModal('vaccinationModal')">Đóng</button>
+                    <button type="submit" id="btnSubmitVac" class="btn-primary" style="width: auto;">
+                        <i class="fas fa-check"></i> Xác nhận hoàn tất tiêm
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="js/doctor-dashboard.js"></script>
+</body>
+</html>
