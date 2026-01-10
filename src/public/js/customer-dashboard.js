@@ -241,7 +241,7 @@ class CustomerDashboard {
 
     setupModals() {
         // CÁCH SỬA LỖI: Kiểm tra phần tử có tồn tại trước khi add event
-        const modalIds = ['close-pet-modal', 'close-pet-detail-modal', 'close-booking-modal'];
+        const modalIds = ['close-pet-modal', 'close-pet-detail-modal', 'close-booking-modal', 'close-review-modal', 'close-view-review-modal'];
         modalIds.forEach(id => {
             const btn = document.getElementById(id);
             if (btn) {
@@ -251,6 +251,23 @@ class CustomerDashboard {
                 });
             }
         });
+
+        // Xử lý các nút đóng ngoài modal
+        const closeReviewBtn = document.getElementById('close-review-btn');
+        if (closeReviewBtn) {
+            closeReviewBtn.addEventListener('click', window.closeReviewModal);
+        }
+
+        const closeViewReviewBtn = document.getElementById('close-view-review-btn');
+        if (closeViewReviewBtn) {
+            closeViewReviewBtn.addEventListener('click', window.closeViewReviewModal);
+        }
+
+        // Xử lý form đánh giá
+        const reviewForm = document.getElementById('review-form');
+        if (reviewForm) {
+            reviewForm.addEventListener('submit', window.submitReview);
+        }
 
         document.querySelectorAll('.modal').forEach(modal => {
             modal.addEventListener('click', (e) => {
@@ -1300,7 +1317,7 @@ function displayPendingInvoices() {
 }
 
 // Phân loại phiếu dịch vụ theo loại
-window.filterInvoicesByType = function(type) {
+window.filterInvoicesByType = async function(type) {
     const container = document.getElementById('invoices-list-container');
     let filtered = invoiceData.pendingInvoices;
 
@@ -1330,12 +1347,32 @@ window.filterInvoicesByType = function(type) {
     document.querySelector(`[data-type="${type}"]`).style.color = '#667eea';
     document.querySelector(`[data-type="${type}"]`).style.background = 'white';
 
+    // Load reviews cho các hóa đơn đã thanh toán
+    invoiceData.reviews = invoiceData.reviews || {};
+    const reviewLoadPromises = filtered.filter(inv => inv.TrangThaiThanhToan === 'Đã thanh toán')
+        .map(async (invoice) => {
+            if (!invoiceData.reviews[invoice.MaHoaDon]) {
+                try {
+                    const ngayLap = new Date(invoice.NgayLap).toISOString().split('T')[0];
+                    const reviewResponse = await apiCall(`/api/invoices/review/${invoice.MaHoaDon}/${ngayLap}`);
+                    if (reviewResponse && reviewResponse.success && reviewResponse.data) {
+                        invoiceData.reviews[invoice.MaHoaDon] = reviewResponse.data;
+                    }
+                } catch (err) {
+                    console.log('Lỗi load review:', err);
+                }
+            }
+        });
+    
+    await Promise.all(reviewLoadPromises);
+
     // Hiển thị phiếu đã lọc
     container.innerHTML = filtered.map(invoice => {
         const isThanhToan = invoice.TrangThaiThanhToan === 'Đã thanh toán';
         const invoiceType = invoice.LoaiPhieuDichVu || detectInvoiceType(invoice);
         const typeIcon = getTypeIcon(invoiceType);
         const typeLabel = getTypeLabel(invoiceType);
+        const hasReview = invoiceData.reviews && invoiceData.reviews[invoice.MaHoaDon];
         
         return `
         <div style="border: 2px solid ${isThanhToan ? '#d1d5db' : '#e0e0e0'}; border-radius: 12px; padding: 15px; background: ${isThanhToan ? '#f3f4f6' : 'white'}; transition: all 0.3s;">
@@ -1376,6 +1413,12 @@ window.filterInvoicesByType = function(type) {
                         <strong>💳 Hình thức:</strong> ${invoice.HinhThucThanhToan}
                     </p>
                 </div>
+                <button onclick="window.${hasReview ? 'viewReview' : 'openReviewModal'}('${invoice.MaHoaDon}', '${new Date(invoice.NgayLap).toISOString().split('T')[0]}')" 
+                    style="width: 100%; padding: 12px; background: ${hasReview ? '#8b5cf6' : '#f59e0b'}; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s;"
+                    onmouseover="this.style.background='${hasReview ? '#7c3aed' : '#d97706'}'"
+                    onmouseout="this.style.background='${hasReview ? '#8b5cf6' : '#f59e0b'}'">
+                    <i class="fas ${hasReview ? 'fa-eye' : 'fa-star'}"></i> ${hasReview ? 'Xem Đánh Giá & Phản Hồi' : 'Đánh Giá Dịch Vụ'}
+                </button>
             ` : invoice.TrangThaiThanhToan === 'Chờ xác nhận' ? `
                 <div style="padding: 12px; background: #fef3c7; border-radius: 8px; margin-bottom: 12px; border-left: 4px solid #f59e0b;">
                     <p style="margin: 0; font-size: 12px; color: #92400e;">
@@ -1555,4 +1598,168 @@ window.cancelInvoicePayment = async function(maHoaDon, ngayLap) {
     } catch (err) {
         showAlert('Lỗi: ' + err.message, 'error');
     }
+}
+
+// ==================== REVIEW FUNCTIONS ====================
+
+// Star rating selector
+window.selectStar = function(btn, category) {
+    const star = parseInt(btn.getAttribute('data-star'));
+    const fieldId = `review-${category}`;
+    document.getElementById(fieldId).value = star;
+    
+    // Update UI - highlight selected stars
+    const parent = btn.parentElement;
+    const buttons = parent.querySelectorAll('button.star-btn');
+    buttons.forEach((b, idx) => {
+        if (idx < star) {
+            b.style.opacity = '1';
+        } else {
+            b.style.opacity = '0.3';
+        }
+    });
+}
+
+// Open review modal
+window.openReviewModal = async function(maHoaDon, ngayLap) {
+    const reviewModal = document.getElementById('review-modal');
+    document.getElementById('review-maHoaDon').value = maHoaDon;
+    document.getElementById('review-ngayLap').value = ngayLap;
+    
+    // Reset form
+    document.getElementById('review-form').reset();
+    document.getElementById('review-chatluong').value = 0;
+    document.getElementById('review-thaido').value = 0;
+    document.getElementById('review-hailong').value = 0;
+    document.getElementById('review-binhluan').value = '';
+    
+    // Reset star UI
+    document.querySelectorAll('.star-btn').forEach(btn => {
+        btn.style.opacity = '0.3';
+    });
+    
+    // Show modal
+    reviewModal.classList.add('active');
+}
+
+// Close review modal
+window.closeReviewModal = function() {
+    const reviewModal = document.getElementById('review-modal');
+    reviewModal.classList.remove('active');
+}
+
+// Submit review
+window.submitReview = async function(e) {
+    e.preventDefault();
+    
+    const maHoaDon = document.getElementById('review-maHoaDon').value;
+    const ngayLap = document.getElementById('review-ngayLap').value;
+    const diemChatLuong = parseInt(document.getElementById('review-chatluong').value);
+    const thaiDo = parseInt(document.getElementById('review-thaido').value);
+    const mucDoHaiLong = parseInt(document.getElementById('review-hailong').value);
+    const binhLuan = document.getElementById('review-binhluan').value;
+    
+    if (!diemChatLuong || !thaiDo || !mucDoHaiLong) {
+        showAlert('❌ Vui lòng đánh giá cả 3 tiêu chí!', 'error');
+        return;
+    }
+    
+    const submitBtn = document.querySelector('#review-form button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang gửi...';
+    
+    try {
+        const response = await apiCall('/api/invoices/review/submit', {
+            method: 'POST',
+            body: JSON.stringify({
+                maHoaDon,
+                ngayLap,
+                diemChatLuong,
+                thaiDo,
+                mucDoHaiLong,
+                binhLuan
+            })
+        });
+        
+        if (response && response.success) {
+            showAlert('✓ Gửi đánh giá thành công!', 'success');
+            window.closeReviewModal();
+            // Cập nhật cache và refresh invoice list
+            invoiceData.reviews = invoiceData.reviews || {};
+            invoiceData.reviews[maHoaDon] = {
+                DiemChatLuongDichVu: diemChatLuong,
+                ThaiDoNhanVien: thaiDo,
+                MucDoHaiLong: mucDoHaiLong,
+                BinhLuan: binhLuan,
+                PhanHoi: null
+            };
+            setTimeout(() => {
+                loadPendingInvoices();
+            }, 1500);
+        } else {
+            showAlert('❌ ' + (response ? response.message : 'Không rõ'), 'error');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Gửi Đánh Giá';
+        }
+    } catch (err) {
+        showAlert('❌ Lỗi: ' + err.message, 'error');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Gửi Đánh Giá';
+    }
+}
+
+// View review
+window.viewReview = async function(maHoaDon, ngayLap) {
+    const viewModal = document.getElementById('view-review-modal');
+    const content = document.getElementById('view-review-content');
+    viewModal.classList.add('active');
+    content.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang tải...';
+    
+    try {
+        const response = await apiCall(`/api/invoices/review/${maHoaDon}/${ngayLap}`);
+        
+        if (response && response.success && response.data) {
+            const review = response.data;
+            const renderStars = (num) => '★'.repeat(num) + '☆'.repeat(5 - num);
+            
+            content.innerHTML = `
+                <div style="margin-bottom: 1.5rem;">
+                    <h3>📊 Đánh Giá Của Bạn</h3>
+                    <div style="background: #f5f5f5; padding: 1rem; border-radius: 8px; margin-top: 0.5rem;">
+                        <p><strong>Chất Lượng Dịch Vụ:</strong> <span style="color: #ff9800; font-size: 1.2rem;">${renderStars(review.DiemChatLuongDichVu)}</span> (${review.DiemChatLuongDichVu}/5)</p>
+                        <p style="margin-top: 0.5rem;"><strong>Thái Độ Nhân Viên:</strong> <span style="color: #ff9800; font-size: 1.2rem;">${renderStars(review.ThaiDoNhanVien)}</span> (${review.ThaiDoNhanVien}/5)</p>
+                        <p style="margin-top: 0.5rem;"><strong>Mức Độ Hài Lòng:</strong> <span style="color: #ff9800; font-size: 1.2rem;">${renderStars(review.MucDoHaiLong)}</span> (${review.MucDoHaiLong}/5)</p>
+                    </div>
+                </div>
+                
+                ${review.BinhLuan ? `
+                    <div style="margin-bottom: 1.5rem;">
+                        <h3>💬 Bình Luận Của Bạn</h3>
+                        <p style="background: #f9f9f9; padding: 1rem; border-left: 3px solid #2196F3; border-radius: 4px;">${review.BinhLuan}</p>
+                    </div>
+                ` : ''}
+                
+                ${review.PhanHoi ? `
+                    <div>
+                        <h3>📝 Phản Hồi Từ Nhân Viên</h3>
+                        <p style="background: #e8f5e9; padding: 1rem; border-left: 3px solid #4caf50; border-radius: 4px;">${review.PhanHoi}</p>
+                    </div>
+                ` : `
+                    <div style="background: #fff3e0; padding: 1rem; border-left: 3px solid #ff9800; border-radius: 4px;">
+                        <i class="fas fa-info-circle"></i> Nhân viên chưa có phản hồi cho đánh giá này
+                    </div>
+                `}
+            `;
+        } else {
+            content.innerHTML = '<p style="color: #d32f2f;">❌ Không tìm thấy đánh giá</p>';
+        }
+    } catch (err) {
+        content.innerHTML = '<p style="color: #d32f2f;">❌ Lỗi: ' + err.message + '</p>';
+    }
+}
+
+// Close view review modal
+window.closeViewReviewModal = function() {
+    const viewModal = document.getElementById('view-review-modal');
+    viewModal.classList.remove('active');
 }

@@ -1730,3 +1730,71 @@ tbody tr:last-child td {
         font-size: 0.8rem;
     }
 }
+/* ==================== REVIEW SYSTEM STYLES ==================== */
+
+.star-btn {
+    transition: all 0.2s ease !important;
+}
+
+.star-btn:hover {
+    transform: scale(1.15) !important;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1)) !important;
+}
+
+.star-btn[data-star="5"]:hover,
+.star-btn[data-star="4"]:hover,
+.star-btn[data-star="3"]:hover,
+.star-btn[data-star="2"]:hover,
+.star-btn[data-star="1"]:hover {
+    color: #ff9800 !important;
+}
+
+/* Review Modal Styling */
+#review-modal .modal-content,
+#view-review-modal .modal-content {
+    animation: slideInUp 0.3s ease;
+}
+
+@keyframes slideInUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+#review-form .form-group {
+    margin-bottom: 1.5rem;
+}
+
+#review-form .form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    font-family: inherit;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+#review-form .form-control:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+#view-review-content {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}

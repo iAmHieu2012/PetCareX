@@ -177,6 +177,51 @@ async function getInvoicesByBranch(req, res) {
     }
 }
 
+// Gửi đánh giá cho hóa đơn
+const submitReview = async (req, res) => {
+    try {
+        const { maHoaDon, ngayLap, diemChatLuong, thaiDo, mucDoHaiLong, binhLuan } = req.body;
+
+        if (!maHoaDon || !ngayLap) {
+            return res.status(400).json({ success: false, message: 'Mã hóa đơn và ngày lập là bắt buộc' });
+        }
+
+        const result = await invoiceModel.submitReview({
+            maHoaDon,
+            ngayLap,
+            diemChatLuong,
+            thaiDo,
+            mucDoHaiLong,
+            binhLuan
+        });
+
+        return res.json(successResponse(result, 'Gửi đánh giá thành công'));
+    } catch (err) {
+        handleControllerError(err, res, 'submitReview');
+    }
+}
+
+// Lấy đánh giá của hóa đơn
+const getReview = async (req, res) => {
+    try {
+        const { maHoaDon, ngayLap } = req.params;
+
+        if (!maHoaDon || !ngayLap) {
+            return res.status(400).json({ success: false, message: 'Mã hóa đơn và ngày lập là bắt buộc' });
+        }
+
+        const result = await invoiceModel.getReview(maHoaDon, ngayLap);
+
+        if (!result) {
+            return res.json(successResponse(null, 'Chưa có đánh giá'));
+        }
+
+        return res.json(successResponse(result, 'Lấy đánh giá thành công'));
+    } catch (err) {
+        handleControllerError(err, res, 'getReview');
+    }
+}
+
 module.exports = {
     getAllPhieuDichVu,
     getPendingInvoices,
@@ -186,5 +231,7 @@ module.exports = {
     getInvoiceHistory,
     getAllPendingConfirmationInvoices,
     confirmPayment,
-    getInvoicesByBranch
-};
+    getInvoicesByBranch,
+    submitReview,
+    getReview
+}

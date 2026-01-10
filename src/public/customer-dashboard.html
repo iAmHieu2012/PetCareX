@@ -592,6 +592,82 @@
         </div>
     </div>
 
+    <!-- Modal Đánh giá hóa đơn -->
+    <div id="review-modal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-star"></i> Đánh Giá Dịch Vụ</h2>
+                <button class="modal-close" id="close-review-modal">&times;</button>
+            </div>
+            <form id="review-form" style="padding: 0 var(--spacing-lg);">
+                <input type="hidden" id="review-maHoaDon">
+                <input type="hidden" id="review-ngayLap">
+
+                <div class="form-group">
+                    <label style="font-weight: 600; margin-bottom: 1rem; display: block;">⭐ Chất Lượng Dịch Vụ</label>
+                    <div style="display: flex; gap: 10px; margin-bottom: 1.5rem;">
+                        <button type="button" class="star-btn" data-star="1" onclick="window.selectStar(this, 'chatluong')" style="font-size: 2rem; background: none; border: none; cursor: pointer; opacity: 0.3;">★</button>
+                        <button type="button" class="star-btn" data-star="2" onclick="window.selectStar(this, 'chatluong')" style="font-size: 2rem; background: none; border: none; cursor: pointer; opacity: 0.3;">★</button>
+                        <button type="button" class="star-btn" data-star="3" onclick="window.selectStar(this, 'chatluong')" style="font-size: 2rem; background: none; border: none; cursor: pointer; opacity: 0.3;">★</button>
+                        <button type="button" class="star-btn" data-star="4" onclick="window.selectStar(this, 'chatluong')" style="font-size: 2rem; background: none; border: none; cursor: pointer; opacity: 0.3;">★</button>
+                        <button type="button" class="star-btn" data-star="5" onclick="window.selectStar(this, 'chatluong')" style="font-size: 2rem; background: none; border: none; cursor: pointer; opacity: 0.3;">★</button>
+                    </div>
+                    <input type="hidden" id="review-chatluong" value="0">
+                </div>
+
+                <div class="form-group">
+                    <label style="font-weight: 600; margin-bottom: 1rem; display: block;">⭐ Thái Độ Nhân Viên</label>
+                    <div style="display: flex; gap: 10px; margin-bottom: 1.5rem;">
+                        <button type="button" class="star-btn" data-star="1" onclick="window.selectStar(this, 'thaido')" style="font-size: 2rem; background: none; border: none; cursor: pointer; opacity: 0.3;">★</button>
+                        <button type="button" class="star-btn" data-star="2" onclick="window.selectStar(this, 'thaido')" style="font-size: 2rem; background: none; border: none; cursor: pointer; opacity: 0.3;">★</button>
+                        <button type="button" class="star-btn" data-star="3" onclick="window.selectStar(this, 'thaido')" style="font-size: 2rem; background: none; border: none; cursor: pointer; opacity: 0.3;">★</button>
+                        <button type="button" class="star-btn" data-star="4" onclick="window.selectStar(this, 'thaido')" style="font-size: 2rem; background: none; border: none; cursor: pointer; opacity: 0.3;">★</button>
+                        <button type="button" class="star-btn" data-star="5" onclick="window.selectStar(this, 'thaido')" style="font-size: 2rem; background: none; border: none; cursor: pointer; opacity: 0.3;">★</button>
+                    </div>
+                    <input type="hidden" id="review-thaido" value="0">
+                </div>
+
+                <div class="form-group">
+                    <label style="font-weight: 600; margin-bottom: 1rem; display: block;">⭐ Mức Độ Hài Lòng</label>
+                    <div style="display: flex; gap: 10px; margin-bottom: 1.5rem;">
+                        <button type="button" class="star-btn" data-star="1" onclick="window.selectStar(this, 'hailong')" style="font-size: 2rem; background: none; border: none; cursor: pointer; opacity: 0.3;">★</button>
+                        <button type="button" class="star-btn" data-star="2" onclick="window.selectStar(this, 'hailong')" style="font-size: 2rem; background: none; border: none; cursor: pointer; opacity: 0.3;">★</button>
+                        <button type="button" class="star-btn" data-star="3" onclick="window.selectStar(this, 'hailong')" style="font-size: 2rem; background: none; border: none; cursor: pointer; opacity: 0.3;">★</button>
+                        <button type="button" class="star-btn" data-star="4" onclick="window.selectStar(this, 'hailong')" style="font-size: 2rem; background: none; border: none; cursor: pointer; opacity: 0.3;">★</button>
+                        <button type="button" class="star-btn" data-star="5" onclick="window.selectStar(this, 'hailong')" style="font-size: 2rem; background: none; border: none; cursor: pointer; opacity: 0.3;">★</button>
+                    </div>
+                    <input type="hidden" id="review-hailong" value="0">
+                </div>
+
+                <div class="form-group">
+                    <label style="font-weight: 600;">💬 Bình Luận (Tùy chọn)</label>
+                    <textarea id="review-binhluan" class="form-control" placeholder="Chia sẻ nhận xét của bạn..." rows="4" style="resize: vertical;"></textarea>
+                </div>
+
+                <div class="modal-footer" style="margin-top: 1.5rem; margin-left: -1.5rem; margin-right: -1.5rem; margin-bottom: -1.5rem;">
+                    <button type="button" class="btn-secondary" id="close-review-btn">Hủy</button>
+                    <button type="submit" class="btn-primary">Gửi Đánh Giá</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Xem Đánh giá -->
+    <div id="view-review-modal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2><i class="fas fa-comments"></i> Đánh Giá & Phản Hồi</h2>
+                <button class="modal-close" id="close-view-review-modal">&times;</button>
+            </div>
+            <div id="view-review-content" style="padding: 0 var(--spacing-lg); min-height: 300px;">
+                <i class="fas fa-spinner fa-spin"></i> Đang tải...
+            </div>
+            <div class="modal-footer" style="margin-top: 1.5rem; margin-left: -1.5rem; margin-right: -1.5rem; margin-bottom: -1.5rem;">
+                <button type="button" class="btn-primary" id="close-view-review-btn">Đóng</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Alert/Notification -->
     <div id="alert-container"></div>
 

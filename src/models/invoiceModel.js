@@ -586,53 +586,116 @@ module.exports = {
     findCustomerByCCCDOrEmail,
     getPendingConfirmationInvoices,
     getAllPendingConfirmationInvoices,
-    confirmPayment,
-    getInvoicesByBranch: async (maChiNhanh, trangThaiThanhToan = null, ngayTao = null) => {
-        try {
-            const pool = await connectDB();
-            let query = `
-                SELECT 
-                    hd.MaHoaDon,
-                    kh.TenKhachHang,
-                    hd.TongTienThanhToan AS tongTien,
-                    CASE 
-                        WHEN hd.HinhThucThanhToan IS NOT NULL AND hd.HinhThucThanhToan != N'Đã hủy' THEN N'Đã thanh toán'
-                        ELSE N'Chưa thanh toán'
-                    END AS trangThaiThanhToan,
-                    hd.NgayLap,
-                    hd.KhuyenMai,
-                    p.TongTien AS tongDichVu,
-                    0 AS tongSanPham
-                FROM HOA_DON hd
-                JOIN PHIEU_DICH_VU p ON hd.MaPhieuDichVu = p.MaPhieuDichVu
-                JOIN KHACH_HANG kh ON p.MaKhachHang = kh.MaKhachHang
-                WHERE p.MaChiNhanh = @MaChiNhanh
-            `;
-            
-            const request = pool.request();
-            request.input('MaChiNhanh', sql.Char(10), maChiNhanh);
-            
-            if (trangThaiThanhToan) {
-                query += ` AND (
-                    CASE 
-                        WHEN hd.HinhThucThanhToan IS NOT NULL AND hd.HinhThucThanhToan != N'Đã hủy' THEN N'Đã thanh toán'
-                        ELSE N'Chưa thanh toán'
-                    END = @TrangThaiThanhToan
-                )`;
-                request.input('TrangThaiThanhToan', sql.NVarChar(20), trangThaiThanhToan);
-            }
-            
-            if (ngayTao) {
-                query += ` AND YEAR(hd.NgayLap) = YEAR(@NgayTao) AND MONTH(hd.NgayLap) = MONTH(@NgayTao)`;
-                request.input('NgayTao', sql.Date, new Date(ngayTao + '-01'));
-            }
-            
-            query += ` ORDER BY hd.NgayLap DESC`;
-            
-            const result = await request.query(query);
-            return result.recordset;
-        } catch (err) {
-            handleModelError(err, 'getInvoicesByBranch');
+    confirmPayment
+};
+
+// Lấy hóa đơn theo chi nhánh
+async function getInvoicesByBranch(maChiNhanh, trangThaiThanhToan = null, ngayTao = null) {
+    try {
+        const pool = await connectDB();
+        let query = `
+            SELECT 
+                hd.MaHoaDon,
+                kh.TenKhachHang,
+                hd.TongTienThanhToan AS tongTien,
+                CASE 
+                    WHEN hd.HinhThucThanhToan IS NOT NULL AND hd.HinhThucThanhToan != N'Đã hủy' THEN N'Đã thanh toán'
+                    ELSE N'Chưa thanh toán'
+                END AS trangThaiThanhToan,
+                hd.NgayLap,
+                hd.KhuyenMai,
+                p.TongTien AS tongDichVu,
+                0 AS tongSanPham
+            FROM HOA_DON hd
+            JOIN PHIEU_DICH_VU p ON hd.MaPhieuDichVu = p.MaPhieuDichVu
+            JOIN KHACH_HANG kh ON p.MaKhachHang = kh.MaKhachHang
+            WHERE p.MaChiNhanh = @MaChiNhanh
+        `;
+        
+        const request = pool.request();
+        request.input('MaChiNhanh', sql.Char(10), maChiNhanh);
+        
+        if (trangThaiThanhToan) {
+            query += ` AND (
+                CASE 
+                    WHEN hd.HinhThucThanhToan IS NOT NULL AND hd.HinhThucThanhToan != N'Đã hủy' THEN N'Đã thanh toán'
+                    ELSE N'Chưa thanh toán'
+                END = @TrangThaiThanhToan
+            )`;
+            request.input('TrangThaiThanhToan', sql.NVarChar(20), trangThaiThanhToan);
         }
+        
+        if (ngayTao) {
+            query += ` AND YEAR(hd.NgayLap) = YEAR(@NgayTao) AND MONTH(hd.NgayLap) = MONTH(@NgayTao)`;
+            request.input('NgayTao', sql.Date, new Date(ngayTao + '-01'));
+        }
+        
+        query += ` ORDER BY hd.NgayLap DESC`;
+        
+        const result = await request.query(query);
+        return result.recordset;
+    } catch (err) {
+        handleModelError(err, 'getInvoicesByBranch');
     }
+}
+
+// Gửi đánh giá hóa đơn
+async function submitReview(data) {
+    try {
+        const pool = await connectDB();
+        
+        const result = await pool.request()
+            .input('MaHD', sql.Char(10), data.maHoaDon)
+            .input('NgayLap', sql.Date, new Date(data.ngayLap))
+            .input('DiemCL', sql.Int, data.diemChatLuong)
+            .input('ThaiDo', sql.Int, data.thaiDo)
+            .input('HaiLong', sql.Int, data.mucDoHaiLong)
+            .input('BinhLuan', sql.NVarChar(100), data.binhLuan || null)
+            .execute('SP_KhachHangDanhGia');
+        
+        return { success: true, message: 'Đánh giá đã được lưu' };
+    } catch (err) {
+        handleModelError(err, 'submitReview');
+    }
+}
+
+// Lấy đánh giá hóa đơn
+async function getReview(maHoaDon, ngayLap) {
+    try {
+        const pool = await connectDB();
+        
+        const result = await pool.request()
+            .input('MaHoaDon', sql.Char(10), maHoaDon)
+            .input('NgayLap', sql.Date, new Date(ngayLap))
+            .query(`
+                SELECT 
+                    MaHoaDon,
+                    NgayLap,
+                    DiemChatLuongDichVu,
+                    ThaiDoNhanVien,
+                    MucDoHaiLong,
+                    BinhLuan,
+                    PhanHoi
+                FROM DANH_GIA
+                WHERE MaHoaDon = @MaHoaDon AND NgayLap = @NgayLap
+            `);
+        
+        return result.recordset[0] || null;
+    } catch (err) {
+        handleModelError(err, 'getReview');
+    }
+}
+
+module.exports = {
+    getAllPhieuDichVu,
+    getPendingInvoices,
+    getPhieuDichVuDetail,
+    createInvoice,
+    cancelInvoice,
+    getInvoiceHistory,
+    getAllPendingConfirmationInvoices,
+    confirmPayment,
+    getInvoicesByBranch,
+    submitReview,
+    getReview
 };

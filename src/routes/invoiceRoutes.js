@@ -29,4 +29,10 @@ router.post('/cancel', invoiceController.cancelInvoice);
 // POST - Xác nhận thanh toán (staff)
 router.post('/confirm', invoiceController.confirmPayment);
 
+// POST - Gửi đánh giá
+router.post('/review/submit', invoiceController.submitReview);
+
+// GET - Lấy đánh giá
+router.get('/review/:maHoaDon/:ngayLap', invoiceController.getReview);
+
 module.exports = router;
