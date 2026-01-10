@@ -44,11 +44,11 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
             if (role === 'KhachHang') {
                 window.location.href = '/customer-dashboard.html';
             } else if (role === 'TiepTan') {
-                window.location.href = '/staff-dashboard-receptionist.html';
+                window.location.href = '/receptionist-dashboard.html';
             } else if (role === 'BacSi') {
                 window.location.href = '/doctor-dashboard.html';
             } else if (role === 'BanHang') {
-                window.location.href = '/staff-dashboard-retail.html';
+                window.location.href = '/retail-dashboard.html';
             } else if (role === 'QuanLi') {
                 window.location.href = '/manager-dashboard.html';
             } else {

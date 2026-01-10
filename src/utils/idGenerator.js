@@ -2,7 +2,7 @@
 const generateId = async (pool, prefix, tableName, maxLength = 10) => {
     try {
         // Whitelist các table được phép
-        const allowedTables = ['KHACH_HANG', 'LICH_HEN', 'PHIEU_DICH_VU', 'PHIEU_KHAM_BENH', 'PHIEU_TIEM_PHONG', 'THU_CUNG', 'HOA_DON'];
+        const allowedTables = ['NHAN_VIEN', 'KHACH_HANG', 'LICH_HEN', 'PHIEU_DICH_VU', 'PHIEU_KHAM_BENH', 'PHIEU_TIEM_PHONG', 'THU_CUNG', 'HOA_DON'];
         
         if (!allowedTables.includes(tableName)) {
             throw new Error(`Table '${tableName}' không được phép`);
@@ -55,6 +55,11 @@ const generateMaThuCung = async (pool) => {
     return generateId(pool, 'TC', 'THU_CUNG', 10);
 };
 
+// Sinh mã nhân viên
+const generateMaNhanVien = async (pool) => {
+    return generateId(pool, 'NV', 'NHAN_VIEN', 10);
+};
+
 module.exports = {
     generateId,
     generateMaKhachHang,
@@ -63,5 +68,6 @@ module.exports = {
     generateMaHoaDon,
     generateMaPhieuKham,
     generateMaPhieuTiem,
-    generateMaThuCung
+    generateMaThuCung,
+    generateMaNhanVien
 };

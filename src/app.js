@@ -14,6 +14,8 @@ const petRoutes = require('./routes/petRoutes');
 const medicalFormRoutes = require('./routes/medicalFormRoutes');
 const vaccinationRoutes = require('./routes/vaccinationRoutes');
 const invoiceRoutes = require('./routes/invoiceRoutes');
+const staffRoutes = require('./routes/staffRoutes');
+const reviewRoutes = require('./routes/reviewRoutes');
 
 // 0. Middleware hiện lỗi
 const logger = require('./middlewares/loggerMiddleware'); 
@@ -39,6 +41,8 @@ app.use('/api/pets', petRoutes);
 app.use('/api/medical-forms', medicalFormRoutes);
 app.use('/api/vaccinations', vaccinationRoutes);
 app.use('/api/invoices', invoiceRoutes);
+app.use('/api/staff', staffRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 // 3. Cấu hình thư mục tĩnh
 // Khi bạn vào localhost:5000/css/style.css, nó sẽ tìm trong thư mục public

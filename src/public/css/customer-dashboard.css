@@ -444,9 +444,9 @@
     color: #065f46;
 }
 
-.status-completed {
-    background: #e9d5ff;
-    color: #581c87;
+.status-cancelled {
+    background: #fee2e2;
+    color: #991b1b;
 }
 
 .booking-body {
@@ -847,4 +847,4 @@
 /* Màu cho các Badge trạng thái */
 .status-unpaid { background-color: #ef4444; color: white; }    /* Đỏ */
 .status-pending { background-color: #f59e0b; color: white; }   /* Cam */
-.status-completed { background-color: #10b981; color: white; } /* Xanh lá */
+.status-cancelled { background-color: #fecaca; color: #7f1d1d; } /* Đỏ */

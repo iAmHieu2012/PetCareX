@@ -237,6 +237,20 @@ class CustomerDashboard {
                 this.loadPetHistoryIntoModal(e.target.value);
             });
         }
+
+        // Booking filters
+        const filterButtons = document.querySelectorAll('.bookings-filters .filter-btn');
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                // Update active state
+                document.querySelectorAll('.bookings-filters .filter-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                
+                // Update filter and render
+                this.currentFilter = e.target.dataset.filter;
+                this.renderBookings();
+            });
+        });
     }
 
     setupModals() {
@@ -616,7 +630,7 @@ class CustomerDashboard {
         
         let filtered = this.bookings;
         if (this.currentFilter !== 'all') {
-            filtered = this.bookings.filter(b => b.TrangThai.includes(this.currentFilter));
+            filtered = this.bookings.filter(b => this.getBookingStatus(b.TrangThai) === this.currentFilter);
         }
 
         if (filtered.length === 0) {
@@ -624,17 +638,8 @@ class CustomerDashboard {
                 <div class="empty-state" style="grid-column: 1/-1;">
                     <i class="fas fa-calendar-times"></i>
                     <p>Chưa có lịch hẹn nào</p>
-                    <button id="new-booking-empty-btn" class="btn-primary">
-                        <i class="fas fa-plus"></i> Đặt Lịch Hẹn Ngay
-                    </button>
                 </div>
             `;
-            document.getElementById('new-booking-empty-btn').addEventListener('click', async () => {
-                // Refresh pets list trước khi mở modal (giống nút header)
-                await this.loadPets();
-                this.populateBookingPets();
-                this.showModal('booking-modal');
-            });
             return;
         }
 
@@ -685,8 +690,8 @@ class CustomerDashboard {
 
     getBookingStatus(status) {
         if (status.includes('Chờ')) return 'pending';
-        if (status.includes('Xác')) return 'confirmed';
-        if (status.includes('Hoàn')) return 'completed';
+        if (status.includes('Đã xác nhận')) return 'confirmed';
+        if (status.includes('Đã hủy')) return 'cancelled';
         return 'pending';
     }
 

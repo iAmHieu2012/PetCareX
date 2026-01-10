@@ -28,7 +28,7 @@
             <div class="banner-content">
                 <h1 id="greeting-message">Chào buổi sáng, Tiếp tân!</h1>
                 <p>Quản lý lịch hẹn và khách hàng tại chi nhánh</p>
-                <div style="display: flex; gap: 20px; margin-top: 15px;">
+                <div class="flex gap-lg mt-lg">
                     <div><small>Hôm nay:</small> <strong id="todayBookings">0</strong></div>
                     <div><small>Chờ xác nhận:</small> <strong id="pendingBookings">0</strong></div>
                 </div>
@@ -45,10 +45,10 @@
 
         <div class="tabs-content">
             <div class="tab-pane active" id="bookings-tab">
-                <div class="tab-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                <div class="tab-header flex-between mb-lg">
                     <h2>Lịch Hẹn Chi Nhánh</h2>
-                    <div style="width: 250px;">
-                        <select id="maChiNhanh" class="form-group" style="padding: 10px; width: 100%; border-radius: 8px; border: 1px solid #ddd;"></select>
+                    <div class="w-1/3 min-w-sm">
+                        <select id="maChiNhanh" class="form-group"></select>
                     </div>
                 </div>
                 <div id="bookingList" class="pets-grid">
@@ -56,11 +56,11 @@
             </div>
 
             <div class="tab-pane" id="payment-confirmation-tab">
-                <div class="tab-header" style="margin-bottom:1.5rem;">
+                <div class="tab-header mb-lg">
                     <h2>Xác Nhận Thanh Toán</h2>
-                    <p style="color:#666; font-size:0.95rem;">Danh sách tất cả hóa đơn khách hàng đã thanh toán nhưng chưa xác nhận</p>
+                    <p class="text-muted text-sm">Danh sách tất cả hóa đơn khách hàng đã thanh toán nhưng chưa xác nhận</p>
                 </div>
-                <div id="paymentConfirmationList" style="display:grid; gap:15px;">
+                <div id="paymentConfirmationList" class="grid-2 gap-md">
                     <!-- Danh sách sẽ được load từ API -->
                 </div>
             </div>
@@ -69,26 +69,26 @@
 
     <div id="doctorSelectionModal" class="modal">
         <div class="modal-content">
-            <h2 style="margin-bottom:1.5rem;">Tiếp Nhận Lịch Hẹn</h2>
-            <div id="modalBookingInfo" style="font-size:0.9rem; margin-bottom:1.5rem; color:#666; background:#f9fafb; padding:10px; border-radius:8px;"></div>
+            <h2 class="mb-lg">Tiếp Nhận Lịch Hẹn</h2>
+            <div id="modalBookingInfo" class="text-sm text-muted p-sm mb-lg bg-light rounded-md"></div>
             
-            <div class="form-group" style="margin-bottom:1.5rem;">
-                <label style="display:block; margin-bottom:5px; font-weight:600;">Bác Sĩ Phụ Trách:</label>
-                <select id="selectDoctor" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;"></select>
+            <div class="form-group mb-lg">
+                <label class="block font-semibold mb-sm">Bác Sĩ Phụ Trách:</label>
+                <select id="selectDoctor" class="w-full"></select>
             </div>
 
-            <div id="vaccinePackageSection" class="form-group" style="margin-bottom:1.5rem; display:none;">
-                <label style="display:block; margin-bottom:5px; font-weight:600;">Gói Tiêm Thú Cưng Đã Mua:</label>
-                <select id="maGoiTiem" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;"></select>
+            <div id="vaccinePackageSection" class="form-group mb-lg" style="display:none;">
+                <label class="block font-semibold mb-sm">Gói Tiêm Thú Cưng Đã Mua:</label>
+                <select id="maGoiTiem" class="w-full"></select>
             </div>
 
-            <div style="display:flex; gap:10px; justify-content:flex-end;">
-                <button onclick="closeDoctorModal()" style="padding:10px 20px; border:none; border-radius:8px; cursor:pointer; background:#eee;">Hủy</button>
+            <div class="flex-end gap-md">
+                <button onclick="closeDoctorModal()" class="btn-secondary">Hủy</button>
                 <button id="finalConfirmBtn" class="btn-primary">Xác Nhận Tiếp Nhận</button>
             </div>
         </div>
     </div>
 
-    <script type="module" src="js/staff-dashboard-receptionist.js"></script>
+    <script type="module" src="js/receptionist-dashboard.js"></script>
 </body>
 </html>
