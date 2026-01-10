@@ -264,10 +264,10 @@ const medicalFormModel = {
             const reqFee = new sql.Request(transaction);
             await reqFee
                 .input('MaPDV', sql.Char(10), data.maPhieuDichVu)
-                .input('PhiKham', sql.Decimal(11, 2), phiKham)
+                .input('PhiKham', sql.Decimal(11, 2), data.phiKhamBenh)
                 .query(`
                     UPDATE PHIEU_DICH_VU 
-                    SET TongTien = ISNULL(TongTien,0) + @PhiKham 
+                    SET TongTien = @PhiKham
                     WHERE MaPhieuDichVu = @MaPDV
                 `);
 
@@ -282,11 +282,7 @@ const medicalFormModel = {
                         .input('SL', sql.Int, med.soLuong)
                         .query(`
                             INSERT INTO CHI_TIET_TOA_THUOC (MaPhieuKhamBenh, MaThuoc, SoLuong)
-                            VALUES (@MaPhieuKhamBenh, @MaThuoc, @SL);
-
-                            UPDATE PHIEU_DICH_VU 
-                            SET TongTien = TongTien + (SELECT GiaBan * @SL FROM SAN_PHAM WHERE MaSanPham = @MaThuoc)
-                            WHERE MaPhieuDichVu = @MaPhieuKhamBenh;
+                            VALUES (@MaPhieuKhamBenh, @MaThuoc, @SL)
                         `);
                 }
             }

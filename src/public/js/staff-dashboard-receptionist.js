@@ -403,7 +403,3 @@ async function loadCustomers() {
     `).join('');
 }
 
-// Xuất các hàm ra window để các thuộc tính onclick trong HTML hoạt động
-window.openConfirmModal = openConfirmModal;
-window.handleCancel = handleCancel;
-window.closeDoctorModal = closeDoctorModal;

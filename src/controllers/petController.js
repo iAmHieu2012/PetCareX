@@ -19,7 +19,7 @@ const petController = {
 
             return res.json(successResponse(result[0], 'Lấy thông tin thú cưng thành công'));
         } catch (err) {
-            return handleControllerError(res, err);
+            return handleControllerError(err, res);
         }
     },
 
@@ -36,14 +36,15 @@ const petController = {
 
             return res.json(successResponse(result, 'Lấy lịch sử y tế thành công'));
         } catch (err) {
-            return handleControllerError(res, err);
+            return handleControllerError(err, res);
         }
     },
 
     // Thêm thú cưng mới
     addPet: async (req, res) => {
         try {
-            const { maKhachHang, tenThuCung, loaiThuCung, gioiTinh, ngaySinh } = req.body;
+            console.log(req.body);
+            const { maKhachHang, tenThuCung, loaiThuCung, giong, gioiTinh, ngaySinh, tinhTrang } = req.body;
 
             const validation = validateRequired(['maKhachHang', 'tenThuCung', 'loaiThuCung'], {
                 maKhachHang, tenThuCung, loaiThuCung
@@ -56,13 +57,15 @@ const petController = {
                 maKhachHang,
                 tenThuCung,
                 loaiThuCung,
+                giong: giong || null,
                 gioiTinh: gioiTinh || 'Chưa xác định',
-                ngaySinh: ngaySinh ? new Date(ngaySinh) : null
+                ngaySinh: ngaySinh ? new Date(ngaySinh) : null,
+                tinhTrang: tinhTrang || 'Bình thường'
             });
 
             return res.status(201).json(successResponse(result, 'Thêm thú cưng thành công'));
         } catch (err) {
-            return handleControllerError(res, err);
+            return handleControllerError(err, res);
         }
     }
 };

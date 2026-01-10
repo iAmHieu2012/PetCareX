@@ -82,6 +82,7 @@ const petModel = {
             .input('NgaySinh', sql.Date, data.ngaySinh ? new Date(data.ngaySinh) : null)
             .input('GioiTinh', sql.NVarChar(3), data.gioiTinh || 'Chưa xác định')
             .input('MaKhachHang', sql.Char(10), data.maKhachHang)
+            .input('TinhTrang', sql.NVarChar(20), data.tinhTrang || 'Bình thường')
             .execute('SP_ThemThuCung');
         
         return {

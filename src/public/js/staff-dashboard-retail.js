@@ -26,9 +26,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 function setupMainTabs() {
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.onclick = () => {
-            document.querySelectorAll('.tab-btn, .tab-pane').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
             btn.classList.add('active');
-            document.getElementById(`${btn.dataset.tab}-tab`).classList.add('active');
+            const tabPane = document.getElementById(`${btn.dataset.tab}-tab`);
+            if (tabPane) tabPane.classList.add('active');
         };
     });
 }
@@ -36,9 +38,18 @@ function setupMainTabs() {
 // ==================== XÁC NHẬN THANH TOÁN ====================
 async function loadUnconfirmedInvoices() {
     const container = document.getElementById('unconfirmedInvoicesList');
+    if (!container) {
+        console.error('Container not found!');
+        return;
+    }
+    
     try {
+        console.log('Loading unconfirmed invoices from:', `/api/retail/unconfirmed/${state.maChiNhanh}`);
         const res = await fetch(`/api/retail/unconfirmed/${state.maChiNhanh}`).then(r => r.json());
+        console.log('API Response:', res);
+        
         state.unconfirmedInvoices = res.data || [];
+        console.log('State updated:', state.unconfirmedInvoices);
 
         if (state.unconfirmedInvoices.length === 0) {
             container.innerHTML = `
@@ -50,46 +61,53 @@ async function loadUnconfirmedInvoices() {
             return;
         }
 
-        container.innerHTML = state.unconfirmedInvoices.map(invoice => `
-            <div class="invoice-card">
-                <div class="invoice-header">
-                    <div class="invoice-info">
-                        <h3><i class="fas fa-receipt"></i> ${invoice.MaHoaDon}</h3>
-                        <p><strong>Khách hàng:</strong> ${invoice.TenKhachHang}</p>
-                        <p><strong>Ngày bán:</strong> ${new Date(invoice.NgayTao).toLocaleDateString('vi-VN')}</p>
-                        <p><strong>Thành tiền:</strong> <span style="color: #ef4444; font-weight: 600;">₫${parseInt(invoice.TongTien).toLocaleString('vi-VN')}</span></p>
+        const html = state.unconfirmedInvoices.map(invoice => `
+            <div class="booking-card" style="border-left: 5px solid #ff9500;">
+                <div class="booking-header">
+                    <div class="booking-header-left">
+                        <h3 style="color: var(--primary); font-size: 1.1rem;">Mã HĐ: ${invoice.MaHoaDon}</h3>
+                        <p style="font-size: 0.85rem; color: #666;">Khách: ${invoice.TenKhachHang}</p>
                     </div>
-                    <span class="status-badge pending">
-                        <i class="fas fa-hourglass-half"></i> Chưa xác nhận
-                    </span>
+                    <span class="booking-status status-pending">Chưa Xác Nhận</span>
                 </div>
-
-                <div class="invoice-details">
-                    <div style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;">Chi tiết sản phẩm:</div>
+                <div class="booking-body" style="grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                    <div class="booking-info-item">
+                        <div class="booking-info-label">Ngày Bán</div>
+                        <div class="booking-info-value">${new Date(invoice.NgayTao).toLocaleDateString('vi-VN')}</div>
+                    </div>
+                    <div class="booking-info-item">
+                        <div class="booking-info-label">SĐT</div>
+                        <div class="booking-info-value">${invoice.SoDienThoai || 'N/A'}</div>
+                    </div>
+                    <div class="booking-info-item">
+                        <div class="booking-info-label">Tổng Tiền</div>
+                        <div class="booking-info-value" style="color: #ef4444; font-weight: bold;">₫${parseInt(invoice.TongTien).toLocaleString('vi-VN')}</div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 1rem; background: #f9fafb; padding: 1rem; border-radius: 8px;">
+                    <p style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;"><i class="fas fa-list"></i> Sản phẩm:</p>
                     ${(invoice.details || []).map(detail => `
-                        <div class="detail-item">
-                            <div class="detail-product">
-                                <strong>${detail.TenSanPham}</strong>
-                                <small>${detail.DonVi}</small>
-                            </div>
-                            <div class="detail-quantity">
-                                <strong>${detail.SoLuong}</strong>
-                            </div>
-                            <div class="detail-price">
-                                ₫${parseInt(detail.GiaBan * detail.SoLuong).toLocaleString('vi-VN')}
-                            </div>
+                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #e5e7eb; font-size: 0.9rem;">
+                            <span><strong>${detail.TenSanPham}</strong> × ${detail.SoLuong}</span>
+                            <span style="color: #10b981;">₫${parseInt(detail.GiaBan * detail.SoLuong).toLocaleString('vi-VN')}</span>
                         </div>
                     `).join('')}
                 </div>
 
-                <button class="btn-confirm" onclick="window.handleConfirmPayment('${invoice.MaPhieuDichVu}')">
-                    <i class="fas fa-check"></i> Xác Nhận
-                </button>
+                <div class="booking-actions" style="margin-top: 1rem; display: flex; gap: 10px;">
+                    <button class="btn-primary" onclick="window.handleConfirmPayment('${invoice.MaPhieuDichVu}', '${invoice.MaHoaDon}')" style="flex: 1;">
+                        <i class="fas fa-check"></i> Xác Nhận Thanh Toán
+                    </button>
+                </div>
             </div>
         `).join('');
+        
+        console.log('Rendering HTML, length:', html.length);
+        container.innerHTML = html;
     } catch (err) {
         console.error('Error loading unconfirmed invoices:', err);
-        container.innerHTML = '<p style="color:red;">Lỗi tải dữ liệu</p>';
+        container.innerHTML = `<p style="color:red;">Lỗi tải dữ liệu: ${err.message}</p>`;
     }
 }
 
@@ -206,9 +224,8 @@ async function loadWarehouseInventory() {
 }
 
 // ==================== MODAL THANH TOÁN ====================
-async function handleConfirmPayment(maPhieuDichVu) {
-    console.log('📝 handleConfirmPayment called with:', maPhieuDichVu);
-    console.log('📊 state.unconfirmedInvoices:', state.unconfirmedInvoices);
+async function handleConfirmPayment(maPhieuDichVu, maHoaDon) {
+    console.log('📝 Confirming payment:', { maPhieuDichVu, maHoaDon });
     
     if (!state.maNhanVien) {
         alert('Lỗi: Không tìm thấy mã nhân viên');
@@ -217,35 +234,33 @@ async function handleConfirmPayment(maPhieuDichVu) {
 
     // Tìm hóa đơn từ danh sách
     const invoice = state.unconfirmedInvoices.find(inv => inv.MaPhieuDichVu === maPhieuDichVu);
-    console.log('🔍 Found invoice:', invoice);
     
-    if (!invoice || !invoice.MaHoaDon) {
-        alert('Lỗi: Không tìm thấy mã hóa đơn\nMaPhieuDichVu: ' + maPhieuDichVu);
+    if (!invoice) {
+        alert('Lỗi: Không tìm thấy hóa đơn');
         return;
     }
 
-    if (confirm('Xác nhận cập nhật hóa đơn này?')) {
+    if (confirm(`Xác nhận thanh toán hóa đơn ${maHoaDon || invoice.MaHoaDon}?`)) {
         try {
             const res = await fetch('/api/invoices/confirm', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    maHoaDon: invoice.MaHoaDon,
-                    ngayLap: invoice.NgayTao,
+                    maHoaDon: maHoaDon || invoice.MaHoaDon,
+                    ngayLap: invoice.NgayTao.split('T')[0],
                     maNhanVien: state.maNhanVien,
                     hinhThucThanhToan: invoice.HinhThucThanhToan || 'Tiền mặt'
                 })
             }).then(r => r.json());
 
             if (res.success) {
-                alert('✓ Xác nhận thành công!');
+                alert('✓ Xác nhận thanh toán thành công!');
                 await loadUnconfirmedInvoices();
             } else {
-                alert('Lỗi: ' + res.message);
+                alert('Lỗi: ' + (res.message || 'Không xác nhận được'));
             }
         } catch (err) {
-            alert('Không thể kết nối đến máy chủ.');
-            console.error(err);
+            alert('Lỗi hệ thống: ' + err.message);
         }
     }
 }

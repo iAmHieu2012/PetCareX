@@ -1,0 +1,31 @@
+/* ==================== RETAIL DASHBOARD - ORANGE COLOR SCHEME ==================== */
+:root {
+    --primary: #f97316;
+    --primary-dark: #ea580c;
+    --secondary: #c2410c;
+}
+
+.header {
+    background: linear-gradient(135deg, #f97316 0%, #c2410c 100%);
+}
+
+.welcome-banner {
+    background: linear-gradient(135deg, #f97316 0%, #c2410c 100%);
+}
+
+.stat-icon {
+    color: #f97316;
+}
+
+.tab-btn.active {
+    border-bottom-color: #f97316;
+    color: #f97316;
+}
+
+.btn-primary {
+    background: #f97316;
+}
+
+.btn-primary:hover {
+    background: #ea580c;
+}

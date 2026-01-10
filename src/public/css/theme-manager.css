@@ -1,0 +1,31 @@
+/* ==================== MANAGER DASHBOARD - GREEN COLOR SCHEME ==================== */
+:root {
+    --primary: #10b981;
+    --primary-dark: #059669;
+    --secondary: #047857;
+}
+
+.header {
+    background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+}
+
+.welcome-banner {
+    background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+}
+
+.stat-icon {
+    color: #10b981;
+}
+
+.tab-btn.active {
+    border-bottom-color: #10b981;
+    color: #10b981;
+}
+
+.btn-primary {
+    background: #10b981;
+}
+
+.btn-primary:hover {
+    background: #059669;
+}

@@ -67,7 +67,8 @@ CREATE OR ALTER PROCEDURE SP_ThemThuCung
     @Giong NVARCHAR(20),
     @NgaySinh DATE,
     @GioiTinh NVARCHAR(3),
-    @MaKhachHang CHAR(10)
+    @MaKhachHang CHAR(10),
+    @TinhTrang NVARCHAR(20) = N'Bình thường'
 AS
 BEGIN
     -- Kiểm tra chủ sở hữu có tồn tại không
@@ -76,11 +77,11 @@ BEGIN
         RAISERROR(N'Không tìm thấy khách hàng sở hữu.', 16, 1);
         RETURN;
     END
-    INSERT INTO THU_CUNG (MaThuCung, TenThuCung, Loai, Giong, NgaySinh, GioiTinh, MaKhachHang)
-    VALUES (@MaThuCung, @TenThuCung, @Loai, @Giong, @NgaySinh, @GioiTinh, @MaKhachHang);
+    INSERT INTO THU_CUNG (MaThuCung, TenThuCung, Loai, Giong, NgaySinh, GioiTinh, TinhTrang, MaKhachHang)
+    VALUES (@MaThuCung, @TenThuCung, @Loai, @Giong, @NgaySinh, @GioiTinh, @TinhTrang, @MaKhachHang);
 END;
 GO
--- Chạy thử: EXEC SP_ThemThuCung 'TC00000001', N'Lu Lu', N'Chó', N'Poodle', '2023-05-10', N'Đực', 'KH00000001'
+-- Chạy thử: EXEC SP_ThemThuCung 'TC00000001', N'Lu Lu', N'Chó', N'Poodle', '2023-05-10', N'Đực', 'KH00000001', N'Bình thường'
 -- GO
 
 -- Tra cứu thông tin chi tiết thú cưng và chủ sở hữu

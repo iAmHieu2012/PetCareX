@@ -6,7 +6,8 @@
     <title>Receptionist Dashboard - PetCareX</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/receptionist-dashboard.css">
+    <link rel="stylesheet" href="css/unified-dashboard.css">
+    <link rel="stylesheet" href="css/theme-receptionist.css">
 </head>
 <body>
     <header class="header">
@@ -39,8 +40,6 @@
             <div class="tabs-header">
                 <button class="tab-btn active" data-tab="bookings"><i class="fas fa-calendar-alt"></i> Quản Lý Lịch Hẹn</button>
                 <button class="tab-btn" data-tab="payment-confirmation"><i class="fas fa-check-circle"></i> Xác Nhận Thanh Toán</button>
-                <button class="tab-btn" data-tab="customers"><i class="fas fa-users"></i> Khách Hàng</button>
-                <button class="tab-btn" data-tab="reports"><i class="fas fa-file-alt"></i> Báo Cáo</button>
             </div>
         </div>
 
@@ -63,25 +62,6 @@
                 </div>
                 <div id="paymentConfirmationList" style="display:grid; gap:15px;">
                     <!-- Danh sách sẽ được load từ API -->
-                </div>
-            </div>
-
-            <div class="tab-pane" id="customers-tab">
-                <div class="tab-header" style="margin-bottom:1.5rem;">
-                    <h2>Danh Sách Khách Hàng</h2>
-                </div>
-                <div id="customerList" class="pets-grid"></div>
-            </div>
-
-            <div class="tab-pane" id="reports-tab">
-                <div style="background:white; padding:2rem; border-radius:15px; box-shadow:0 2px 10px rgba(0,0,0,0.05);">
-                    <h3>Booking Reports</h3>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin: 1.5rem 0;">
-                        <input type="date" id="fromDate" style="padding:10px; border-radius:8px; border:1px solid #ddd;">
-                        <input type="date" id="toDate" style="padding:10px; border-radius:8px; border:1px solid #ddd;">
-                    </div>
-                    <button id="generateReportBtn" class="btn-primary"><i class="fas fa-chart-bar"></i> Generate Report</button>
-                    <div id="reportContent" style="margin-top:2rem;"></div>
                 </div>
             </div>
         </div>

@@ -1,0 +1,31 @@
+/* ==================== CUSTOMER DASHBOARD - BLUE COLOR SCHEME ==================== */
+:root {
+    --primary: #3b82f6;
+    --primary-dark: #2563eb;
+    --secondary: #1e40af;
+}
+
+.header {
+    background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+}
+
+.welcome-banner {
+    background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+}
+
+.stat-icon {
+    color: #3b82f6;
+}
+
+.tab-btn.active {
+    border-bottom-color: #3b82f6;
+    color: #3b82f6;
+}
+
+.btn-primary {
+    background: #3b82f6;
+}
+
+.btn-primary:hover {
+    background: #2563eb;
+}
