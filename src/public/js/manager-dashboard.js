@@ -172,9 +172,6 @@ function loadSection(section) {
     
     // Load data based on section
     switch(section) {
-        case 'overview':
-            loadOverviewSection(branchId);
-            break;
         case 'staff':
             loadStaffSection(branchId);
             break;
@@ -187,86 +184,6 @@ function loadSection(section) {
     }
 }
 
-// Load overview section
-async function loadOverviewSection(branchId) {
-    try {
-        const token = localStorage.getItem('token');
-        
-        // Load active staff count
-        try {
-            const staffResponse = await fetch(`/api/branches/staff/by-branch/${branchId}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (staffResponse.ok) {
-                const result = await staffResponse.json();
-                const staffList = Array.isArray(result.data) ? result.data : [];
-                document.getElementById('activeStaffCount').textContent = staffList.length;
-            } else {
-                document.getElementById('activeStaffCount').textContent = '0';
-            }
-        } catch (e) {
-            console.error('Error loading active staff:', e);
-            document.getElementById('activeStaffCount').textContent = '0';
-        }
-        
-        // Load unpaid invoices count
-        try {
-            const invoiceResponse = await fetch(
-                `/api/invoices/by-branch/${branchId}?trangThaiThanhToan=Chưa thanh toán`,
-                { headers: { 'Authorization': `Bearer ${token}` } }
-            );
-            if (invoiceResponse.ok) {
-                const result = await invoiceResponse.json();
-                const unpaidList = Array.isArray(result.data) ? result.data : [];
-                document.getElementById('unpaidInvoices').textContent = unpaidList.length;
-            } else {
-                document.getElementById('unpaidInvoices').textContent = '0';
-            }
-        } catch (e) {
-            console.error('Error loading unpaid invoices:', e);
-            document.getElementById('unpaidInvoices').textContent = '0';
-        }
-        
-        // Load new customers
-        try {
-            const customerResponse = await fetch(`/api/customer/all`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (customerResponse.ok) {
-                const result = await customerResponse.json();
-                const customerList = Array.isArray(result.data) ? result.data : [];
-                document.getElementById('newCustomers').textContent = customerList.length;
-            } else {
-                document.getElementById('newCustomers').textContent = '0';
-            }
-        } catch (e) {
-            console.error('Error loading new customers:', e);
-            document.getElementById('newCustomers').textContent = '0';
-        }
-        
-        // Load today's revenue
-        try {
-            const invoiceResponse = await fetch(
-                `/api/invoices/by-branch/${branchId}?trangThaiThanhToan=Đã thanh toán`,
-                { headers: { 'Authorization': `Bearer ${token}` } }
-            );
-            if (invoiceResponse.ok) {
-                const result = await invoiceResponse.json();
-                const invoiceList = Array.isArray(result.data) ? result.data : [];
-                const todayRevenue = invoiceList.reduce((sum, inv) => sum + (inv.tongTien || 0), 0);
-                document.getElementById('todayRevenue').textContent = formatVND(todayRevenue);
-            } else {
-                document.getElementById('todayRevenue').textContent = '0₫';
-            }
-        } catch (e) {
-            console.error('Error loading today revenue:', e);
-            document.getElementById('todayRevenue').textContent = '0₫';
-        }
-        
-    } catch (error) {
-        console.error('Error loading overview:', error);
-    }
-}
 
 // Load staff section
 async function loadStaffSection(branchId) {

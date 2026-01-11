@@ -751,8 +751,7 @@ class CustomerDashboard {
             MaThuCung: form.pet.value,
             MaChiNhanh: form.branch.value,
             ThoiGian: `${form.date.value}T${form.time.value}:00`,
-            LoaiLichHen: form.service.value,
-            GhiChu: form.notes.value
+            LoaiLichHen: form.service.value
         };
 
         const response = await apiCall('/api/bookings', {
@@ -774,16 +773,17 @@ class CustomerDashboard {
         const grid = document.getElementById('dashboard-products-grid'); // ID đúng trong HTML của bạn
         if (!grid) return;
 
+        // Nếu chưa chọn chi nhánh, hiển thị message
+        if (!branchId) {
+            grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: #999;"><i class="fas fa-info-circle" style="font-size: 2rem; margin-bottom: 10px;"></i><p>Vui lòng chọn chi nhánh để xem sản phẩm</p></div>';
+            return;
+        }
+
         grid.innerHTML = '<div class="loading-message"><i class="fas fa-spinner fa-spin"></i> Đang tải cửa hàng...</div>';
 
         try {
-            // Nếu chọn chi nhánh, load sản phẩm có tồn kho tại chi nhánh đó
-            let response;
-            if (branchId) {
-                response = await api.getProductsByBranch(branchId, type);
-            } else {
-                response = await api.getProducts(type);
-            }
+            // Load sản phẩm có tồn kho tại chi nhánh đó
+            let response = await api.getProductsByBranch(branchId, type);
             
             const products = (response && response.data) ? response.data : (Array.isArray(response) ? response : []);
             
