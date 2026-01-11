@@ -23,26 +23,25 @@ async function addStaff(data) {
     try {
         const pool = await connectDB();
         
-        // Kiểm tra nhân viên đã tồn tại
+        // SỬA ĐỔI: Kiểm tra nhân viên tồn tại thông qua Email trong bảng TAI_KHOAN
+        // Sử dụng TOP 1 để đảm bảo luôn chỉ trả về tối đa 1 kết quả
         const checkStaff = await pool.request()
             .input('Email', sql.NVarChar(50), data.email)
             .query(`
-                SELECT MaNhanVien FROM NHAN_VIEN
-                WHERE HoTen = (SELECT HoTen FROM NHAN_VIEN WHERE EXISTS (
-                    SELECT 1 FROM TAI_KHOAN WHERE TenDangNhap = @Email
-                ))
-                OR EXISTS (SELECT 1 FROM TAI_KHOAN WHERE TenDangNhap = @Email)
+                SELECT TOP 1 MaNhanVien 
+                FROM TAI_KHOAN 
+                WHERE TenDangNhap = @Email OR Email = @Email
             `);
 
         let maNhanVien;
         let isReturningStaff = false;
 
         if (checkStaff.recordset.length > 0) {
-            // Nhân viên cũ trở lại
+            // Trường hợp: Nhân viên cũ quay trở lại làm việc
             isReturningStaff = true;
             maNhanVien = checkStaff.recordset[0].MaNhanVien;
 
-            // Thêm lịch sử điều động
+            // Thêm lịch sử điều động mới cho nhân viên cũ này
             await pool.request()
                 .input('MaNhanVien', sql.Char(10), maNhanVien)
                 .input('MaChiNhanh', sql.Char(10), data.maChiNhanh)
@@ -53,15 +52,15 @@ async function addStaff(data) {
                     VALUES (@MaNhanVien, @MaChiNhanh, @NgayBatDau, NULL, @ViTri)
                 `);
 
-            // Cập nhật trạng thái tài khoản
+            // Kích hoạt lại tài khoản
             await pool.request()
-                .input('Email', sql.NVarChar(50), data.email)
+                .input('MaNhanVien', sql.Char(10), maNhanVien)
                 .query(`
-                    UPDATE TAI_KHOAN SET TrangThai = 'Hoạt động'
-                    WHERE TenDangNhap = @Email
+                    UPDATE TAI_KHOAN SET TrangThai = N'Hoạt động'
+                    WHERE MaNhanVien = @MaNhanVien
                 `);
         } else {
-            // Nhân viên mới
+            // Trường hợp: Thêm nhân viên mới hoàn toàn (Giữ nguyên logic tạo ID và INSERT của bạn)
             maNhanVien = await generateMaNhanVien(pool);
 
             // Thêm vào bảng NHAN_VIEN
