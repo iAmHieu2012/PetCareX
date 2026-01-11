@@ -141,13 +141,14 @@ const customerController = {
                     ORDER BY TenKhachHang
                 `);
 
-            // Return first match as single object, or array if multiple
             const customers = result.recordset;
             if (customers.length === 0) {
                 return res.json(successResponse(null, 'Không tìm thấy khách hàng'));
             }
-
-            return res.json(successResponse(customers, 'Tìm kiếm khách hàng thành công'));
+            
+            // Return single object if only 1 result, otherwise return array
+            const responseData = customers.length === 1 ? customers[0] : customers;
+            return res.json(successResponse(responseData, 'Tìm kiếm khách hàng thành công'));
         } catch (err) {
             return handleControllerError(err, res);;
         }

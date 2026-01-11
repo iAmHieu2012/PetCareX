@@ -665,9 +665,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 const result = await response.json();
                 
-                if (result.success && Array.isArray(result.data)) { // Kiểm tra mảng an toàn
+                if (result.success && result.data) { // Handle both single object and array
+                    const customers = Array.isArray(result.data) ? result.data : [result.data];
                     const resultsDiv = document.getElementById('customer-search-results');
-                    resultsDiv.innerHTML = result.data.map(customer => `
+                    resultsDiv.innerHTML = customers.map(customer => `
                         <div style="padding: 12px; border-bottom: 1px solid #e5e7eb; cursor: pointer;" 
                             onclick="selectCustomer('${customer.MaKhachHang}', '${customer.TenKhachHang}')">
                             <strong>${customer.TenKhachHang}</strong>

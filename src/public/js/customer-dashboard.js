@@ -544,7 +544,7 @@ class CustomerDashboard {
         });
     }
 
-    showPetDetail(petId) {
+    async showPetDetail(petId) {
         const pet = this.pets.find(p => p.MaThuCung === petId);
         if (!pet) return;
 
@@ -583,15 +583,96 @@ class CustomerDashboard {
                     </div>
                 </div>
 
-                <div style="margin-top: 2rem;">
-                    <button class="btn-primary" style="width: 100%;">
-                        <i class="fas fa-calendar-alt"></i> Đặt Lịch Hẹn Cho ${pet.TenThuCung}
-                    </button>
+                <div id="pet-medical-history-section" style="margin-top: 2rem; margin-bottom: 2rem;">
+                    <p style="text-align: center; color: var(--text-light);">
+                        <i class="fas fa-spinner fa-spin"></i> Đang tải lịch sử y tế...
+                    </p>
                 </div>
             </div>
         `;
 
         this.showModal('pet-detail-modal');
+
+        // Load medical history
+        await this.loadPetMedicalHistory(petId);
+    }
+
+    async loadPetMedicalHistory(petId) {
+        try {
+            const response = await apiCall(`/api/pets/history/${petId}`);
+            
+            if (response && response.success) {
+                const { checkups = [], vaccinations = [], packages = [] } = response.data || {};
+                
+                let medicalHTML = '';
+                
+                // Gói tiêm đã mua
+                medicalHTML += '<div style="margin-bottom: 1.5rem;">';
+                medicalHTML += '<h4 style="color: var(--primary); margin: 0 0 1rem 0; font-size: 0.95rem;"><i class="fas fa-box"></i> Gói tiêm đã sở hữu</h4>';
+                if (packages && packages.length > 0) {
+                    medicalHTML += '<div style="display: grid; gap: 0.5rem;">';
+                    medicalHTML += packages.map(p => `
+                        <div style="background: #f0fdf4; padding: 0.75rem; border-radius: 6px; border-left: 3px solid var(--success); font-size: 0.85rem;">
+                            <strong>${p.MaGoiTiem || p.tenGoiTiem || 'N/A'}</strong><br>
+                            <span style="color: #666; font-size: 0.8rem;">Ngày đăng ký: ${p.NgayDangKy ? new Date(p.NgayDangKy).toLocaleDateString('vi-VN') : 'N/A'}</span>
+                        </div>
+                    `).join('');
+                    medicalHTML += '</div>';
+                } else {
+                    medicalHTML += '<p style="font-size: 0.9rem; color: var(--text-light);">Chưa có gói tiêm nào</p>';
+                }
+                medicalHTML += '</div>';
+                
+                // Lịch sử khám bệnh
+                medicalHTML += '<div style="margin-bottom: 1.5rem;">';
+                medicalHTML += '<h4 style="color: var(--primary); margin: 0 0 1rem 0; font-size: 0.95rem;"><i class="fas fa-stethoscope"></i> Lịch sử khám bệnh</h4>';
+                if (checkups && checkups.length > 0) {
+                    medicalHTML += '<div style="display: grid; gap: 0.5rem;">';
+                    medicalHTML += checkups.map(c => `
+                        <div style="background: #f0f9ff; padding: 0.75rem; border-radius: 6px; border-left: 3px solid var(--primary); font-size: 0.85rem;">
+                            <strong>Chẩn đoán:</strong> ${c.ChuanDoan || 'N/A'}<br>
+                            <span style="color: #666; font-size: 0.8rem;">Hẹn tái khám: ${c.NgayHenTaiKham ? new Date(c.NgayHenTaiKham).toLocaleDateString('vi-VN') : 'Không có'}</span>
+                        </div>
+                    `).join('');
+                    medicalHTML += '</div>';
+                } else {
+                    medicalHTML += '<p style="font-size: 0.9rem; color: var(--text-light);">Chưa có lịch sử khám</p>';
+                }
+                medicalHTML += '</div>';
+                
+                // Lịch sử tiêm chủng
+                medicalHTML += '<div>';
+                medicalHTML += '<h4 style="color: var(--primary); margin: 0 0 1rem 0; font-size: 0.95rem;"><i class="fas fa-syringe"></i> Lịch sử tiêm chủng</h4>';
+                if (vaccinations && vaccinations.length > 0) {
+                    medicalHTML += '<div style="display: grid; gap: 0.5rem;">';
+                    medicalHTML += vaccinations.map(v => `
+                        <div style="background: #fffbf0; padding: 0.75rem; border-radius: 6px; border-left: 3px solid #ff9800; font-size: 0.85rem;">
+                            <strong>Vắc-xin:</strong> ${v.TenVacxin || v.TenTiepChung || 'N/A'}<br>
+                            <span style="color: #666; font-size: 0.8rem;">Ngày tiêm: ${v.NgayTiem ? new Date(v.NgayTiem).toLocaleDateString('vi-VN') : 'N/A'}</span>
+                        </div>
+                    `).join('');
+                    medicalHTML += '</div>';
+                } else {
+                    medicalHTML += '<p style="font-size: 0.9rem; color: var(--text-light);">Chưa có lịch sử tiêm phòng</p>';
+                }
+                medicalHTML += '</div>';
+                
+                document.getElementById('pet-medical-history-section').innerHTML = medicalHTML;
+            } else {
+                document.getElementById('pet-medical-history-section').innerHTML = `
+                    <p style="color: var(--text-light); font-size: 0.9rem; text-align: center;">
+                        <i class="fas fa-info-circle"></i> Không có dữ liệu lịch sử y tế
+                    </p>
+                `;
+            }
+        } catch (err) {
+            console.error('Error loading medical history:', err);
+            document.getElementById('pet-medical-history-section').innerHTML = `
+                <p style="color: #e74c3c; font-size: 0.9rem; text-align: center;">
+                    <i class="fas fa-exclamation-circle"></i> Lỗi khi tải lịch sử y tế
+                </p>
+            `;
+        }
     }
 
     async addPet() {
