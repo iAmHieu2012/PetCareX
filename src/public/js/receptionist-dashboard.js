@@ -62,26 +62,26 @@ function setupTabs() {
 
 async function loadInitialData() {
     try {
-        const branchesRes = await api.getBranches();
-        const branches = branchesRes.data || branchesRes;
-        const branchesData = Array.isArray(branches) ? branches : (branchesRes.data || []);
+        // Lấy chi nhánh từ localStorage, không cần load từ DB
+        state.maChiNhanh = localStorage.getItem('maChiNhanh');
         
-        const select = document.getElementById('maChiNhanh');
-        
-        select.innerHTML = branchesData.map(b => `<option value="${b.MaChiNhanh}">${b.TenChiNhanh}</option>`).join('');
-        
-        if (branchesData.length > 0) {
-            state.maChiNhanh = branchesData[0].MaChiNhanh;
-            select.value = state.maChiNhanh;
-            await loadAllBookings();
+        if (!state.maChiNhanh) {
+            console.error('Lỗi: Không tìm thấy mã chi nhánh');
+            document.getElementById('bookingList').innerHTML = '<p style="color:red;">Lỗi: Không tìm thấy chi nhánh</p>';
+            return;
         }
-    } catch (err) { console.error('Lỗi tải chi nhánh:', err); }
+        
+        await loadAllBookings();
+    } catch (err) { console.error('Lỗi tải dữ liệu:', err); }
 }
 
 async function loadAllBookings() {
     const res = await api.getBookingsByBranch(state.maChiNhanh);
     const bookingsData = res.data || res || [];
     state.bookings = Array.isArray(bookingsData) ? bookingsData : [];
+    
+    // Sắp xếp theo MaLichHen DESC (lớn hơn xếp trên)
+    state.bookings.sort((a, b) => b.MaLichHen.localeCompare(a.MaLichHen));
     
     updateBannerStats(state.bookings);
     renderBookingCards(state.bookings);
@@ -267,12 +267,6 @@ function setupEventListeners() {
     
     // Nút xác nhận trong modal
     document.getElementById('finalConfirmBtn').addEventListener('click', handleFinalConfirm);
-    
-    // Thay đổi chi nhánh để lọc lịch hẹn
-    document.getElementById('maChiNhanh').addEventListener('change', (e) => {
-        state.maChiNhanh = e.target.value;
-        loadAllBookings();
-    });
 }
 
 // Load tất cả hóa đơn chờ xác nhận (loại trừ PHIEU_MUA_HANG - chỉ khám bệnh, tiêm phòng, gói tiêm)

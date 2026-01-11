@@ -40,7 +40,6 @@
             <div class="tabs-header">
                 <button class="tab-btn active" data-tab="payment"><i class="fas fa-receipt"></i> Xác Nhận Thanh Toán</button>
                 <button class="tab-btn" data-tab="my-invoices"><i class="fas fa-history"></i> Hóa Đơn Của Tôi</button>
-                <button class="tab-btn" data-tab="confirmed"><i class="fas fa-check-double"></i> Tất Cả Hóa Đơn Đã Xác Nhận</button>
                 <button class="tab-btn" data-tab="warehouse"><i class="fas fa-warehouse"></i> Kho Hàng</button>
             </div>
         </div>
@@ -76,24 +75,124 @@
                 </div>
             </div>
 
-            <!-- TAB HÓA ĐƠN ĐÃ XÁC NHẬN -->
-            <div class="tab-pane" id="confirmed-tab">
+            <!-- TAB KHO HÀNG -->
+            <div class="tab-pane" id="warehouse-tab">
                 <div class="tab-header mb-lg">
-                    <h2>Tất Cả Hóa Đơn Đã Xác Nhận</h2>
-                    <p class="text-muted text-sm">Danh sách các hóa đơn đã được xác nhận thanh toán tại chi nhánh</p>
+                    <h2>Quản Lý Kho Hàng</h2>
+                    <p class="text-muted text-sm">Danh sách sản phẩm và quản lý nhập hàng</p>
+                    <div style="margin-top: 1rem; display: flex; gap: 1rem;">
+                        <button class="btn-primary" onclick="openAddProductModal()">
+                            <i class="fas fa-plus"></i> Thêm Sản Phẩm
+                        </button>
+                        <button class="btn-primary" style="background: #10b981;" onclick="openImportBatchModal()">
+                            <i class="fas fa-box"></i> Nhập Lô Hàng
+                        </button>
+                    </div>
                 </div>
 
-                <div id="confirmedInvoicesList">
-                    <div class="empty-state">
-                        <i class="fas fa-check-double"></i>
-                        <p>Không có hóa đơn đã xác nhận</p>
+                <!-- Danh sách sản phẩm (bảng) -->
+                <div class="section-card">
+                    <h3 style="margin-bottom: 1rem; color: var(--primary);"><i class="fas fa-boxes"></i> Sản Phẩm Trong Kho</h3>
+                    <div id="warehouseProductList" style="overflow-x: auto;">
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>Đang tải danh sách sản phẩm...</p>
+                        </div>
                     </div>
                 </div>
             </div>
-
-            <!-- HIDE KHO HÀNG -->
         </div>
     </main>
+
+    <!-- MODAL THÊM SẢN PHẨM -->
+    <div id="addProductModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3><i class="fas fa-plus"></i> Thêm Sản Phẩm Mới</h3>
+                <button onclick="closeAddProductModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">×</button>
+            </div>
+            <form id="addProductForm" onsubmit="handleAddProduct(event)">
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label>Tên Sản Phẩm *</label>
+                    <input type="text" id="productName" required style="width: 100%; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 6px;">
+                </div>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label>Loại Sản Phẩm *</label>
+                    <select id="productType" required style="width: 100%; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 6px;">
+                        <option value="">-- Chọn loại --</option>
+                        <option value="thức ăn">Thức Ăn</option>
+                        <option value="thuốc">Thuốc</option>
+                        <option value="phụ kiện">Phụ Kiện</option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label>Giá Bán (VNĐ) *</label>
+                    <input type="number" id="productPrice" min="0" step="1000" required style="width: 100%; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 6px;">
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button type="submit" class="btn-primary" style="flex: 1;">
+                        <i class="fas fa-save"></i> Thêm Sản Phẩm
+                    </button>
+                    <button type="button" class="btn-secondary" onclick="closeAddProductModal()" style="flex: 1; background: #6b7280;">
+                        Hủy
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL NHẬP LÔ HÀNG -->
+    <div id="importBatchModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3><i class="fas fa-box"></i> Nhập Lô Hàng</h3>
+                <button onclick="closeImportBatchModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">×</button>
+            </div>
+            <form id="importBatchForm" onsubmit="handleImportBatch(event)">
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label>Sản Phẩm *</label>
+                    <select id="batchProductId" required style="width: 100%; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 6px;">
+                        <option value="">-- Chọn sản phẩm --</option>
+                    </select>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <div class="form-group">
+                        <label>Ngày Sản Xuất *</label>
+                        <input type="datetime-local" id="batchProduceDate" required style="width: 100%; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 6px;">
+                    </div>
+                    <div class="form-group">
+                        <label>Hạn Sử Dụng</label>
+                        <input type="datetime-local" id="batchExpireDate" style="width: 100%; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 6px;">
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label>Số Lượng (Cái) *</label>
+                    <input type="number" id="batchQuantity" min="1" value="1" required style="width: 100%; padding: 0.75rem; border: 1px solid #e5e7eb; border-radius: 6px;">
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button type="submit" class="btn-primary" style="flex: 1; background: #10b981;">
+                        <i class="fas fa-check"></i> Nhập Hàng
+                    </button>
+                    <button type="button" class="btn-secondary" onclick="closeImportBatchModal()" style="flex: 1; background: #6b7280;">
+                        Hủy
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL XEM CHI TIẾT LÔ HÀNG -->
+    <div id="batchDetailsModal" class="modal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3 id="batchModalTitle"><i class="fas fa-list"></i> Chi Tiết Lô Hàng</h3>
+                <button onclick="closeBatchDetailsModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">×</button>
+            </div>
+            <div id="batchDetailsContent" style="overflow-y: auto; max-height: 400px;">
+                <p>Đang tải...</p>
+            </div>
+        </div>
+    </div>
 
     <script type="module" src="js/retail-dashboard.js"></script>
 </body>

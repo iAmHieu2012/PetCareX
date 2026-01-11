@@ -359,12 +359,229 @@
                 <button class="nav-btn" onclick="loadSection('customers')">
                     <i class="fas fa-user-friends"></i> Quản lý Khách hàng
                 </button>
-                <button class="nav-btn" onclick="loadSection('pets')">
-                    <i class="fas fa-paw"></i> Quản lý Thú cưng
-                </button>
                 <button class="nav-btn" onclick="loadSection('reports')">
                     <i class="fas fa-chart-bar"></i> Báo cáo & Thống kê
                 </button>
+            </div>
+        </div>
+
+        <!-- Staff Section -->
+        <div id="staff" class="content-section" style="display: none;">
+            <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h2><i class="fas fa-users"></i> Danh Sách Nhân Viên</h2>
+                <button class="btn-primary" onclick="openAddStaffModal()" style="padding: 0.75rem 1.5rem; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer;">
+                    <i class="fas fa-plus"></i> Thêm Nhân Viên
+                </button>
+            </div>
+
+            <!-- Filters -->
+            <div style="background: white; padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                <div>
+                    <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;">Chi Nhánh</label>
+                    <select id="filterBranch" onchange="window.filterStaff()" style="width: 100%; padding: 0.6rem; border: 1px solid #ddd; border-radius: 6px;">
+                        <option value="">-- Tất cả chi nhánh --</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;">Chức Vụ</label>
+                    <select id="filterPosition" onchange="window.filterStaff()" style="width: 100%; padding: 0.6rem; border: 1px solid #ddd; border-radius: 6px;">
+                        <option value="">-- Tất cả chức vụ --</option>
+                        <option value="Bác sĩ thú y">Bác sĩ thú y</option>
+                        <option value="Nhân viên bán hàng">Nhân viên bán hàng</option>
+                        <option value="Tiếp tân">Tiếp tân</option>
+                        <option value="Quản lí">Quản lí</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;">Tìm Kiếm</label>
+                    <input type="text" id="filterSearch" onchange="window.filterStaff()" placeholder="Tên hoặc Mã NV..." style="width: 100%; padding: 0.6rem; border: 1px solid #ddd; border-radius: 6px;">
+                </div>
+            </div>
+
+            <div class="table-wrapper" style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead style="background: #f8f9fa; border-bottom: 2px solid #e0e0e0;">
+                        <tr>
+                            <th style="padding: 1rem; text-align: left; font-weight: 600;">Mã NV</th>
+                            <th style="padding: 1rem; text-align: left; font-weight: 600;">Họ Tên</th>
+                            <th style="padding: 1rem; text-align: left; font-weight: 600;">Chức Vụ</th>
+                            <th style="padding: 1rem; text-align: left; font-weight: 600;">Chi Nhánh</th>
+                            <th style="padding: 1rem; text-align: left; font-weight: 600;">Ngày Vào Làm</th>
+                            <th style="padding: 1rem; text-align: center; font-weight: 600;">Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="staffTableBody">
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 2rem;">
+                                <i class="fas fa-spinner fa-spin"></i> Đang tải...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Add Staff Modal -->
+        <div id="add-staff-modal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+            <div class="modal-content" style="background: white; border-radius: 12px; padding: 2rem; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid #e0e0e0;">
+                    <h2 style="margin: 0;"><i class="fas fa-user-plus"></i> Thêm Nhân Viên</h2>
+                    <button id="close-staff-modal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #999;">×</button>
+                </div>
+                <form id="add-staff-form">
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Họ Tên <span style="color: red;">*</span></label>
+                        <input type="text" id="staffName" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem;" required>
+                    </div>
+
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Email <span style="color: red;">*</span></label>
+                        <input type="email" id="staffEmail" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem;" required>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                        <div>
+                            <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Ngày Sinh <span style="color: red;">*</span></label>
+                            <input type="date" id="staffDOB" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem;" required>
+                        </div>
+                        <div>
+                            <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Giới Tính <span style="color: red;">*</span></label>
+                            <select id="staffGender" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem;" required>
+                                <option value="">-- Chọn --</option>
+                                <option value="Nam">Nam</option>
+                                <option value="Nữ">Nữ</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                        <div>
+                            <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Ngày Vào Làm</label>
+                            <input type="date" id="staffHireDate" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Chức Vụ <span style="color: red;">*</span></label>
+                            <select id="staffPosition" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem;" required onchange="updateStaffFormFields()">
+                                <option value="">-- Chọn --</option>
+                                <option value="Bác sĩ thú y">Bác sĩ thú y</option>
+                                <option value="Nhân viên bán hàng">Nhân viên bán hàng</option>
+                                <option value="Tiếp tân">Tiếp tân</option>
+                                <option value="Quản lí">Quản lí</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Chi Nhánh <span style="color: red;">*</span></label>
+                        <select id="staffBranch" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem;" required></select>
+                    </div>
+
+                    <!-- Doctor-specific fields -->
+                    <div id="doctor-fields" style="display: none; margin-bottom: 1rem;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div>
+                                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Giờ Làm Việc <span style="color: red;">*</span></label>
+                                <input type="time" id="staffWorkStart" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem;">
+                            </div>
+                            <div>
+                                <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Giờ Nghỉ <span style="color: red;">*</span></label>
+                                <input type="time" id="staffWorkEnd" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e0e0e0;">
+                        <button type="button" id="close-staff-btn" style="flex: 1; padding: 0.75rem; background: #f0f0f0; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Hủy</button>
+                        <button type="submit" style="flex: 1; padding: 0.75rem; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Thêm Nhân Viên</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Edit Staff Modal -->
+        <div id="edit-staff-modal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+            <div class="modal-content" style="background: white; border-radius: 12px; padding: 2rem; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid #e0e0e0;">
+                    <h2 style="margin: 0;"><i class="fas fa-edit"></i> Sửa Thông Tin Nhân Viên</h2>
+                    <button id="close-edit-modal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #999;">×</button>
+                </div>
+                <div style="max-height: calc(90vh - 150px); overflow-y: auto;">
+                    <!-- Staff Info Display -->
+                    <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border-left: 4px solid var(--primary);">
+                        <h3 style="margin-top: 0;">Thông Tin Nhân Viên</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div><strong>Mã NV:</strong> <span id="editStaffId"></span></div>
+                            <div><strong>Họ Tên:</strong> <span id="editStaffName"></span></div>
+                            <div><strong>Ngày Sinh:</strong> <span id="editStaffDOB"></span></div>
+                            <div><strong>Giới Tính:</strong> <span id="editStaffGender"></span></div>
+                            <div><strong>Ngày Vào Làm:</strong> <span id="editStaffHireDate"></span></div>
+                        </div>
+                    </div>
+
+                    <!-- Edit Form -->
+                    <form id="edit-staff-form">
+                        <h3>Chỉnh Sửa Thông Tin</h3>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Chi Nhánh Hiện Tại <span style="color: red;">*</span></label>
+                            <select id="editStaffBranch" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem;" required>
+                                <option value="">-- Chọn --</option>
+                            </select>
+                        </div>
+
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Chức Vụ <span style="color: red;">*</span></label>
+                            <select id="editStaffPosition" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem;" required onchange="updateEditStaffFormFields()">
+                                <option value="">-- Chọn --</option>
+                                <option value="Bác sĩ thú y">Bác sĩ thú y</option>
+                                <option value="Nhân viên bán hàng">Nhân viên bán hàng</option>
+                                <option value="Tiếp tân">Tiếp tân</option>
+                                <option value="Quản lí">Quản lí</option>
+                            </select>
+                        </div>
+
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Chi Nhánh (Điều Động)</label>
+                            <select id="editStaffNewBranch" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem;">
+                                <option value="">-- Giữ nguyên chi nhánh --</option>
+                            </select>
+                            <small style="color: #999; display: block; margin-top: 0.5rem;">Để trống để giữ nguyên chi nhánh hiện tại. Chọn chi nhánh mới để điều động nhân viên.</small>
+                        </div>
+
+                        <!-- Doctor-specific fields -->
+                        <div id="edit-doctor-fields" style="display: none; margin-bottom: 1rem;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <div>
+                                    <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Giờ Làm Việc</label>
+                                    <input type="time" id="editStaffWorkStart" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem;" placeholder="Để trống lấy giờ mở cửa chi nhánh">
+                                </div>
+                                <div>
+                                    <label style="display: block; font-weight: 600; margin-bottom: 0.5rem;">Giờ Nghỉ</label>
+                                    <input type="time" id="editStaffWorkEnd" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem;" placeholder="Để trống lấy giờ đóng cửa chi nhánh">
+                                </div>
+                            </div>
+                            <small style="color: #999; display: block; margin-top: 0.5rem;">Nếu để trống, sẽ tự động lấy giờ mở/đóng cửa của chi nhánh</small>
+                        </div>
+
+                        <div style="border-top: 1px solid #e0e0e0; padding-top: 1rem; margin-top: 1rem;">
+                            <h3>Lịch Sử Điều Động</h3>
+                            <div id="staffHistoryDisplay" style="background: #f9f9f9; padding: 1rem; border-radius: 8px; max-height: 200px; overflow-y: auto;"></div>
+                        </div>
+                    </form>
+                </div>
+                <div style="display: flex; gap: 1rem; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e0e0e0;">
+                    <button type="button" onclick="window.viewStaffSalary()" style="padding: 0.75rem 1rem; background: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                        <i class="fas fa-money-bill-wave"></i> Xem Lương & Thưởng
+                    </button>
+                    <button type="button" id="delete-staff-btn" style="padding: 0.75rem 1rem; background: #dc3545; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                        <i class="fas fa-trash"></i> Xóa Nhân Viên
+                    </button>
+                    <div style="flex: 1;"></div>
+                    <button type="button" id="close-edit-btn" style="padding: 0.75rem 1rem; background: #f0f0f0; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Hủy</button>
+                    <button type="button" id="submit-edit-btn" style="padding: 0.75rem 1rem; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                        <i class="fas fa-save"></i> Lưu Thay Đổi
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -375,6 +592,37 @@
                 <p>Chọn một mục từ menu trên để bắt đầu quản lý hệ thống</p>
             </div>
         </div>
+
+        <!-- Salary View Modal -->
+        <div id="salary-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1100; justify-content: center; align-items: center; animation: fadeIn 0.3s ease;">
+            <div style="background: white; border-radius: 16px; padding: 0; max-width: 700px; width: 95%; max-height: 90vh; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3); display: flex; flex-direction: column; animation: slideUp 0.3s ease;">
+                <!-- Header -->
+                <div style="background: linear-gradient(135deg, var(--primary) 0%, #0d6b7f 100%); color: white; padding: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                    <h2 style="margin: 0; font-size: 1.3rem;"><i class="fas fa-money-bill-wave"></i> Lương & Thưởng Hàng Năm</h2>
+                    <button onclick="window.closeSalaryModal()" style="background: rgba(255,255,255,0.3); border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; color: white; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; transition: background 0.3s;" onmouseover="this.style.background='rgba(255,255,255,0.5)'" onmouseout="this.style.background='rgba(255,255,255,0.3)'">×</button>
+                </div>
+                
+                <!-- Content -->
+                <div id="salaryModalContent" style="padding: 2rem; flex: 1; overflow-y: auto;">
+                    <div style="text-align: center; padding: 3rem 1rem; color: #999;">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 1rem; display: block;"></i>
+                        <p>Đang tải dữ liệu lương...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            @keyframes slideUp {
+                from { transform: translateY(30px); opacity: 0; }
+                to { transform: translateY(0); opacity: 1; }
+            }
+        </style>
+    </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

@@ -269,28 +269,61 @@ const retailModel = {
         }
     },
 
-    // Xác nhận thanh toán (cập nhật MaNhanVien và HinhThucThanhToan)
-    confirmPayment: async (data) => {
+    // Lấy danh sách sản phẩm trong kho (cho dashboard)
+    getWarehouseProducts: async (maChiNhanh) => {
         try {
             const pool = await connectDB();
             const result = await pool.request()
-                .input('MaPhieuDichVu', sql.Char(10), data.maPhieuDichVu)
-                .input('MaNhanVien', sql.Char(10), data.maNhanVien)
-                .input('HinhThucThanhToan', sql.NVarChar(20), data.hinhThucThanhToan)
+                .input('MaChiNhanh', sql.Char(10), maChiNhanh)
                 .query(`
-                    UPDATE HOA_DON 
-                    SET MaNhanVien = @MaNhanVien, 
-                        HinhThucThanhToan = @HinhThucThanhToan
-                    WHERE MaPhieuDichVu = @MaPhieuDichVu
+                    SELECT 
+                        sp.MaSanPham,
+                        sp.TenSanPham,
+                        sp.LoaiSanPham,
+                        ISNULL(SUM(kh.SoLuongTonKho), 0) as SoLuong,
+                        sp.GiaBan as Gia
+                    FROM SAN_PHAM sp
+                    LEFT JOIN KHO_HANG kh ON sp.MaSanPham = kh.MaSanPham 
+                        AND kh.MaChiNhanh = @MaChiNhanh
+                    GROUP BY sp.MaSanPham, sp.TenSanPham, sp.LoaiSanPham, sp.GiaBan
+                    ORDER BY sp.TenSanPham
                 `);
 
-            return {
-                success: true,
-                message: 'Xác nhận thanh toán thành công'
-            };
+            return result.recordset;
         } catch (err) {
-            handleModelError(err, 'confirmPayment');
-            throw err;
+            handleModelError(err, 'getWarehouseProducts');
+            return [];
+        }
+    },
+
+    // Lấy danh sách lô hàng trong kho
+    getWarehouseBatches: async (maChiNhanh) => {
+        try {
+            const pool = await connectDB();
+            const result = await pool.request()
+                .input('MaChiNhanh', sql.Char(10), maChiNhanh)
+                .query(`
+                    SELECT 
+                        lh.MaSanPham as MaLo,
+                        sp.TenSanPham,
+                        ISNULL(kh.SoLuongTonKho, 0) as SoLuong,
+                        lh.NgaySanXuat as NgayNhap,
+                        lh.HanSuDung as NgayHetHan,
+                        'Nhà cung cấp' as NhaCungCap,
+                        'Cái' as DonVi
+                    FROM LO_HANG lh
+                    INNER JOIN SAN_PHAM sp ON lh.MaSanPham = sp.MaSanPham
+                    LEFT JOIN KHO_HANG kh ON lh.MaSanPham = kh.MaSanPham 
+                        AND lh.NgaySanXuat = kh.NgaySanXuat
+                        AND kh.MaChiNhanh = @MaChiNhanh
+                    WHERE kh.MaChiNhanh = @MaChiNhanh OR kh.MaChiNhanh IS NULL
+                    ORDER BY lh.HanSuDung ASC, lh.NgaySanXuat DESC
+                `);
+
+            return result.recordset;
+        } catch (err) {
+            handleModelError(err, 'getWarehouseBatches');
+            return [];
         }
     },
 
@@ -306,24 +339,117 @@ const retailModel = {
         } catch (err) {
             handleModelError(err, 'getPDVDetail');
         }
+    },
+
+    // Thêm sản phẩm mới
+    addProduct: async (data) => {
+        try {
+            const pool = await connectDB();
+            
+            // Generate MaSanPham
+            const result = await pool.request()
+                .query('SELECT MAX(CAST(SUBSTRING(MaSanPham, 3, 8) AS INT)) as MaxId FROM SAN_PHAM');
+            
+            const maxId = result.recordset[0]?.MaxId || 0;
+            const maSanPham = 'SP' + String(maxId + 1).padStart(8, '0');
+            
+            await pool.request()
+                .input('MaSanPham', sql.Char(10), maSanPham)
+                .input('TenSanPham', sql.NVarChar(30), data.tenSanPham)
+                .input('LoaiSanPham', sql.NVarChar(10), data.loaiSanPham)
+                .input('GiaBan', sql.Decimal(11, 2), data.giaBan)
+                .query(`
+                    INSERT INTO SAN_PHAM (MaSanPham, TenSanPham, LoaiSanPham, GiaBan)
+                    VALUES (@MaSanPham, @TenSanPham, @LoaiSanPham, @GiaBan)
+                `);
+            
+            return {
+                maSanPham,
+                tenSanPham: data.tenSanPham,
+                success: true
+            };
+        } catch (err) {
+            handleModelError(err, 'addProduct');
+            throw err;
+        }
+    },
+
+    // Nhập lô hàng
+    importBatch: async (data) => {
+        try {
+            const pool = await connectDB();
+            
+            // Insert vào LO_HANG nếu chưa tồn tại
+            const loHangCheck = await pool.request()
+                .input('MaSanPham', sql.Char(10), data.maSanPham)
+                .input('NgaySanXuat', sql.DateTime, new Date(data.ngaySanXuat))
+                .query(`
+                    SELECT * FROM LO_HANG 
+                    WHERE MaSanPham = @MaSanPham AND NgaySanXuat = @NgaySanXuat
+                `);
+            
+            const ngayHetHan = data.hanSuDung ? new Date(data.hanSuDung) : null;
+            
+            if (loHangCheck.recordset.length === 0) {
+                // Insert lô mới
+                await pool.request()
+                    .input('MaSanPham', sql.Char(10), data.maSanPham)
+                    .input('NgaySanXuat', sql.DateTime, new Date(data.ngaySanXuat))
+                    .input('HanSuDung', sql.DateTime, ngayHetHan)
+                    .query(`
+                        INSERT INTO LO_HANG (MaSanPham, NgaySanXuat, HanSuDung)
+                        VALUES (@MaSanPham, @NgaySanXuat, @HanSuDung)
+                    `);
+            }
+            
+            // Check xem đã có trong KHO_HANG chưa
+            const khoHangCheck = await pool.request()
+                .input('MaChiNhanh', sql.Char(10), data.maChiNhanh)
+                .input('MaSanPham', sql.Char(10), data.maSanPham)
+                .input('NgaySanXuat', sql.DateTime, new Date(data.ngaySanXuat))
+                .query(`
+                    SELECT * FROM KHO_HANG 
+                    WHERE MaChiNhanh = @MaChiNhanh 
+                        AND MaSanPham = @MaSanPham 
+                        AND NgaySanXuat = @NgaySanXuat
+                `);
+            
+            if (khoHangCheck.recordset.length === 0) {
+                // Insert mới vào KHO_HANG
+                await pool.request()
+                    .input('MaChiNhanh', sql.Char(10), data.maChiNhanh)
+                    .input('MaSanPham', sql.Char(10), data.maSanPham)
+                    .input('NgaySanXuat', sql.DateTime, new Date(data.ngaySanXuat))
+                    .input('SoLuongTonKho', sql.Int, data.soLuong)
+                    .query(`
+                        INSERT INTO KHO_HANG (MaChiNhanh, MaSanPham, NgaySanXuat, SoLuongTonKho)
+                        VALUES (@MaChiNhanh, @MaSanPham, @NgaySanXuat, @SoLuongTonKho)
+                    `);
+            } else {
+                // Update số lượng
+                await pool.request()
+                    .input('MaChiNhanh', sql.Char(10), data.maChiNhanh)
+                    .input('MaSanPham', sql.Char(10), data.maSanPham)
+                    .input('NgaySanXuat', sql.DateTime, new Date(data.ngaySanXuat))
+                    .input('SoLuongTonKho', sql.Int, data.soLuong)
+                    .query(`
+                        UPDATE KHO_HANG 
+                        SET SoLuongTonKho = SoLuongTonKho + @SoLuongTonKho
+                        WHERE MaChiNhanh = @MaChiNhanh 
+                            AND MaSanPham = @MaSanPham 
+                            AND NgaySanXuat = @NgaySanXuat
+                    `);
+            }
+            
+            return {
+                success: true,
+                message: 'Nhập lô hàng thành công'
+            };
+        } catch (err) {
+            handleModelError(err, 'importBatch');
+            throw err;
+        }
     }
 };
-
-// Lấy chi tiết phiếu dịch vụ
-const getPDVDetail = async (maPDV) => {
-    try {
-        const pool = await connectDB();
-        const result = await pool.request()
-            .input('MaPDV', sql.Char(10), maPDV)
-            .query(`SELECT * FROM PHIEU_DICH_VU WHERE MaPhieuDichVu = @MaPDV`);
-        
-        return result.recordset?.[0] || null;
-    } catch (err) {
-        handleModelError(err, 'getPDVDetail');
-    }
-};
-
-// Thêm vào exports
-retailModel.getPDVDetail = getPDVDetail;
 
 module.exports = retailModel;

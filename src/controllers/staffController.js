@@ -1,6 +1,7 @@
 const staffModel = require('../models/staffModel');
 const { successResponse, errorResponse } = require('../utils/responseFormatter');
 const { handleControllerError } = require('../utils/errorHandler');
+const { validateAndConvertTime } = require('../utils/validation');
 
 // Thêm nhân viên mới
 const addStaff = async (req, res) => {
@@ -16,6 +17,24 @@ const addStaff = async (req, res) => {
             return res.status(400).json(errorResponse('Bác sĩ thú y phải có giờ làm việc và giờ nghỉ'));
         }
 
+        // Validate time format cho Bác sĩ thú y
+        let validatedGioLamViec = gioLamViec;
+        let validatedGioNghi = gioNghi;
+
+        if (chucVu === 'Bác sĩ thú y') {
+            const gioLamViecValidation = validateAndConvertTime(gioLamViec);
+            if (!gioLamViecValidation.isValid) {
+                return res.status(400).json(errorResponse(gioLamViecValidation.message));
+            }
+            validatedGioLamViec = gioLamViecValidation.value;
+
+            const gioNghiValidation = validateAndConvertTime(gioNghi);
+            if (!gioNghiValidation.isValid) {
+                return res.status(400).json(errorResponse(gioNghiValidation.message));
+            }
+            validatedGioNghi = gioNghiValidation.value;
+        }
+
         const result = await staffModel.addStaff({
             hoTen,
             email,
@@ -24,8 +43,8 @@ const addStaff = async (req, res) => {
             ngayVaoLam: ngayVaoLam || new Date().toISOString().split('T')[0],
             chucVu,
             maChiNhanh,
-            gioLamViec,
-            gioNghi,
+            gioLamViec: validatedGioLamViec,
+            gioNghi: validatedGioNghi,
             nguoiQuanLi: nguoiQuanLi || null
         });
 
@@ -131,11 +150,33 @@ const updateStaff = async (req, res) => {
             return res.status(400).json(errorResponse('Thiếu mã nhân viên hoặc chức vụ'));
         }
 
+        // Validate time format cho Bác sĩ thú y
+        let validatedGioLamViec = gioLamViec;
+        let validatedGioNghi = gioNghi;
+
+        if (chucVu === 'Bác sĩ thú y') {
+            if (gioLamViec) {
+                const gioLamViecValidation = validateAndConvertTime(gioLamViec);
+                if (!gioLamViecValidation.isValid) {
+                    return res.status(400).json(errorResponse(gioLamViecValidation.message));
+                }
+                validatedGioLamViec = gioLamViecValidation.value;
+            }
+
+            if (gioNghi) {
+                const gioNghiValidation = validateAndConvertTime(gioNghi);
+                if (!gioNghiValidation.isValid) {
+                    return res.status(400).json(errorResponse(gioNghiValidation.message));
+                }
+                validatedGioNghi = gioNghiValidation.value;
+            }
+        }
+
         const result = await staffModel.updateStaff({
             maNhanVien,
             chucVu,
-            gioLamViec,
-            gioNghi,
+            gioLamViec: validatedGioLamViec,
+            gioNghi: validatedGioNghi,
             maChiNhanh
         });
 
@@ -166,6 +207,48 @@ const getStaffHistory = async (req, res) => {
     }
 };
 
+// Lấy bảng lương theo chức vụ
+const getSalaryTable = async (req, res) => {
+    try {
+        const salaryTable = await staffModel.getSalaryTable();
+
+        return res.json(successResponse(salaryTable || [], 'Lấy bảng lương thành công'));
+    } catch (err) {
+        handleControllerError(err, res, 'getSalaryTable');
+    }
+};
+
+// Điều động nhân viên sang chi nhánh khác
+const transferStaff = async (req, res) => {
+    try {
+        const { maNhanVien } = req.params;
+        const { oldBranch, newBranch, newPosition } = req.body;
+
+        if (!maNhanVien || !oldBranch || !newBranch) {
+            return res.status(400).json(errorResponse('Thiếu thông tin bắt buộc'));
+        }
+
+        if (oldBranch === newBranch) {
+            return res.status(400).json(errorResponse('Chi nhánh mới phải khác chi nhánh cũ'));
+        }
+
+        const result = await staffModel.transferStaff({
+            maNhanVien,
+            oldBranch,
+            newBranch,
+            newPosition
+        });
+
+        if (!result) {
+            return res.status(404).json(errorResponse('Không tìm thấy nhân viên hoặc lỗi khi điều động'));
+        }
+
+        return res.json(successResponse(result, 'Điều động nhân viên thành công'));
+    } catch (err) {
+        handleControllerError(err, res, 'transferStaff');
+    }
+};
+
 module.exports = {
     addStaff,
     getAllStaff,
@@ -174,5 +257,7 @@ module.exports = {
     getStaffDetail,
     deleteStaff,
     updateStaff,
-    getStaffHistory
+    getStaffHistory,
+    getSalaryTable,
+    transferStaff
 };

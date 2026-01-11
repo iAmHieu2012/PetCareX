@@ -66,6 +66,39 @@ const validateQueryParams = (params, data) => {
     return { isValid: true };
 };
 
+// Kiểm tra và chuyển đổi định dạng thời gian (HH:mm hoặc HH:mm:ss)
+const validateAndConvertTime = (timeString) => {
+    if (!timeString) {
+        return null;
+    }
+
+    // Kiểm tra định dạng HH:mm hoặc HH:mm:ss
+    const timeRegex = /^([0-1][0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/;
+    
+    if (!timeRegex.test(timeString)) {
+        return {
+            isValid: false,
+            message: `Định dạng thời gian không hợp lệ. Vui lòng sử dụng định dạng HH:mm`
+        };
+    }
+
+    // Nếu chỉ có HH:mm, thêm :00
+    let normalizedTime = timeString;
+    if (timeString.split(':').length === 2) {
+        normalizedTime = timeString + ':00';
+    }
+
+    // Trả về thời gian đã chuẩn hóa dưới dạng Date để SQL Server có thể xử lý
+    const timeParts = normalizedTime.split(':');
+    const date = new Date();
+    date.setHours(parseInt(timeParts[0]), parseInt(timeParts[1]), parseInt(timeParts[2]), 0);
+
+    return {
+        isValid: true,
+        value: date // SQL mssql sẽ tự convert Date object sang TIME
+    };
+};
+
 module.exports = {
     validateRequired,
     validateId,
@@ -75,5 +108,6 @@ module.exports = {
     validateDate,
     validateYear,
     validateMonth,
-    validateQueryParams
+    validateQueryParams,
+    validateAndConvertTime
 };

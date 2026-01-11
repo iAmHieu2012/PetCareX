@@ -153,6 +153,36 @@ async function addStaff(data) {
 }
 
 // Lấy danh sách nhân viên của chi nhánh
+async function getAllStaff() {
+    try {
+        const pool = await connectDB();
+
+        const result = await pool.request()
+            .query(`
+                SELECT 
+                    nv.MaNhanVien,
+                    nv.HoTen,
+                    nv.NgaySinh,
+                    nv.GioiTinh,
+                    nv.NgayVaoLam,
+                    nv.ChucVu,
+                    nv.MaChiNhanh,
+                    cn.TenChiNhanh,
+                    bsty.GioLamViec,
+                    bsty.GioNghi
+                FROM NHAN_VIEN nv
+                LEFT JOIN CHI_NHANH cn ON nv.MaChiNhanh = cn.MaChiNhanh
+                LEFT JOIN BAC_SI_THU_Y bsty ON nv.MaNhanVien = bsty.MaNhanVien
+                ORDER BY nv.HoTen
+            `);
+
+        return result.recordset;
+    } catch (err) {
+        handleModelError(err, 'getAllStaff');
+    }
+}
+
+// Lấy danh sách nhân viên của chi nhánh
 async function getStaffByBranch(maChiNhanh) {
     try {
         const pool = await connectDB();
@@ -335,8 +365,10 @@ async function updateStaff(data) {
                 let gioDongCua = gioNghi;
 
                 if (!gioMoCua || !gioDongCua) {
+                    // Use maChiNhanh if provided, otherwise use old branch
+                    const targetChiNhanh = maChiNhanh || staffMaChiNhanh;
                     const branchInfo = await pool.request()
-                        .input('MaChiNhanh', sql.Char(10), staffMaChiNhanh)
+                        .input('MaChiNhanh', sql.Char(10), targetChiNhanh)
                         .query(`
                             SELECT GioMoCua, GioDongCua FROM CHI_NHANH 
                             WHERE MaChiNhanh = @MaChiNhanh
@@ -494,6 +526,198 @@ async function getStaffHistory(maNhanVien) {
     }
 }
 
+// Điều động nhân viên sang chi nhánh khác
+async function transferStaff(data) {
+    try {
+        const pool = await connectDB();
+        const { maNhanVien, oldBranch, newBranch, newPosition } = data;
+
+        // Lấy thông tin nhân viên hiện tại
+        const staffResult = await pool.request()
+            .input('MaNhanVien', sql.Char(10), maNhanVien)
+            .query(`
+                SELECT 
+                    MaNhanVien,
+                    HoTen,
+                    ChucVu,
+                    MaChiNhanh,
+                    NgayVaoLam
+                FROM NHAN_VIEN
+                WHERE MaNhanVien = @MaNhanVien
+            `);
+
+        if (staffResult.recordset.length === 0) {
+            return null;
+        }
+
+        const staff = staffResult.recordset[0];
+        const transaction = pool.transaction();
+
+        try {
+            await transaction.begin();
+
+            // 1. Cập nhật NHAN_VIEN
+            await transaction.request()
+                .input('MaNhanVien', sql.Char(10), maNhanVien)
+                .input('NewBranch', sql.Char(10), newBranch)
+                .input('NewPosition', sql.NVarChar(20), newPosition || staff.ChucVu)
+                .query(`
+                    UPDATE NHAN_VIEN
+                    SET MaChiNhanh = @NewBranch,
+                        ChucVu = @NewPosition
+                    WHERE MaNhanVien = @MaNhanVien
+                `);
+
+            // 2. Thêm bản ghi LICH_SU_DIEU_DONG cho chi nhánh cũ (đóng bản ghi cũ)
+            await transaction.request()
+                .input('MaNhanVien', sql.Char(10), maNhanVien)
+                .input('OldBranch', sql.Char(10), oldBranch)
+                .query(`
+                    UPDATE LICH_SU_DIEU_DONG
+                    SET NgayKetThuc = CAST(GETDATE() AS DATE)
+                    WHERE MaNhanVien = @MaNhanVien
+                    AND MaChiNhanh = @OldBranch
+                    AND NgayKetThuc IS NULL
+                `);
+
+            // 3. Thêm bản ghi LICH_SU_DIEU_DONG cho chi nhánh mới
+            await transaction.request()
+                .input('MaNhanVien', sql.Char(10), maNhanVien)
+                .input('NewBranch', sql.Char(10), newBranch)
+                .input('NewPosition', sql.NVarChar(20), newPosition || staff.ChucVu)
+                .input('NgayBatDau', sql.Date, new Date())
+                .query(`
+                    INSERT INTO LICH_SU_DIEU_DONG (MaNhanVien, MaChiNhanh, NgayBatDau, ViTri)
+                    VALUES (@MaNhanVien, @NewBranch, @NgayBatDau, @NewPosition)
+                `);
+
+            // 4. Cập nhật các bảng phân loại nhân viên nếu cần
+            if (newPosition === 'Tiếp tân') {
+                // Xóa khỏi các bảng khác nếu có
+                await transaction.request()
+                    .input('MaNhanVien', sql.Char(10), maNhanVien)
+                    .query(`
+                        DELETE FROM NHAN_VIEN_BAN_HANG WHERE MaNhanVien = @MaNhanVien;
+                        DELETE FROM BAC_SI_THU_Y WHERE MaNhanVien = @MaNhanVien;
+                        DELETE FROM QUAN_LI WHERE MaNhanVien = @MaNhanVien;
+                    `);
+
+                // Thêm vào NHAN_VIEN_TIEP_TAN nếu chưa có
+                await transaction.request()
+                    .input('MaNhanVien', sql.Char(10), maNhanVien)
+                    .query(`
+                        IF NOT EXISTS (SELECT 1 FROM NHAN_VIEN_TIEP_TAN WHERE MaNhanVien = @MaNhanVien)
+                            INSERT INTO NHAN_VIEN_TIEP_TAN (MaNhanVien) VALUES (@MaNhanVien)
+                    `);
+            } else if (newPosition === 'Nhân viên bán hàng') {
+                await transaction.request()
+                    .input('MaNhanVien', sql.Char(10), maNhanVien)
+                    .query(`
+                        DELETE FROM NHAN_VIEN_TIEP_TAN WHERE MaNhanVien = @MaNhanVien;
+                        DELETE FROM BAC_SI_THU_Y WHERE MaNhanVien = @MaNhanVien;
+                        DELETE FROM QUAN_LI WHERE MaNhanVien = @MaNhanVien;
+                    `);
+
+                await transaction.request()
+                    .input('MaNhanVien', sql.Char(10), maNhanVien)
+                    .query(`
+                        IF NOT EXISTS (SELECT 1 FROM NHAN_VIEN_BAN_HANG WHERE MaNhanVien = @MaNhanVien)
+                            INSERT INTO NHAN_VIEN_BAN_HANG (MaNhanVien) VALUES (@MaNhanVien)
+                    `);
+            } else if (newPosition === 'Bác sĩ thú y') {
+                await transaction.request()
+                    .input('MaNhanVien', sql.Char(10), maNhanVien)
+                    .query(`
+                        DELETE FROM NHAN_VIEN_TIEP_TAN WHERE MaNhanVien = @MaNhanVien;
+                        DELETE FROM NHAN_VIEN_BAN_HANG WHERE MaNhanVien = @MaNhanVien;
+                        DELETE FROM QUAN_LI WHERE MaNhanVien = @MaNhanVien;
+                    `);
+
+                await transaction.request()
+                    .input('MaNhanVien', sql.Char(10), maNhanVien)
+                    .query(`
+                        IF NOT EXISTS (SELECT 1 FROM BAC_SI_THU_Y WHERE MaNhanVien = @MaNhanVien)
+                            INSERT INTO BAC_SI_THU_Y (MaNhanVien, GioLamViec, GioNghi)
+                            VALUES (@MaNhanVien, '08:00:00', '17:00:00')
+                    `);
+            } else if (newPosition === 'Quản lí') {
+                await transaction.request()
+                    .input('MaNhanVien', sql.Char(10), maNhanVien)
+                    .query(`
+                        DELETE FROM NHAN_VIEN_TIEP_TAN WHERE MaNhanVien = @MaNhanVien;
+                        DELETE FROM NHAN_VIEN_BAN_HANG WHERE MaNhanVien = @MaNhanVien;
+                        DELETE FROM BAC_SI_THU_Y WHERE MaNhanVien = @MaNhanVien;
+                    `);
+
+                // Kiểm tra nếu không phải quản lí hiện tại của chi nhánh cũ, thêm vào QUAN_LI
+                const existingManager = await transaction.request()
+                    .input('MaNhanVien', sql.Char(10), maNhanVien)
+                    .query(`SELECT 1 FROM QUAN_LI WHERE MaNhanVien = @MaNhanVien`);
+
+                if (existingManager.recordset.length === 0) {
+                    // Nếu chi nhánh mới đã có quản lí, thay thế
+                    await transaction.request()
+                        .input('NewBranch', sql.Char(10), newBranch)
+                        .query(`DELETE FROM QUAN_LI WHERE MaChiNhanhQuanLi = @NewBranch`);
+
+                    await transaction.request()
+                        .input('MaNhanVien', sql.Char(10), maNhanVien)
+                        .input('NewBranch', sql.Char(10), newBranch)
+                        .query(`
+                            INSERT INTO QUAN_LI (MaNhanVien, MaChiNhanhQuanLi)
+                            VALUES (@MaNhanVien, @NewBranch)
+                        `);
+                }
+            }
+
+            // 5. Cập nhật TAI_KHOAN
+            await transaction.request()
+                .input('MaNhanVien', sql.Char(10), maNhanVien)
+                .input('NewBranch', sql.Char(10), newBranch)
+                .query(`
+                    UPDATE TAI_KHOAN
+                    SET MaNhanVien = @MaNhanVien
+                    WHERE MaNhanVien = @MaNhanVien
+                `);
+
+            await transaction.commit();
+
+            return {
+                maNhanVien,
+                oldBranch,
+                newBranch,
+                newPosition: newPosition || staff.ChucVu,
+                transferDate: new Date().toISOString().split('T')[0]
+            };
+        } catch (err) {
+            await transaction.rollback();
+            throw err;
+        }
+    } catch (err) {
+        handleModelError(err, 'transferStaff');
+    }
+}
+
+// Lấy bảng lương (mức lương cơ bản theo chức vụ)
+async function getSalaryTable() {
+    try {
+        const pool = await connectDB();
+
+        const result = await pool.request()
+            .query(`
+                SELECT 
+                    ChucVu,
+                    LuongCoBan
+                FROM BANG_LUONG
+                ORDER BY ChucVu
+            `);
+
+        return result.recordset;
+    } catch (err) {
+        handleModelError(err, 'getSalaryTable');
+    }
+}
+
 module.exports = {
     addStaff,
     getStaffByBranch,
@@ -501,5 +725,8 @@ module.exports = {
     getManagersByBranch,
     deleteStaff,
     updateStaff,
-    getStaffHistory
+    getStaffHistory,
+    getAllStaff,
+    getSalaryTable,
+    transferStaff
 };

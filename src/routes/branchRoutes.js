@@ -1,12 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const branchController = require('../controllers/branchController');
+const staffController = require('../controllers/staffController');
+const authMiddleware = require('../middlewares/authMiddleware');
 
 // General routes
 router.get('/', branchController.getAllBranches);
 router.get('/services', branchController.getAllServices);
 
 // PHẢI ĐẶT SPECIFIC ROUTES TRƯỚC GENERIC ROUTES
+// Salary table route (MUST be before /staff/:maNV/* patterns)
+router.get('/salary-table', authMiddleware.verifyToken, staffController.getSalaryTable);
+
 // Staff routes (Đặt specific pattern TRƯỚC generic pattern)
 router.get('/staff/count', branchController.getStaffCount);
 router.get('/staff/doctors/:maChiNhanh', branchController.getDoctorsByBranch);

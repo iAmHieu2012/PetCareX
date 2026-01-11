@@ -91,7 +91,11 @@ function loadSection(section) {
         event.target.classList.add('active');
     }
     
+    // Reset display for all main sections
     const contentSection = document.getElementById('content-section');
+    const staffDiv = document.getElementById('staff');
+    if (contentSection) contentSection.style.display = 'block';
+    if (staffDiv) staffDiv.style.display = 'none';
     
     switch(section) {
         case 'overview':
@@ -132,17 +136,7 @@ function loadSection(section) {
             break;
             
         case 'customers':
-            contentSection.innerHTML = `
-                <h2><i class="fas fa-user-friends"></i> Quản lý Khách hàng</h2>
-                <div class="empty-state">
-                    <i class="fas fa-user-friends"></i>
-                    <p>Tính năng quản lý khách hàng đang được phát triển...</p>
-                </div>
-            `;
-            break;
-            
-        case 'pets':
-            loadPetsSection();
+            loadCustomersSection();
             break;
             
         case 'reports':
@@ -224,8 +218,8 @@ async function loadServicesSection() {
     const contentSection = document.getElementById('content-section');
     contentSection.innerHTML = `
         <h2><i class="fas fa-concierge-bell"></i> Quản lý Dịch vụ</h2>
-        <div id="services-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
-            <p style="text-align: center; color: var(--text-light); padding: 2rem; grid-column: 1/-1;">
+        <div id="services-list" style="display: flex; flex-direction: column; gap: 1rem;">
+            <p style="text-align: center; color: var(--text-light); padding: 2rem;">
                 <i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu...
             </p>
         </div>
@@ -238,7 +232,7 @@ async function loadServicesSection() {
         
         if (!Array.isArray(services) || services.length === 0) {
             document.getElementById('services-list').innerHTML = `
-                <div class="empty-state" style="grid-column: 1/-1;">
+                <div class="empty-state">
                     <i class="fas fa-concierge-bell"></i>
                     <p>Chưa có dịch vụ nào trong hệ thống.</p>
                 </div>
@@ -247,16 +241,18 @@ async function loadServicesSection() {
         }
         
         const servicesHTML = services.map((service, i) => `
-            <div style="background: white; padding: 1.5rem; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-top: 3px solid var(--primary);">
-                <div style="text-align: center; margin-bottom: 1rem;">
-                    <i class="fas ${icons[i] || 'fa-paw'}" style="font-size: 2.5rem; color: var(--primary);"></i>
+            <div style="background: white; padding: 1.5rem; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-left: 4px solid var(--primary); display: flex; align-items: center; gap: 1.5rem;">
+                <div style="flex-shrink: 0;">
+                    <i class="fas ${icons[i] || 'fa-paw'}" style="font-size: 2rem; color: var(--primary);"></i>
                 </div>
-                <h3 style="color: var(--text-dark); margin-bottom: 0.5rem; text-align: center;">
-                    ${service.TenDichVu || 'N/A'}
-                </h3>
-                <p style="color: var(--text-light); font-size: 0.9rem; text-align: center;">
-                    ${service.MoTa || 'Chưa có mô tả'}
-                </p>
+                <div style="flex: 1;">
+                    <h3 style="color: var(--text-dark); margin: 0 0 0.5rem 0;">
+                        ${service.TenDichVu || 'N/A'}
+                    </h3>
+                    <p style="color: var(--text-light); font-size: 0.9rem; margin: 0;">
+                        ${service.MoTa || 'Chưa có mô tả'}
+                    </p>
+                </div>
             </div>
         `).join('');
         
@@ -264,7 +260,7 @@ async function loadServicesSection() {
     } catch (err) {
         console.error('Error loading services:', err);
         document.getElementById('services-list').innerHTML = `
-            <div class="empty-state" style="grid-column: 1/-1;">
+            <div class="empty-state">
                 <i class="fas fa-exclamation-triangle" style="color: #e74c3c;"></i>
                 <p>Lỗi khi tải dữ liệu dịch vụ: ${err.message}</p>
             </div>
@@ -272,24 +268,23 @@ async function loadServicesSection() {
     }
 }
 
-async function loadPetsSection() {
+async function loadCustomersSection() {
     const contentSection = document.getElementById('content-section');
     contentSection.innerHTML = `
-        <h2><i class="fas fa-paw"></i> Quản lý Thú cưng</h2>
+        <h2><i class="fas fa-user-friends"></i> Quản lý Khách hàng</h2>
         
         <div style="background: white; padding: 1.5rem; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 2rem;">
             <h3 style="color: var(--primary); margin-bottom: 1rem;">
-                <i class="fas fa-search"></i> Tìm kiếm Thú cưng
+                <i class="fas fa-search"></i> Tìm kiếm Khách hàng
             </h3>
-            <form id="pet-search-form" onsubmit="handlePetSearch(event)" style="display: flex; gap: 1rem; align-items: end;">
-                <div style="flex: 1;">
+            <form id="customer-search-form" onsubmit="handleCustomerSearch(event)" style="display: flex; gap: 1rem; align-items: end; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 200px;">
                     <label style="display: block; margin-bottom: 0.5rem; color: var(--text-dark); font-weight: 600; font-size: 0.9rem;">
-                        <i class="fas fa-tag"></i> Mã Thú cưng
+                        <i class="fas fa-phone"></i> Số điện thoại / Email / CCCD
                     </label>
-                    <input type="text" id="pet-search-input" placeholder="VD: TC00000001" maxlength="10" 
+                    <input type="text" id="customer-search-input" placeholder="VD: 0912345678 hoặc email@example.com" 
                            style="width: 100%; padding: 0.75rem; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem; transition: border-color 0.3s;"
                            onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#e0e0e0'" required>
-                    <small style="color: var(--text-light); font-size: 0.8rem;">Nhập mã thú cưng để tìm kiếm</small>
                 </div>
                 <div>
                     <button type="submit" style="padding: 0.75rem 2rem; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; white-space: nowrap;"
@@ -301,75 +296,100 @@ async function loadPetsSection() {
             </form>
         </div>
         
-        <div id="pet-details-container">
+        <div id="customer-details-container">
             <p style="text-align: center; color: var(--text-light); padding: 2rem;">
-                <i class="fas fa-info-circle"></i> Nhập mã thú cưng ở trên để xem thông tin chi tiết
+                <i class="fas fa-info-circle"></i> Nhập thông tin khách hàng ở trên để xem chi tiết và danh sách thú cưng
             </p>
         </div>
     `;
 }
 
-async function handlePetSearch(event) {
+async function handleCustomerSearch(event) {
     event.preventDefault();
     
-    const maThuCung = document.getElementById('pet-search-input').value.trim().toUpperCase();
+    const searchInput = document.getElementById('customer-search-input').value.trim();
     
-    if (!maThuCung) {
-        alert('Vui lòng nhập mã thú cưng!');
+    if (!searchInput) {
+        alert('Vui lòng nhập thông tin tìm kiếm!');
         return;
     }
     
-    const petContainer = document.getElementById('pet-details-container');
-    petContainer.innerHTML = `
+    const container = document.getElementById('customer-details-container');
+    container.innerHTML = `
         <p style="text-align: center; color: var(--text-light); padding: 2rem;">
             <i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu...
         </p>
     `;
     
     try {
-        const petDetails = await api.getPetDetail(maThuCung);
-        displayPetDetails(petDetails);
+        const token = localStorage.getItem('token');
+        
+        // Try searching customer by various fields
+        const response = await fetch(`/api/customer/search?q=${encodeURIComponent(searchInput)}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Không tìm thấy khách hàng');
+        }
+        
+        const result = await response.json();
+        const customer = result.data || result;
+        
+        if (!customer || !customer.MaKhachHang) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-circle" style="color: #e74c3c;"></i>
+                    <p>Không tìm thấy khách hàng với thông tin: <strong>${searchInput}</strong></p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Load customer's pets
+        const petsResponse = await fetch(`/api/customer/pets/${customer.MaKhachHang}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        let pets = [];
+        if (petsResponse.ok) {
+            const petsResult = await petsResponse.json();
+            pets = Array.isArray(petsResult.data) ? petsResult.data : (Array.isArray(petsResult) ? petsResult : []);
+        }
+        
+        displayCustomerDetails(customer, pets);
     } catch (err) {
-        console.error('Error loading pet details:', err);
-        const errorMessage = err.message || 'Không tìm thấy thú cưng với mã này';
-        petContainer.innerHTML = `
+        console.error('Error searching customer:', err);
+        container.innerHTML = `
             <div class="empty-state">
                 <i class="fas fa-exclamation-triangle" style="color: #e74c3c;"></i>
-                <p>${errorMessage}</p>
+                <p>Lỗi: ${err.message}</p>
             </div>
         `;
-    }
-}
-
-function displayPetDetails(pet) {
-    if (!pet) {
-        document.getElementById('pet-details-container').innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-inbox"></i>
-                <p>Không tìm thấy thông tin thú cưng</p>
-            </div>
-        `;
-        return;
     }
     
+    return false;
+}
+
+function displayCustomerDetails(customer, pets) {
     const dateFormatter = new Intl.DateTimeFormat('vi-VN', {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit'
     });
     
-    const petHTML = `
-        <div style="background: white; padding: 2rem; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+    const customerHTML = `
+        <div style="background: white; padding: 2rem; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 2rem;">
             <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 2px solid #f0f0f0;">
                 <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: bold;">
-                    <i class="fas fa-paw"></i>
+                    <i class="fas fa-user"></i>
                 </div>
                 <div style="flex: 1;">
                     <h3 style="color: var(--text-dark); margin: 0 0 0.5rem 0; font-size: 1.5rem;">
-                        ${pet.TenThuCung || 'N/A'}
+                        ${customer.TenKhachHang || 'N/A'}
                     </h3>
                     <p style="color: var(--text-light); margin: 0; font-size: 0.9rem;">
-                        Mã: <strong>${pet.MaThuCung || 'N/A'}</strong>
+                        Mã: <strong>${customer.MaKhachHang || 'N/A'}</strong>
                     </p>
                 </div>
             </div>
@@ -377,154 +397,798 @@ function displayPetDetails(pet) {
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
                 <div style="background: #f8faff; padding: 1.5rem; border-radius: 10px; border-left: 4px solid var(--primary);">
                     <h4 style="color: var(--primary); margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
-                        <i class="fas fa-info-circle"></i> Thông tin Thú cưng
+                        <i class="fas fa-info-circle"></i> Thông tin Khách hàng
                     </h4>
                     <div style="display: grid; gap: 0.75rem; color: var(--text-dark);">
-                        <div>
-                            <strong style="color: var(--text-light);">Loài:</strong><br>
-                            <span style="font-size: 1.1rem;">${pet.Loai || 'N/A'}</span>
-                        </div>
-                        <div>
-                            <strong style="color: var(--text-light);">Giống:</strong><br>
-                            <span style="font-size: 1.1rem;">${pet.Giong || 'N/A'}</span>
-                        </div>
-                        <div>
-                            <strong style="color: var(--text-light);">Giới tính:</strong><br>
-                            <span style="font-size: 1.1rem;">${pet.GioiTinh || 'N/A'}</span>
-                        </div>
-                        <div>
-                            <strong style="color: var(--text-light);">Ngày sinh:</strong><br>
-                            <span style="font-size: 1.1rem;">${pet.NgaySinh ? dateFormatter.format(new Date(pet.NgaySinh)) : 'N/A'}</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div style="background: #f8faff; padding: 1.5rem; border-radius: 10px; border-left: 4px solid var(--accent);">
-                    <h4 style="color: var(--accent); margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
-                        <i class="fas fa-user"></i> Thông tin Chủ sở hữu
-                    </h4>
-                    <div style="display: grid; gap: 0.75rem; color: var(--text-dark);">
-                        <div>
-                            <strong style="color: var(--text-light);">Mã khách hàng:</strong><br>
-                            <span style="font-size: 1.1rem; font-weight: 600;">${pet.MaKhachHang || 'N/A'}</span>
-                        </div>
-                        <div>
-                            <strong style="color: var(--text-light);">Tên chủ sở hữu:</strong><br>
-                            <span style="font-size: 1.1rem;">${pet.TenChuSoHuu || 'N/A'}</span>
-                        </div>
                         <div>
                             <strong style="color: var(--text-light);">Số điện thoại:</strong><br>
-                            <span style="font-size: 1.1rem;">${pet.SoDienThoai || 'N/A'}</span>
+                            <span style="font-size: 1.1rem;">${customer.SoDienThoai || 'N/A'}</span>
+                        </div>
+                        <div>
+                            <strong style="color: var(--text-light);">Email:</strong><br>
+                            <span style="font-size: 1.1rem;">${customer.Email || 'N/A'}</span>
+                        </div>
+                        <div>
+                            <strong style="color: var(--text-light);">CCCD:</strong><br>
+                            <span style="font-size: 1.1rem;">${customer.CCCD || 'N/A'}</span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+        
+        <div style="background: white; padding: 2rem; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+            <h3 style="color: var(--primary); margin-top: 0; margin-bottom: 1.5rem;">
+                <i class="fas fa-paw"></i> Danh sách Thú cưng (${pets.length})
+            </h3>
+            
+            ${pets.length === 0 ? `
+                <div class="empty-state">
+                    <i class="fas fa-paw"></i>
+                    <p>Khách hàng này chưa có thú cưng nào trong hệ thống</p>
+                </div>
+            ` : `
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">
+                    ${pets.map(pet => `
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.2);">
+                                <div style="width: 50px; height: 50px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                                    <i class="fas fa-paw"></i>
+                                </div>
+                                <div>
+                                    <h4 style="margin: 0; font-size: 1.1rem;">${pet.TenThuCung || 'N/A'}</h4>
+                                    <p style="margin: 0; font-size: 0.85rem; opacity: 0.9;">Mã: ${pet.MaThuCung}</p>
+                                </div>
+                            </div>
+                            <div style="font-size: 0.9rem; line-height: 1.6;">
+                                <p style="margin: 0.5rem 0;"><strong>Loài:</strong> ${pet.Loai || 'N/A'}</p>
+                                <p style="margin: 0.5rem 0;"><strong>Giống:</strong> ${pet.Giong || 'N/A'}</p>
+                                <p style="margin: 0.5rem 0;"><strong>Giới tính:</strong> ${pet.GioiTinh || 'N/A'}</p>
+                                <p style="margin: 0.5rem 0;"><strong>Ngày sinh:</strong> ${pet.NgaySinh ? dateFormatter.format(new Date(pet.NgaySinh)) : 'N/A'}</p>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `}
+        </div>
     `;
     
-    document.getElementById('pet-details-container').innerHTML = petHTML;
+    document.getElementById('customer-details-container').innerHTML = customerHTML;
 }
 
 async function loadStaffSection() {
-    const contentSection = document.getElementById('content-section');
-    contentSection.innerHTML = `
-        <h2><i class="fas fa-users"></i> Quản lý Nhân viên</h2>
-        <div id="staff-list" style="display: grid; gap: 1rem;">
-            <p style="text-align: center; color: var(--text-light); padding: 2rem;">
-                <i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu...
-            </p>
-        </div>
-    `;
+    const staffDiv = document.getElementById('staff');
+    if (!staffDiv) return;
+    
+    staffDiv.style.display = 'block';
+    document.getElementById('content-section').style.display = 'none';
     
     try {
-        const staffRes = await api.getAllStaff();
-        const staff = staffRes.data || staffRes || [];
-        const dateFormatter = new Intl.DateTimeFormat('vi-VN', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit'
+        const token = localStorage.getItem('token');
+        
+        // Load branches for filter dropdown
+        const branchRes = await fetch('/api/branches', {
+            headers: { 'Authorization': `Bearer ${token}` }
         });
         
-        if (!Array.isArray(staff) || staff.length === 0) {
-            document.getElementById('staff-list').innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-users"></i>
-                    <p>Chưa có nhân viên nào trong hệ thống.</p>
-                </div>
-            `;
-            return;
+        if (branchRes.ok) {
+            const branchResult = await branchRes.json();
+            const branches = Array.isArray(branchResult.data) ? branchResult.data : (Array.isArray(branchResult) ? branchResult : []);
+            
+            const filterBranch = document.getElementById('filterBranch');
+            filterBranch.innerHTML = '<option value="">-- Tất cả chi nhánh --</option>';
+            branches.forEach(branch => {
+                const option = document.createElement('option');
+                option.value = branch.MaChiNhanh || branch.maChiNhanh;
+                option.textContent = branch.TenChiNhanh || branch.tenChiNhanh;
+                filterBranch.appendChild(option);
+            });
         }
         
-        // Group staff by ChucVu (Position)
-        const groupedByPosition = {};
-        staff.forEach(employee => {
-            const position = employee.ChucVu || 'Khác';
-            if (!groupedByPosition[position]) {
-                groupedByPosition[position] = [];
-            }
-            groupedByPosition[position].push(employee);
+        // Load all staff
+        const staffRes = await fetch('/api/staff/all', {
+            headers: { 'Authorization': `Bearer ${token}` }
         });
         
-        let staffHTML = '';
+        if (!staffRes.ok) {
+            throw new Error(`HTTP error! status: ${staffRes.status}`);
+        }
         
-        // Display each position group
-        Object.keys(groupedByPosition).forEach(position => {
-            staffHTML += `
-                <div style="margin-bottom: 2rem;">
-                    <h3 style="color: var(--primary); margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--bg-light);">
-                        <i class="fas fa-briefcase"></i> ${position}
-                    </h3>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem;">
-                        ${groupedByPosition[position].map(emp => `
-                            <div class="staff-card" onclick="showEmployeeDetails('${emp.MaNhanVien}', '${emp.HoTen || 'N/A'}')" style="background: #f8faff; padding: 1.5rem; border-radius: 10px; border-left: 4px solid var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.1); cursor: pointer; transition: all 0.3s;">
-                                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-                                    <div style="width: 50px; height: 50px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.2rem;">
-                                        ${emp.HoTen ? emp.HoTen.charAt(0) : 'N'}
-                                    </div>
-                                    <div style="flex: 1;">
-                                        <h4 style="color: var(--text-dark); margin: 0 0 0.25rem 0; font-size: 1.1rem;">
-                                            ${emp.HoTen || 'N/A'}
-                                        </h4>
-                                        <p style="color: var(--text-light); margin: 0; font-size: 0.85rem;">
-                                            ${emp.MaNhanVien || 'N/A'}
-                                        </p>
-                                    </div>
-                                </div>
-                                <div style="display: grid; gap: 0.5rem; color: var(--text-light); font-size: 0.9rem;">
-                                    <div>
-                                        <i class="fas fa-building" style="color: var(--primary); width: 20px;"></i>
-                                        <strong>Chi nhánh:</strong> ${emp.TenChiNhanh || 'N/A'}
-                                    </div>
-                                    <div>
-                                        <i class="fas fa-calendar-alt" style="color: var(--primary); width: 20px;"></i>
-                                        <strong>Ngày vào làm:</strong> ${emp.NgayVaoLam ? dateFormatter.format(new Date(emp.NgayVaoLam)) : 'N/A'}
-                                    </div>
-                                    <div>
-                                        <i class="fas fa-money-bill-wave" style="color: var(--accent); width: 20px;"></i>
-                                        <strong>Lương cơ bản:</strong> ${emp.LuongCoBan ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(emp.LuongCoBan) : 'N/A'}
-                                    </div>
-                                </div>
-                                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(0,0,0,0.1); text-align: center; color: var(--primary); font-size: 0.85rem;">
-                                    <i class="fas fa-info-circle"></i> Click để xem chi tiết
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
-        });
+        const staffResult = await staffRes.json();
+        const allStaff = Array.isArray(staffResult.data) ? staffResult.data : (Array.isArray(staffResult) ? staffResult : []);
         
-        document.getElementById('staff-list').innerHTML = staffHTML;
-    } catch (err) {
-        console.error('Error loading staff:', err);
-        document.getElementById('staff-list').innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-exclamation-triangle" style="color: #e74c3c;"></i>
-                <p>Lỗi khi tải dữ liệu nhân viên: ${err.message}</p>
-            </div>
-        `;
+        // Store for filtering
+        window.allStaffData = allStaff;
+        
+        // Display staff
+        window.filterStaff();
+        
+    } catch (error) {
+        console.error('Error loading staff:', error);
+        const tbody = document.getElementById('staffTableBody');
+        if (tbody) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: red; padding: 2rem;">Lỗi: ${error.message}</td></tr>`;
+        }
     }
 }
+
+window.filterStaff = function() {
+    const filterBranch = document.getElementById('filterBranch')?.value || '';
+    const filterPosition = document.getElementById('filterPosition')?.value || '';
+    const filterSearch = document.getElementById('filterSearch')?.value?.toLowerCase() || '';
+    const tbody = document.getElementById('staffTableBody');
+    
+    if (!tbody || !window.allStaffData) return;
+    
+    let filtered = window.allStaffData;
+    
+    // Apply filters
+    if (filterBranch) {
+        filtered = filtered.filter(s => (s.MaChiNhanh || s.maChiNhanh) === filterBranch);
+    }
+    
+    if (filterPosition) {
+        filtered = filtered.filter(s => s.ChucVu === filterPosition);
+    }
+    
+    if (filterSearch) {
+        filtered = filtered.filter(s => {
+            const name = (s.HoTen || s.hoTen || '').toLowerCase();
+            const id = (s.MaNhanVien || s.maNhanVien || '').toLowerCase();
+            return name.includes(filterSearch) || id.includes(filterSearch);
+        });
+    }
+    
+    // Display filtered staff
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 2rem;">Không có nhân viên phù hợp</td></tr>';
+        return;
+    }
+    
+    tbody.innerHTML = filtered.map(emp => {
+        const hireDate = emp.NgayVaoLam || emp.ngayVaoLam;
+        const formattedDate = hireDate ? new Date(hireDate).toLocaleDateString('vi-VN') : '';
+        
+        return `
+            <tr style="border-bottom: 1px solid #e0e0e0;">
+                <td style="padding: 1rem;">${emp.MaNhanVien || emp.maNhanVien || ''}</td>
+                <td style="padding: 1rem;">${emp.HoTen || emp.hoTen || ''}</td>
+                <td style="padding: 1rem;">${emp.ChucVu || emp.chucVu || ''}</td>
+                <td style="padding: 1rem;">${emp.TenChiNhanh || emp.tenChiNhanh || ''}</td>
+                <td style="padding: 1rem;">${formattedDate}</td>
+                <td style="padding: 1rem; text-align: center;">
+                    <button onclick="window.openEditStaffModal('${emp.MaNhanVien || emp.maNhanVien}')" style="background: #2196F3; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; margin-right: 0.5rem;">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+};
+
+window.openAddStaffModal = function() {
+    const modal = document.getElementById('add-staff-modal');
+    if (!modal) return;
+    
+    // Reset form
+    document.getElementById('add-staff-form').reset();
+    document.getElementById('doctor-fields').style.display = 'none';
+    
+    // Load branches
+    loadBranchesForAddModal();
+    
+    // Show modal
+    modal.style.display = 'flex';
+};
+
+async function loadBranchesForAddModal() {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/branches', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            const branches = Array.isArray(result.data) ? result.data : (Array.isArray(result) ? result : []);
+            
+            const select = document.getElementById('staffBranch');
+            if (!select) {
+                console.error('staffBranch element not found');
+                return;
+            }
+            select.innerHTML = '<option value="">-- Chọn chi nhánh --</option>';
+            branches.forEach(branch => {
+                const option = document.createElement('option');
+                option.value = branch.MaChiNhanh || branch.maChiNhanh;
+                option.textContent = branch.TenChiNhanh || branch.tenChiNhanh;
+                select.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading branches:', error);
+    }
+}
+
+window.closeAddStaffModal = function() {
+    const modal = document.getElementById('add-staff-modal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.getElementById('add-staff-form').reset();
+    }
+};
+
+window.updateStaffFormFields = function() {
+    const position = document.getElementById('staffPosition')?.value;
+    const doctorFields = document.getElementById('doctor-fields');
+    
+    if (position === 'Bác sĩ thú y') {
+        doctorFields.style.display = 'block';
+        document.getElementById('staffWorkStart').required = true;
+        document.getElementById('staffWorkEnd').required = true;
+    } else {
+        doctorFields.style.display = 'none';
+        document.getElementById('staffWorkStart').required = false;
+        document.getElementById('staffWorkEnd').required = false;
+    }
+};
+
+window.submitAddStaff = async function(e) {
+    e.preventDefault();
+    
+    // Check if user is logged in
+    const token = localStorage.getItem('token');
+    if (!token) {
+        alert('Vui lòng đăng nhập để tiếp tục!');
+        window.location.href = '/login.html';
+        return;
+    }
+    
+    const staffName = document.getElementById('staffName').value;
+    const staffEmail = document.getElementById('staffEmail').value;
+    const staffDOB = document.getElementById('staffDOB').value;
+    const staffGender = document.getElementById('staffGender').value;
+    const staffHireDate = document.getElementById('staffHireDate').value;
+    const staffPosition = document.getElementById('staffPosition').value;
+    const staffBranch = document.getElementById('staffBranch').value;
+    
+    if (!staffName || !staffEmail || !staffDOB || !staffGender || !staffPosition || !staffBranch) {
+        alert('Vui lòng điền đầy đủ thông tin bắt buộc!');
+        return;
+    }
+    
+    const formData = {
+        hoTen: staffName,
+        email: staffEmail,
+        ngaySinh: staffDOB,
+        gioiTinh: staffGender,
+        ngayVaoLam: staffHireDate || null,
+        chucVu: staffPosition,
+        maChiNhanh: staffBranch
+    };
+    
+    // Add doctor fields if applicable
+    if (staffPosition === 'Bác sĩ thú y') {
+        formData.gioLamViec = document.getElementById('staffWorkStart').value;
+        formData.gioNghi = document.getElementById('staffWorkEnd').value;
+    }
+    
+    try {
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang thêm...';
+        
+        const response = await fetch('/api/staff/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.success || result.data) {
+            alert('✓ Thêm nhân viên thành công!');
+            window.closeAddStaffModal();
+            loadStaffSection();
+        } else {
+            alert('❌ ' + (result.message || 'Lỗi khi thêm nhân viên'));
+        }
+        
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = 'Thêm Nhân Viên';
+    } catch (error) {
+        console.error('Error:', error);
+        alert('❌ Lỗi: ' + error.message);
+    }
+};
+
+window.openEditStaffModal = async function(maNhanVien) {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/staff/${maNhanVien}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Không thể tải thông tin nhân viên');
+        }
+        
+        const result = await response.json();
+        const staff = result.data;
+        
+        // Display staff info
+        document.getElementById('editStaffId').textContent = staff.MaNhanVien;
+        document.getElementById('editStaffName').textContent = staff.HoTen;
+        document.getElementById('editStaffDOB').textContent = staff.NgaySinh ? new Date(staff.NgaySinh).toLocaleDateString('vi-VN') : '';
+        document.getElementById('editStaffGender').textContent = staff.GioiTinh;
+        document.getElementById('editStaffHireDate').textContent = staff.NgayVaoLam ? new Date(staff.NgayVaoLam).toLocaleDateString('vi-VN') : '';
+        
+        // Load branches
+        await loadBranchesForEditModal();
+        
+        // Set current branch
+        const branchSelect = document.getElementById('editStaffBranch');
+        if (branchSelect) {
+            branchSelect.value = staff.MaChiNhanh;
+        }
+        
+        // Set current position
+        document.getElementById('editStaffPosition').value = staff.ChucVu;
+        
+        // Set doctor fields if applicable
+        if (staff.ChucVu === 'Bác sĩ thú y' && staff.GioLamViec && staff.GioNghi) {
+            document.getElementById('editStaffWorkStart').value = staff.GioLamViec;
+            document.getElementById('editStaffWorkEnd').value = staff.GioNghi;
+            document.getElementById('edit-doctor-fields').style.display = 'block';
+        } else {
+            document.getElementById('edit-doctor-fields').style.display = 'none';
+        }
+        
+        // Load history
+        await loadStaffHistory(maNhanVien);
+        
+        // Store current staff ID for form submission
+        document.getElementById('edit-staff-form').dataset.maNhanVien = maNhanVien;
+        
+        // Show modal
+        const modal = document.getElementById('edit-staff-modal');
+        modal.style.display = 'flex';
+        
+    } catch (error) {
+        console.error('Error:', error);
+        alert('❌ Lỗi: ' + error.message);
+    }
+};
+
+async function loadBranchesForEditModal() {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/branches', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            const branches = Array.isArray(result.data) ? result.data : (Array.isArray(result) ? result : []);
+            
+            const selectCurrent = document.getElementById('editStaffBranch');
+            const selectNew = document.getElementById('editStaffNewBranch');
+            
+            if (!selectCurrent) {
+                console.error('editStaffBranch element not found');
+                return;
+            }
+            
+            // Load current branch dropdown
+            selectCurrent.innerHTML = '';
+            branches.forEach(branch => {
+                const option = document.createElement('option');
+                option.value = branch.MaChiNhanh || branch.maChiNhanh;
+                option.textContent = branch.TenChiNhanh || branch.tenChiNhanh;
+                selectCurrent.appendChild(option);
+            });
+            
+            // Load new branch dropdown for transfer
+            if (selectNew) {
+                selectNew.innerHTML = '<option value="">-- Giữ nguyên chi nhánh --</option>';
+                branches.forEach(branch => {
+                    const option = document.createElement('option');
+                    option.value = branch.MaChiNhanh || branch.maChiNhanh;
+                    option.textContent = branch.TenChiNhanh || branch.tenChiNhanh;
+                    selectNew.appendChild(option);
+                });
+            }
+        }
+    } catch (error) {
+        console.error('Error loading branches:', error);
+    }
+}
+
+async function loadStaffHistory(maNhanVien) {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/staff/history/${maNhanVien}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            const history = result.data || [];
+            
+            let historyHtml = history.map(h => `
+                <div style="margin-bottom: 0.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid #ddd;">
+                    <strong>${h.MaChiNhanh || h.maChiNhanh}</strong> - ${h.ViTri || h.viTri}<br>
+                    <small>Từ: ${new Date(h.NgayBatDau || h.ngayBatDau).toLocaleDateString('vi-VN')} ${h.NgayKetThuc ? '→ ' + new Date(h.NgayKetThuc).toLocaleDateString('vi-VN') : '(Hiện tại)'}</small>
+                </div>
+            `).join('');
+            
+            document.getElementById('staffHistoryDisplay').innerHTML = historyHtml || 'Không có lịch sử';
+        }
+    } catch (error) {
+        console.error('Error loading history:', error);
+    }
+}
+
+window.updateEditStaffFormFields = function() {
+    const position = document.getElementById('editStaffPosition')?.value;
+    const doctorFields = document.getElementById('edit-doctor-fields');
+    
+    if (position === 'Bác sĩ thú y') {
+        doctorFields.style.display = 'block';
+        document.getElementById('editStaffWorkStart').required = true;
+        document.getElementById('editStaffWorkEnd').required = true;
+    } else {
+        doctorFields.style.display = 'none';
+        document.getElementById('editStaffWorkStart').required = false;
+        document.getElementById('editStaffWorkEnd').required = false;
+    }
+};
+
+window.closeEditStaffModal = function() {
+    const modal = document.getElementById('edit-staff-modal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.getElementById('edit-staff-form').reset();
+    }
+};
+
+window.submitEditStaff = async function() {
+    const maNhanVien = document.getElementById('edit-staff-form').dataset.maNhanVien;
+    const currentBranch = document.getElementById('editStaffBranch').value;
+    const newBranch = document.getElementById('editStaffNewBranch').value;
+    const chucVu = document.getElementById('editStaffPosition').value;
+    
+    if (!chucVu || !currentBranch) {
+        alert('Vui lòng chọn chức vụ và chi nhánh!');
+        return;
+    }
+    
+    const submitBtn = document.getElementById('submit-edit-btn');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang lưu...';
+    
+    try {
+        const token = localStorage.getItem('token');
+        
+        // Nếu có chi nhánh mới và khác chi nhánh cũ, thực hiện transfer
+        if (newBranch && newBranch !== currentBranch) {
+            const transferResponse = await fetch(`/api/staff/${maNhanVien}/transfer`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    oldBranch: currentBranch,
+                    newBranch: newBranch,
+                    newPosition: chucVu
+                })
+            });
+            
+            if (!transferResponse.ok) {
+                throw new Error(`HTTP error! status: ${transferResponse.status}`);
+            }
+            
+            const transferResult = await transferResponse.json();
+            if (!transferResult.success && !transferResult.data) {
+                throw new Error(transferResult.message || 'Lỗi khi điều động nhân viên');
+            }
+        }
+        
+        // Cập nhật thông tin khác
+        const formData = {
+            maNhanVien,
+            maChiNhanh: newBranch || currentBranch,
+            chucVu,
+            gioLamViec: document.getElementById('editStaffWorkStart').value || null,
+            gioNghi: document.getElementById('editStaffWorkEnd').value || null
+        };
+        
+        const response = await fetch(`/api/staff/${maNhanVien}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.success || result.data) {
+            const message = newBranch && newBranch !== currentBranch 
+                ? '✓ Điều động nhân viên và cập nhật thông tin thành công!' 
+                : '✓ Cập nhật nhân viên thành công!';
+            alert(message);
+            window.closeEditStaffModal();
+            loadStaffSection();
+        } else {
+            alert('❌ ' + (result.message || 'Lỗi khi cập nhật nhân viên'));
+        }
+        
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-save"></i> Lưu Thay Đổi';
+    } catch (error) {
+        console.error('Error:', error);
+        alert('❌ Lỗi: ' + error.message);
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-save"></i> Lưu Thay Đổi';
+    }
+};
+
+window.deleteStaffFromModal = async function() {
+    const maNhanVien = document.getElementById('edit-staff-form').dataset.maNhanVien;
+    const staffName = document.getElementById('editStaffName').textContent;
+    
+    if (!confirm(`Bạn có chắc muốn xóa nhân viên ${staffName}?`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/staff/delete', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({
+                maNhanVien,
+                maChiNhanh: document.getElementById('editStaffBranch').value
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('✓ Xóa nhân viên thành công!');
+            window.closeEditStaffModal();
+            loadStaffSection();
+        } else {
+            alert('❌ ' + (result.message || 'Lỗi khi xóa nhân viên'));
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('❌ Lỗi: ' + error.message);
+    }
+}
+
+window.viewStaffSalary = async function() {
+    const maNhanVien = document.getElementById('edit-staff-form').dataset.maNhanVien;
+    const staffName = document.getElementById('editStaffName').textContent;
+    const hireDateText = document.getElementById('editStaffHireDate').textContent;
+    
+    if (!maNhanVien) {
+        alert('Vui lòng chọn nhân viên!');
+        return;
+    }
+    
+    const modal = document.getElementById('salary-modal');
+    if (!modal) return;
+    
+    modal.style.display = 'flex';
+    const content = document.getElementById('salaryModalContent');
+    content.innerHTML = '<div style="text-align: center; padding: 2rem;"><i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary);"></i><p style="color: #999; margin-top: 1rem;">Đang tải dữ liệu lương...</p></div>';
+    
+    try {
+        const token = localStorage.getItem('token');
+        
+        // Parse hire date - Multiple formats supported
+        let hireYear, hireMonth;
+        
+        // Try YYYY-MM-DD format first (SQL Server format)
+        if (hireDateText.includes('-')) {
+            const parts = hireDateText.split('-');
+            if (parts.length >= 2) {
+                hireYear = parseInt(parts[0]);
+                hireMonth = parseInt(parts[1]);
+            }
+        }
+        // Try DD/MM/YYYY format
+        else if (hireDateText.includes('/')) {
+            const [hireDayStr, hireMonthStr, hireYearStr] = hireDateText.split('/');
+            hireYear = parseInt(hireYearStr);
+            hireMonth = parseInt(hireMonthStr);
+        }
+        // Try "DD tháng MM năm YYYY" format
+        else {
+            const monthMatch = hireDateText.match(/tháng\s+(\d+)\s+năm\s+(\d+)/);
+            if (monthMatch) {
+                hireMonth = parseInt(monthMatch[1]);
+                hireYear = parseInt(monthMatch[2]);
+            }
+        }
+        
+        if (isNaN(hireYear) || isNaN(hireMonth) || !hireYear || !hireMonth) {
+            throw new Error('Lỗi: Ngày vào làm không hợp lệ - ' + hireDateText);
+        }
+        
+        // Fetch job history
+        const historyResponse = await fetch(`/api/staff/history/${maNhanVien}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!historyResponse.ok) {
+            throw new Error('Không thể lấy lịch sử điều động');
+        }
+        
+        const historyResult = await historyResponse.json();
+        const jobHistory = historyResult.data || [];
+        
+        // Fetch salary table once
+        let salaryTable = [];
+        try {
+            const salaryTableResponse = await fetch('/api/branches/salary-table', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            
+            if (salaryTableResponse.ok) {
+                const salaryTableResult = await salaryTableResponse.json();
+                salaryTable = salaryTableResult.data || [];
+            }
+        } catch (err) {
+            console.error('Error loading salary table:', err);
+        }
+        
+        // Build salary table from job history
+        const salaryData = [];
+        let totalIncome = 0;
+        
+        // For each month from hire month to December
+        for (let month = hireMonth; month <= 12; month++) {
+            // Find active position at this month
+            let activePosition = null;
+            
+            for (const entry of jobHistory) {
+                const startDate = new Date(entry.NgayBatDau);
+                const endDate = entry.NgayKetThuc ? new Date(entry.NgayKetThuc) : null;
+                
+                // Check if this month falls within the period of this position
+                const entryStartMonth = startDate.getMonth() + 1;
+                const entryStartYear = startDate.getFullYear();
+                const entryEndMonth = endDate ? endDate.getMonth() + 1 : null;
+                const entryEndYear = endDate ? endDate.getFullYear() : null;
+                
+                // Check if current month is within this period
+                const isInRange = (entryStartYear < hireYear || (entryStartYear === hireYear && entryStartMonth <= month)) &&
+                                 (!endDate || entryEndYear > hireYear || (entryEndYear === hireYear && entryEndMonth >= month));
+                
+                if (isInRange) {
+                    activePosition = entry.ViTri;
+                    break;
+                }
+            }
+            
+            // If there's an active position, get the salary for that position
+            if (activePosition) {
+                const positionSalary = salaryTable.find(s => s.ChucVu === activePosition);
+                if (positionSalary) {
+                    const baseSalary = positionSalary.LuongCoBan;
+                    salaryData.push({
+                        year: hireYear,
+                        month,
+                        salary: baseSalary,
+                        position: activePosition,
+                        status: 'Đang làm'
+                    });
+                    totalIncome += baseSalary;
+                } else {
+                    // No salary info found, mark as working but no salary
+                    salaryData.push({
+                        year: hireYear,
+                        month,
+                        salary: 0,
+                        position: activePosition,
+                        status: 'Đang làm (chưa xác định lương)'
+                    });
+                }
+            } else {
+                // No active position this month - no salary
+                salaryData.push({
+                    year: hireYear,
+                    month,
+                    salary: 0,
+                    position: null,
+                    status: 'Không làm'
+                });
+            }
+        }
+        
+        // Display salary data
+        let html = `<div style="margin-bottom: 1.5rem;">
+                        <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                            <div style="width: 50px; height: 50px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.2rem;">
+                                ${staffName.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                                <h3 style="margin: 0; font-size: 1.1rem; color: var(--primary);">${staffName}</h3>
+                                <p style="margin: 0.25rem 0 0 0; color: #666; font-size: 0.9rem;">Lương từ tháng ${hireMonth}/${hireYear} đến 12/${hireYear}</p>
+                            </div>
+                        </div>
+                    </div>`;
+        
+        if (salaryData.length === 0) {
+            html += '<div style="text-align: center; padding: 3rem 1rem; color: #999; background: #f9f9f9; border-radius: 8px; border: 1px dashed #ddd;"><p><i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 1rem; display: block;"></i>Chưa có dữ liệu lương</p></div>';
+        } else {
+            html += '<div style="overflow-x: auto; border-radius: 8px; border: 1px solid #e0e0e0;"><table style="width: 100%; border-collapse: collapse; background: white;">';
+            html += '<thead><tr style="background: linear-gradient(135deg, var(--primary) 0%, #0d6b7f 100%); color: white;">';
+            html += '<th style="padding: 1rem 1.5rem; text-align: left; font-weight: 600; border: none;">Tháng/Năm</th>';
+            html += '<th style="padding: 1rem 1.5rem; text-align: left; font-weight: 600; border: none;">Chức vụ</th>';
+            html += '<th style="padding: 1rem 1.5rem; text-align: center; font-weight: 600; border: none;">Trạng thái</th>';
+            html += '<th style="padding: 1rem 1.5rem; text-align: right; font-weight: 600; border: none;">Lương</th>';
+            html += '</tr></thead><tbody>';
+            
+            salaryData.forEach((item, idx) => {
+                const monthName = new Date(item.year, item.month - 1).toLocaleString('vi-VN', { month: 'long', year: 'numeric' });
+                const isWorking = item.status === 'Đang làm';
+                const statusColor = isWorking ? '#4caf50' : '#ff9800';
+                const statusIcon = isWorking ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-ban"></i>';
+                
+                html += `<tr style="border-bottom: 1px solid #e8e8e8; background: ${idx % 2 === 0 ? '#fafafa' : 'white'}; transition: all 0.3s;">
+                            <td style="padding: 1rem 1.5rem; font-weight: 500; color: #333;">${monthName}</td>
+                            <td style="padding: 1rem 1.5rem; color: ${isWorking ? 'var(--primary)' : '#999'};">${item.position || '—'}</td>
+                            <td style="padding: 1rem 1.5rem; text-align: center; color: ${statusColor};">${statusIcon} ${item.status}</td>
+                            <td style="padding: 1rem 1.5rem; text-align: right; color: ${isWorking ? 'var(--primary)' : '#ccc'}; font-weight: 600;">${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(item.salary)}</td>
+                        </tr>`;
+            });
+            
+            // Add total row
+            html += '<tr style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); font-weight: bold; border-top: 2px solid var(--primary);">';
+            html += `<td style="padding: 1.2rem 1.5rem; color: var(--primary); font-size: 1.05rem;"><i class="fas fa-coins"></i> Tổng Cộng Năm</td>`;
+            html += `<td colspan="2"></td>`;
+            html += `<td style="padding: 1.2rem 1.5rem; text-align: right; color: var(--primary); font-size: 1.1rem;">${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(totalIncome)}</td>`;
+            html += '</tr>';
+            
+            html += '</tbody></table></div>';
+        }
+        
+        content.innerHTML = html;
+    } catch (error) {
+        console.error('Error loading salary:', error);
+        content.innerHTML = `<p style="color: red; text-align: center;">Lỗi khi tải dữ liệu lương: ${error.message}</p>`;
+    }
+};
+
+window.closeSalaryModal = function() {
+    const modal = document.getElementById('salary-modal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+};
 
 async function showEmployeeDetails(maNV, hoTen) {
     // Create modal overlay
@@ -1319,5 +1983,95 @@ window.showEmployeeDetails = showEmployeeDetails;
 window.closeEmployeeModal = closeEmployeeModal;
 window.handleReportFilter = handleReportFilter;
 window.loadDefaultReports = loadDefaultReports;
-window.handlePetSearch = handlePetSearch;
+window.handleCustomerSearch = handleCustomerSearch;
 
+// ==================== MODAL EVENT LISTENERS ====================
+document.addEventListener('DOMContentLoaded', () => {
+    // Add Staff Modal
+    const addStaffModal = document.getElementById('add-staff-modal');
+    const editStaffModal = document.getElementById('edit-staff-modal');
+    const addStaffForm = document.getElementById('add-staff-form');
+    const editStaffForm = document.getElementById('edit-staff-form');
+    const searchForm = document.getElementById('customer-search-form');
+    if (searchForm) {
+        searchForm.addEventListener('submit', handleCustomerSearch);
+    }
+    
+    if (addStaffModal) {
+        // Click outside modal to close
+        addStaffModal.addEventListener('click', (e) => {
+            if (e.target === addStaffModal) {
+                window.closeAddStaffModal();
+            }
+        });
+        
+        // Close button in modal header
+        const closeBtn = addStaffModal.querySelector('button[onclick="window.closeAddStaffModal()"]');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', window.closeAddStaffModal);
+        }
+    }
+    
+    // Add Staff Form Submit
+    if (addStaffForm) {
+        addStaffForm.addEventListener('submit', window.submitAddStaff);
+        
+        // Close button
+        const closeBtn = document.getElementById('close-staff-btn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', window.closeAddStaffModal);
+        }
+    }
+    
+    if (editStaffModal) {
+        // Click outside modal to close
+        editStaffModal.addEventListener('click', (e) => {
+            if (e.target === editStaffModal) {
+                window.closeEditStaffModal();
+            }
+        });
+        
+        // Close button in modal header
+        const closeBtn = editStaffModal.querySelector('button[onclick="window.closeEditStaffModal()"]');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', window.closeEditStaffModal);
+        }
+    }
+    
+    // Edit Staff Form Submit
+    if (editStaffForm) {
+        const submitBtn = document.getElementById('submit-edit-btn');
+        if (submitBtn) {
+            submitBtn.addEventListener('click', window.submitEditStaff);
+        }
+        
+        // Close button
+        const closeBtn = document.getElementById('close-edit-btn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', window.closeEditStaffModal);
+        }
+        
+        // Delete button
+        const deleteBtn = document.getElementById('delete-staff-btn');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', window.deleteStaffFromModal);
+        }
+    }
+    
+    // Salary Modal
+    const salaryModal = document.getElementById('salary-modal');
+    if (salaryModal) {
+        // Click outside modal to close
+        salaryModal.addEventListener('click', (e) => {
+            if (e.target === salaryModal) {
+                window.closeSalaryModal();
+            }
+        });
+        
+        // Close button in modal header
+        const closeBtn = salaryModal.querySelector('button[onclick="window.closeSalaryModal()"]');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', window.closeSalaryModal);
+        }
+    }
+});

@@ -12,6 +12,12 @@ router.post('/delete', authMiddleware.verifyToken, authMiddleware.isManager, sta
 // PUT - Cập nhật nhân viên
 router.put('/:maNhanVien', authMiddleware.verifyToken, authMiddleware.isManager, staffController.updateStaff);
 
+// POST - Điều động nhân viên sang chi nhánh khác
+router.post('/:maNhanVien/transfer', authMiddleware.verifyToken, authMiddleware.isManager, staffController.transferStaff);
+
+// GET - Lấy danh sách tất cả nhân viên (for admin global view)
+router.get('/all', authMiddleware.verifyToken, authMiddleware.isManager, staffController.getAllStaff);
+
 // GET - Lấy danh sách nhân viên theo chi nhánh
 router.get('/by-branch/:maChiNhanh', authMiddleware.verifyToken, authMiddleware.isManager, staffController.getStaffByBranch);
 

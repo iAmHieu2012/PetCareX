@@ -119,6 +119,38 @@ const retailController = {
         }
     },
 
+    // Lấy danh sách sản phẩm trong kho (cho dashboard)
+    getWarehouseProducts: async (req, res) => {
+        try {
+            const { maChiNhanh } = req.params;
+
+            if (!maChiNhanh) {
+                return res.status(400).json({ success: false, message: 'Thiếu mã chi nhánh' });
+            }
+
+            const products = await retailModel.getWarehouseProducts(maChiNhanh);
+            return res.status(200).json(successResponse(products, 'Lấy danh sách sản phẩm thành công'));
+        } catch (err) {
+            return handleControllerError(err, res);
+        }
+    },
+
+    // Lấy danh sách lô hàng trong kho
+    getWarehouseBatches: async (req, res) => {
+        try {
+            const { maChiNhanh } = req.params;
+
+            if (!maChiNhanh) {
+                return res.status(400).json({ success: false, message: 'Thiếu mã chi nhánh' });
+            }
+
+            const batches = await retailModel.getWarehouseBatches(maChiNhanh);
+            return res.status(200).json(successResponse(batches, 'Lấy danh sách lô hàng thành công'));
+        } catch (err) {
+            return handleControllerError(err, res);
+        }
+    },
+
     // Xác nhận thanh toán
     confirmPayment: async (req, res) => {
         try {
@@ -140,6 +172,50 @@ const retailController = {
             });
 
             return res.status(200).json(successResponse(result, 'Xác nhận thanh toán thành công'));
+        } catch (err) {
+            return handleControllerError(err, res);
+        }
+    },
+
+    // Thêm sản phẩm mới
+    addProduct: async (req, res) => {
+        try {
+            const { tenSanPham, loaiSanPham, giaBan } = req.body;
+
+            if (!tenSanPham || !loaiSanPham || !giaBan) {
+                return res.status(400).json({ success: false, message: 'Thiếu thông tin bắt buộc' });
+            }
+
+            const result = await retailModel.addProduct({
+                tenSanPham,
+                loaiSanPham,
+                giaBan
+            });
+
+            return res.status(200).json(successResponse(result, 'Thêm sản phẩm thành công'));
+        } catch (err) {
+            return handleControllerError(err, res);
+        }
+    },
+
+    // Nhập lô hàng
+    importBatch: async (req, res) => {
+        try {
+            const { maSanPham, maChiNhanh, ngaySanXuat, hanSuDung, soLuong } = req.body;
+
+            if (!maSanPham || !maChiNhanh || !ngaySanXuat || !soLuong) {
+                return res.status(400).json({ success: false, message: 'Thiếu thông tin bắt buộc' });
+            }
+
+            const result = await retailModel.importBatch({
+                maSanPham,
+                maChiNhanh,
+                ngaySanXuat,
+                hanSuDung,
+                soLuong
+            });
+
+            return res.status(200).json(successResponse(result, 'Nhập lô hàng thành công'));
         } catch (err) {
             return handleControllerError(err, res);
         }

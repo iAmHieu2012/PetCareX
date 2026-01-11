@@ -101,5 +101,18 @@ export const api = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
     }).then(res => res.json()),
-    getInvoicesByBranch: (maChiNhanh) => fetch(`/api/invoices/by-branch/${maChiNhanh}`).then(res => res.json())
+    getInvoicesByBranch: (maChiNhanh) => fetch(`/api/invoices/by-branch/${maChiNhanh}`).then(res => res.json()),
+    // Warehouse APIs
+    getWarehouseByBranch: (maChiNhanh) => fetch(`/api/retail/warehouse-products/${maChiNhanh}`).then(res => res.json()),
+    getWarehouseBatchesByBranch: (maChiNhanh) => fetch(`/api/retail/warehouse-batches/${maChiNhanh}`).then(res => res.json()),
+    addProduct: (data) => fetch('/api/retail/add-product', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    }).then(res => res.json()),
+    importBatch: (data) => fetch('/api/retail/import-batch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    }).then(res => res.json())
 };
