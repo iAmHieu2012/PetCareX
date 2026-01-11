@@ -8,13 +8,53 @@ const generateId = async (pool, prefix, tableName, maxLength = 10) => {
             throw new Error(`Table '${tableName}' không được phép`);
         }
         
+        // Map table name to primary key column name
+        const pkColumnMap = {
+            'NHAN_VIEN': 'MaNhanVien',
+            'KHACH_HANG': 'MaKhachHang',
+            'LICH_HEN': 'MaLichHen',
+            'PHIEU_DICH_VU': 'MaPhieuDichVu',
+            'PHIEU_KHAM_BENH': 'MaPhieuDichVu', // PHIEU_KHAM_BENH dùng MaPhieuDichVu làm PK
+            'PHIEU_TIEM_PHONG': 'MaPhieuDichVu', // PHIEU_TIEM_PHONG dùng MaPhieuDichVu làm PK
+            'THU_CUNG': 'MaThuCung',
+            'HOA_DON': 'MaHoaDon'
+        };
+        
+        const pkColumn = pkColumnMap[tableName];
+        
+        // Lấy mã ID cao nhất hiện tại
         const result = await pool.request()
-            .query(`SELECT COUNT(*) as count FROM ${tableName}`);
+            .query(`SELECT MAX(${pkColumn}) as maxId FROM ${tableName}`);
         
-        const count = result.recordset[0].count + 1;
-        const paddedNumber = String(count).padStart(maxLength - prefix.length, '0');
+        const maxId = result.recordset[0]?.maxId;
         
-        return prefix + paddedNumber;
+        // Nếu chưa có bản ghi nào, bắt đầu từ 1 với prefix mặc định
+        if (!maxId || maxId === null) {
+            const paddedNumber = String(1).padStart(maxLength - prefix.length, '0');
+            return prefix + paddedNumber;
+        }
+        
+        // Tự động detect prefix từ mã ID hiện có
+        // Tìm phần chữ cái ở đầu (prefix thực tế)
+        const prefixMatch = maxId.match(/^([A-Z]+)/);
+        const actualPrefix = prefixMatch ? prefixMatch[1] : prefix;
+        
+        // Nếu prefix thực tế khác với prefix mong đợi, dùng prefix thực tế
+        const usedPrefix = actualPrefix || prefix;
+        
+        // Lấy số từ mã ID hiện tại
+        const numberPart = maxId.replace(usedPrefix, '');
+        const currentNumber = parseInt(numberPart, 10);
+        
+        // Kiểm tra parse thành công
+        if (isNaN(currentNumber)) {
+            throw new Error(`Không thể parse số từ mã ID: ${maxId}. Prefix phát hiện: ${usedPrefix}, Prefix mong đợi: ${prefix}`);
+        }
+        
+        const nextNumber = currentNumber + 1;
+        const paddedNumber = String(nextNumber).padStart(maxLength - usedPrefix.length, '0');
+        
+        return usedPrefix + paddedNumber;
     } catch (err) {
         throw new Error(`Lỗi sinh ID cho ${tableName}: ${err.message}`);
     }
