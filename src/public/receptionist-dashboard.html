@@ -39,7 +39,9 @@
         <div class="tabs-navigation">
             <div class="tabs-header">
                 <button class="tab-btn active" data-tab="bookings"><i class="fas fa-calendar-alt"></i> Quản Lý Lịch Hẹn</button>
+                <button class="tab-btn" data-tab="new-booking"><i class="fas fa-calendar-plus"></i> Đặt Lịch Khách</button>
                 <button class="tab-btn" data-tab="payment-confirmation"><i class="fas fa-check-circle"></i> Xác Nhận Thanh Toán</button>
+                <button class="tab-btn" data-tab="my-confirmed"><i class="fas fa-history"></i> Hóa Đơn Của Tôi</button>
             </div>
         </div>
 
@@ -55,12 +57,115 @@
                     </div>
             </div>
 
+            <div class="tab-pane" id="new-booking-tab">
+                <div class="tab-header mb-lg">
+                    <h2>Đặt Lịch Hẹn Cho Khách Hàng</h2>
+                    <p class="text-muted text-sm">Tìm kiếm khách hàng và đặt lịch hẹn dịch vụ</p>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; padding: 20px;">
+                    <!-- Cột trái: Tìm kiếm khách hàng -->
+                    <div style="background: white; padding: 25px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                        <h3 style="font-size: 1.1rem; margin-bottom: 20px; color: #333; font-weight: 600;">
+                            <i class="fas fa-user-search"></i> Tìm Kiếm Khách Hàng
+                        </h3>
+                        
+                        <div class="form-group mb-lg">
+                            <label style="font-weight: 600; margin-bottom: 8px; display: block;">Tìm theo SĐT, Email hoặc CCCD</label>
+                            <input type="text" id="customerSearchInput" placeholder="Nhập SĐT, Email hoặc CCCD..." 
+                                style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
+                        </div>
+
+                        <button onclick="window.receptionist.searchCustomer()" 
+                            style="width: 100%; padding: 10px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; margin-bottom: 20px;">
+                            <i class="fas fa-search"></i> Tìm Kiếm
+                        </button>
+
+                        <div id="customerSearchResult" style="min-height: 100px; border: 1px dashed #ddd; border-radius: 8px; padding: 15px; background: #f9fafb;">
+                            <p style="text-align: center; color: #999; font-size: 0.9rem;">Nhập tìm kiếm để xem kết quả...</p>
+                        </div>
+                    </div>
+
+                    <!-- Cột phải: Form đặt lịch -->
+                    <div style="background: white; padding: 25px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                        <h3 style="font-size: 1.1rem; margin-bottom: 20px; color: #333; font-weight: 600;">
+                            <i class="fas fa-calendar"></i> Thông Tin Lịch Hẹn
+                        </h3>
+
+                        <div class="form-group mb-lg">
+                            <label style="font-weight: 600; margin-bottom: 8px; display: block;">Khách Hàng <span style="color: red;">*</span></label>
+                            <div id="selectedCustomerDisplay" style="padding: 12px; background: #f0f7ff; border: 1px solid #bfdbfe; border-radius: 8px; color: #666; min-height: 50px; display: flex; align-items: center;">
+                                Chưa chọn khách hàng
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-lg">
+                            <label style="font-weight: 600; margin-bottom: 8px; display: block;">Thú Cưng <span style="color: red;">*</span></label>
+                            <select id="newBookingPet" style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;" onchange="window.receptionist.onPetSelected()">
+                                <option value="">-- Chọn thú cưng --</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group mb-lg">
+                            <label style="font-weight: 600; margin-bottom: 8px; display: block;">Dịch Vụ <span style="color: red;">*</span></label>
+                            <select id="newBookingService" style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
+                                <option value="">-- Chọn dịch vụ --</option>
+                                <option value="Khám bệnh">Khám bệnh</option>
+                                <option value="Tiêm Phòng">Tiêm phòng</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group mb-lg">
+                            <label style="font-weight: 600; margin-bottom: 8px; display: block;">Chi Nhánh <span style="color: red;">*</span></label>
+                            <select id="newBookingBranch" style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;"></select>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+                            <div class="form-group">
+                                <label style="font-weight: 600; margin-bottom: 8px; display: block;">Ngày <span style="color: red;">*</span></label>
+                                <input type="date" id="newBookingDate" style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
+                            </div>
+                            <div class="form-group">
+                                <label style="font-weight: 600; margin-bottom: 8px; display: block;">Giờ <span style="color: red;">*</span></label>
+                                <input type="time" id="newBookingTime" style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
+                            </div>
+                        </div>
+
+                        <button onclick="window.receptionist.createNewBooking()" 
+                            style="width: 100%; padding: 12px; background: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1rem;">
+                            <i class="fas fa-plus"></i> Đặt Lịch Hẹn
+                        </button>
+                    </div>
+                </div>
+
+                <div id="petMedicalHistoryPanel" style="margin-top: 30px; display: none;">
+                    <div style="background: white; padding: 25px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                        <h3 style="font-size: 1.1rem; margin-bottom: 20px; color: #333; font-weight: 600;">
+                            <i class="fas fa-history"></i> Lịch sử Y Tế & Gói Tiêm
+                        </h3>
+                        <div id="petMedicalHistory" style="color: #666; line-height: 1.6;">
+                            <!-- Sẽ được load động -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="tab-pane" id="payment-confirmation-tab">
                 <div class="tab-header mb-lg">
                     <h2>Xác Nhận Thanh Toán</h2>
                     <p class="text-muted text-sm">Danh sách tất cả hóa đơn khách hàng đã thanh toán nhưng chưa xác nhận</p>
                 </div>
                 <div id="paymentConfirmationList" class="grid-2 gap-md">
+                    <!-- Danh sách sẽ được load từ API -->
+                </div>
+            </div>
+
+            <div class="tab-pane" id="my-confirmed-tab">
+                <div class="tab-header mb-lg">
+                    <h2>Hóa Đơn Của Tôi</h2>
+                    <p class="text-muted text-sm">Danh sách hóa đơn bạn đã xác nhận</p>
+                </div>
+                <div id="myConfirmedPaymentList" class="grid-2 gap-md">
                     <!-- Danh sách sẽ được load từ API -->
                 </div>
             </div>

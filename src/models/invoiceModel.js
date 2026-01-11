@@ -495,7 +495,7 @@ async function getPendingConfirmationInvoices(maKhachHang) {
                 WHERE p.MaKhachHang = @MaKhachHang 
                 AND hd.MaNhanVien IS NULL 
                 AND hd.HinhThucThanhToan IS NOT NULL
-                AND hd.HinhThucThanhToan != 'Đã hủy'
+                AND hd.HinhThucThanhToan != N'Đã hủy'
                 ORDER BY hd.NgayLap DESC, hd.MaHoaDon DESC
             `);
 
@@ -527,10 +527,17 @@ async function getAllPendingConfirmationInvoices() {
                     kh.SoDienThoai,
                     cn.TenChiNhanh,
                     CASE 
-                        WHEN hd.HinhThucThanhToan = 'Đã hủy' THEN 'Đã hủy'
-                        WHEN hd.MaNhanVien IS NULL THEN 'Chờ xác nhận'
-                        ELSE 'Đã xác nhận'
-                    END AS TrangThaiXacNhan
+                        WHEN hd.HinhThucThanhToan = N'Đã hủy' THEN N'Đã hủy'
+                        WHEN hd.MaNhanVien IS NULL THEN N'Chờ xác nhận'
+                        ELSE N'Đã xác nhận'
+                    END AS TrangThaiXacNhan,
+                    CASE 
+                        WHEN EXISTS(SELECT 1 FROM PHIEU_KHAM_BENH WHERE MaPhieuDichVu = hd.MaPhieuDichVu) THEN 'exam'
+                        WHEN EXISTS(SELECT 1 FROM PHIEU_TIEM_PHONG WHERE MaPhieuDichVu = hd.MaPhieuDichVu) THEN 'vaccine'
+                        WHEN EXISTS(SELECT 1 FROM PHIEU_DANG_KY_GOI_TIEM WHERE MaPhieuDichVu = hd.MaPhieuDichVu) THEN 'package'
+                        WHEN EXISTS(SELECT 1 FROM PHIEU_MUA_HANG WHERE MaPhieuDichVu = hd.MaPhieuDichVu) THEN 'retail'
+                        ELSE 'unknown'
+                    END AS LoaiPhieu
                 FROM HOA_DON hd
                 JOIN PHIEU_DICH_VU p ON hd.MaPhieuDichVu = p.MaPhieuDichVu
                 JOIN KHACH_HANG kh ON p.MaKhachHang = kh.MaKhachHang
@@ -598,11 +605,13 @@ async function getInvoicesByBranch(maChiNhanh, trangThaiThanhToan = null, ngayTa
                 hd.MaHoaDon,
                 kh.TenKhachHang,
                 hd.TongTienThanhToan AS tongTien,
+                hd.MaNhanVien,
+                hd.HinhThucThanhToan,
+                hd.NgayLap,
                 CASE 
                     WHEN hd.HinhThucThanhToan IS NOT NULL AND hd.HinhThucThanhToan != N'Đã hủy' THEN N'Đã thanh toán'
                     ELSE N'Chưa thanh toán'
                 END AS trangThaiThanhToan,
-                hd.NgayLap,
                 hd.KhuyenMai,
                 p.TongTien AS tongDichVu,
                 0 AS tongSanPham
@@ -686,6 +695,51 @@ async function getReview(maHoaDon, ngayLap) {
     }
 }
 
+// 11. Lấy danh sách hóa đơn đã xác nhận bởi một nhân viên cụ thể
+async function getConfirmedInvoicesByStaff(maNhanVien) {
+    try {
+        const pool = await connectDB();
+        const result = await pool
+            .request()
+            .input('MaNhanVien', sql.Char(10), maNhanVien)
+            .query(`
+                SELECT 
+                    hd.MaHoaDon,
+                    hd.NgayLap,
+                    hd.TongTienThanhToan,
+                    hd.KhuyenMai,
+                    hd.HinhThucThanhToan,
+                    hd.MaPhieuDichVu,
+                    hd.MaNhanVien,
+                    p.TongTien,
+                    p.MaKhachHang,
+                    kh.TenKhachHang,
+                    kh.SoDienThoai,
+                    kh.CCCD,
+                    cn.TenChiNhanh,
+                    CASE 
+                        WHEN hd.HinhThucThanhToan = N'Đã hủy' THEN N'Đã hủy'
+                        WHEN hd.MaNhanVien IS NOT NULL THEN N'Đã xác nhận'
+                        ELSE N'Chờ xác nhận'
+                    END AS TrangThaiXacNhan,
+                    nv.HoTen AS TenNhanVien
+                FROM HOA_DON hd
+                JOIN PHIEU_DICH_VU p ON hd.MaPhieuDichVu = p.MaPhieuDichVu
+                JOIN KHACH_HANG kh ON p.MaKhachHang = kh.MaKhachHang
+                JOIN CHI_NHANH cn ON p.MaChiNhanh = cn.MaChiNhanh
+                LEFT JOIN NHAN_VIEN nv ON hd.MaNhanVien = nv.MaNhanVien
+                WHERE hd.MaNhanVien = @MaNhanVien
+                AND hd.HinhThucThanhToan IS NOT NULL
+                AND hd.HinhThucThanhToan != N'Đã hủy'
+                ORDER BY hd.NgayLap DESC, hd.MaHoaDon DESC
+            `);
+
+        return result.recordset || [];
+    } catch (err) {
+        handleModelError(err, 'getConfirmedInvoicesByStaff');
+    }
+}
+
 module.exports = {
     getAllPhieuDichVu,
     getPendingInvoices,
@@ -694,6 +748,7 @@ module.exports = {
     cancelInvoice,
     getInvoiceHistory,
     getAllPendingConfirmationInvoices,
+    getConfirmedInvoicesByStaff,
     confirmPayment,
     getInvoicesByBranch,
     submitReview,

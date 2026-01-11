@@ -14,6 +14,9 @@ router.get('/history/:maKhachHang', invoiceController.getInvoiceHistory);
 // GET - Lấy tất cả danh sách hóa đơn chờ xác nhận (staff - không filter theo khách hàng)
 router.get('/pending-confirmation', invoiceController.getAllPendingConfirmationInvoices);
 
+// GET - Lấy danh sách hóa đơn đã xác nhận bởi nhân viên
+router.get('/confirmed/:maNhanVien', invoiceController.getConfirmedInvoicesByStaff);
+
 // GET - Lấy danh sách phiếu dịch vụ chưa thanh toán (legacy)
 router.get('/pending/:maKhachHang', invoiceController.getPendingInvoices);
 

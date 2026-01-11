@@ -35,6 +35,16 @@ const addStaff = async (req, res) => {
     }
 };
 
+// Lấy danh sách tất cả nhân viên
+const getAllStaff = async (req, res) => {
+    try {
+        const staff = await staffModel.getAllStaff();
+        return res.json(successResponse(staff || [], 'Lấy danh sách nhân viên thành công'));
+    } catch (err) {
+        handleControllerError(err, res, 'getAllStaff');
+    }
+};
+
 // Lấy danh sách nhân viên của chi nhánh
 const getStaffByBranch = async (req, res) => {
     try {
@@ -158,6 +168,7 @@ const getStaffHistory = async (req, res) => {
 
 module.exports = {
     addStaff,
+    getAllStaff,
     getStaffByBranch,
     getManagersByBranch,
     getStaffDetail,

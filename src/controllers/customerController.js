@@ -114,29 +114,40 @@ const customerController = {
     // Search customers
     searchCustomers: async (req, res) => {
         try {
-            const { keyword } = req.query;
+            const { keyword, q } = req.query;
+            const searchQuery = keyword || q;
 
-            if (!keyword || keyword.length < 2) {
-                return res.json(successResponse([], 'Từ khóa tìm kiếm phải có ít nhất 2 ký tự'));
+            if (!searchQuery || searchQuery.length < 2) {
+                return res.json(successResponse(null, 'Từ khóa tìm kiếm phải có ít nhất 2 ký tự'));
             }
 
             const pool = await connectDB();
 
             const result = await pool.request()
-                .input('Keyword', sql.NVarChar(50), `%${keyword}%`)
+                .input('Keyword', sql.NVarChar(50), `%${searchQuery}%`)
                 .query(`
                     SELECT TOP 10
                         MaKhachHang,
                         TenKhachHang,
-                        SoDienThoai AS DienThoai,
-                        Email
+                        SoDienThoai,
+                        Email,
+                        CCCD,
+                        DiemTichLuy
                     FROM KHACH_HANG
                     WHERE TenKhachHang LIKE @Keyword
                        OR SoDienThoai LIKE @Keyword
+                       OR Email LIKE @Keyword
+                       OR CCCD LIKE @Keyword
                     ORDER BY TenKhachHang
                 `);
 
-            return res.json(successResponse(result.recordset, 'Tìm kiếm khách hàng thành công'));
+            // Return first match as single object, or array if multiple
+            const customers = result.recordset;
+            if (customers.length === 0) {
+                return res.json(successResponse(null, 'Không tìm thấy khách hàng'));
+            }
+
+            return res.json(successResponse(customers[0], 'Tìm kiếm khách hàng thành công'));
         } catch (err) {
             return handleControllerError(res, err);
         }

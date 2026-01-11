@@ -55,6 +55,7 @@ function setupTabs() {
             if (tabId === 'customers') loadCustomers();
             if (tabId === 'bookings') loadAllBookings();
             if (tabId === 'payment-confirmation') await loadAllPendingConfirmationInvoices();
+            if (tabId === 'my-confirmed') await loadMyConfirmedInvoices();
         });
     });
 }
@@ -274,11 +275,14 @@ function setupEventListeners() {
     });
 }
 
-// Load tất cả hóa đơn chờ xác nhận
+// Load tất cả hóa đơn chờ xác nhận (loại trừ PHIEU_MUA_HANG - chỉ khám bệnh, tiêm phòng, gói tiêm)
 async function loadAllPendingConfirmationInvoices() {
     try {
-        const res = await fetch('/api/invoices/pending-confirmation').then(r => r.json());
-        const invoices = res.data || res || [];
+        const res = await api.getAllPendingConfirmationInvoices();
+        const allInvoices = res.data || res || [];
+        
+        // FILTER: Loại trừ PHIEU_MUA_HANG (retail) - chỉ lấy các hóa đơn từ khám bệnh, tiêm phòng, đăng ký gói tiêm
+        const invoices = allInvoices.filter(inv => inv.LoaiPhieu !== 'retail');
         
         const container = document.getElementById('paymentConfirmationList');
         
@@ -338,16 +342,12 @@ async function loadAllPendingConfirmationInvoices() {
 // Xác nhận thanh toán
 window.confirmPaymentAction = async (maHoaDon, ngayLap) => {
     try {
-        const res = await fetch('/api/invoices/confirm', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                maHoaDon: maHoaDon,
-                ngayLap: ngayLap,
-                maNhanVien: state.maNhanVien,
-                hinhThucThanhToan: 'Chuyển khoản' // Default payment method
-            })
-        }).then(r => r.json());
+        const res = await api.confirmPayment({
+            maHoaDon: maHoaDon,
+            ngayLap: ngayLap,
+            maNhanVien: state.maNhanVien,
+            hinhThucThanhToan: 'Chuyển khoản' // Default payment method
+        });
 
         if (res.success) {
             alert('Xác nhận thanh toán thành công!');
@@ -403,3 +403,308 @@ async function loadCustomers() {
     `).join('');
 }
 
+// Load danh sách hóa đơn mà nhân viên tiếp tân hiện tại đã xác nhận
+async function loadMyConfirmedInvoices() {
+    const container = document.getElementById('myConfirmedPaymentList');
+    if (!container) return;
+    
+    try {
+        if (!state.maNhanVien) {
+            container.innerHTML = '<p style="color:red;">Lỗi: Không tìm thấy mã nhân viên</p>';
+            return;
+        }
+
+        const res = await api.getConfirmedInvoicesByStaff(state.maNhanVien);
+        const invoices = res.data || [];
+
+        if (invoices.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state" style="grid-column: 1/-1; text-align:center; padding:2rem; color:#999;">
+                    <i class="fas fa-inbox"></i>
+                    <p>Bạn chưa xác nhận hóa đơn nào</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = invoices.map(inv => `
+            <div class="booking-card" style="border-left:5px solid #27ae60;">
+                <div class="booking-header">
+                    <div class="booking-header-left">
+                        <h3 style="color:var(--primary); font-size:1.1rem;">Mã HĐ: ${inv.MaHoaDon}</h3>
+                        <p style="font-size:0.85rem; color:#666;">Khách: ${inv.TenKhachHang} (${inv.MaKhachHang})</p>
+                    </div>
+                    <span class="booking-status status-confirmed" style="background:#27ae60;">Đã Xác Nhận</span>
+                </div>
+                <div class="booking-body" style="grid-template-columns: 1fr 1fr 1fr; gap:15px;">
+                    <div class="booking-info-item">
+                        <div class="booking-info-label">Ngày Xác Nhận</div>
+                        <div class="booking-info-value">${new Date(inv.NgayLap).toLocaleDateString('vi-VN')}</div>
+                    </div>
+                    <div class="booking-info-item">
+                        <div class="booking-info-label">Tổng Tiền</div>
+                        <div class="booking-info-value" style="color:#27ae60; font-weight:bold;">${parseInt(inv.TongTienThanhToan).toLocaleString('vi-VN')} ₫</div>
+                    </div>
+                    <div class="booking-info-item">
+                        <div class="booking-info-label">Hình Thức</div>
+                        <div class="booking-info-value">${inv.HinhThucThanhToan}</div>
+                    </div>
+                    <div class="booking-info-item">
+                        <div class="booking-info-label">Chi Nhánh</div>
+                        <div class="booking-info-value">${inv.TenChiNhanh}</div>
+                    </div>
+                    <div class="booking-info-item">
+                        <div class="booking-info-label">SĐT Khách</div>
+                        <div class="booking-info-value">${inv.SoDienThoai}</div>
+                    </div>
+                    <div class="booking-info-item">
+                        <div class="booking-info-label">CCCD</div>
+                        <div class="booking-info-value">${inv.CCCD}</div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    } catch (err) {
+        console.error('Lỗi load hóa đơn của tôi:', err);
+        container.innerHTML = '<div class="empty-state" style="grid-column: 1/-1;">Lỗi tải dữ liệu hóa đơn.</div>';
+    }
+}
+
+// ========== ĐẶT LỊCH KHÁCH HÀNG ==========
+window.receptionist = {
+    selectedCustomer: null,
+    selectedPet: null,
+    branches: [],
+
+    async searchCustomer() {
+        const searchInput = document.getElementById('customerSearchInput').value.trim();
+        if (!searchInput) {
+            alert('Vui lòng nhập SĐT, Email hoặc CCCD để tìm kiếm');
+            return;
+        }
+
+        try {
+            const res = await api.searchCustomer(searchInput);
+            const customer = res.data || res;
+            
+            if (!customer || !customer.MaKhachHang) {
+                document.getElementById('customerSearchResult').innerHTML = `
+                    <div style="text-align: center; color: #dc3545; padding: 30px 0;">
+                        <i class="fas fa-user-slash fa-2x" style="margin-bottom: 10px;"></i>
+                        <p style="margin-top: 10px; font-weight: 600;">Không tìm thấy khách hàng</p>
+                    </div>
+                `;
+                return;
+            }
+
+            this.selectedCustomer = customer;
+            
+            // Hiển thị thông tin khách hàng
+            document.getElementById('customerSearchResult').innerHTML = `
+                <div style="background: #e8f5e9; padding: 15px; border-radius: 8px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+                        <div><strong>Tên:</strong> ${customer.TenKhachHang}</div>
+                        <div><strong>SĐT:</strong> ${customer.SoDienThoai}</div>
+                        <div><strong>Email:</strong> ${customer.Email || 'N/A'}</div>
+                        <div><strong>CCCD:</strong> ${customer.CCCD || 'N/A'}</div>
+                    </div>
+                    <button onclick="window.receptionist.selectCustomer()" 
+                        style="width: 100%; padding: 10px; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; margin-top: 10px;">
+                        <i class="fas fa-check"></i> Chọn Khách Hàng
+                    </button>
+                </div>
+            `;
+        } catch (err) {
+            console.error('Lỗi tìm kiếm khách hàng:', err);
+            document.getElementById('customerSearchResult').innerHTML = `
+                <div style="text-align: center; color: #dc3545;">
+                    <p>Lỗi tìm kiếm khách hàng</p>
+                </div>
+            `;
+        }
+    },
+
+    selectCustomer() {
+        if (!this.selectedCustomer) return;
+
+        const cust = this.selectedCustomer;
+        document.getElementById('selectedCustomerDisplay').innerHTML = `
+            <div style="flex: 1;">
+                <strong>${cust.TenKhachHang}</strong><br>
+                <span style="font-size: 0.85rem; color: #999;">SĐT: ${cust.SoDienThoai} | Điểm: ${cust.DiemTichLuy || 0}</span>
+            </div>
+            <button onclick="window.receptionist.clearCustomer()" style="padding: 8px 12px; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                <i class="fas fa-times"></i> Thay đổi
+            </button>
+        `;
+
+        // Load thú cưng của khách hàng
+        this.loadCustomerPets(cust.MaKhachHang);
+    },
+
+    clearCustomer() {
+        this.selectedCustomer = null;
+        document.getElementById('selectedCustomerDisplay').innerHTML = 'Chưa chọn khách hàng';
+        document.getElementById('newBookingPet').innerHTML = '<option value="">-- Chọn thú cưng --</option>';
+        document.getElementById('petMedicalHistoryPanel').style.display = 'none';
+    },
+
+    async loadCustomerPets(maKhachHang) {
+        try {
+            const res = await api.getPetsByCustomer(maKhachHang);
+            const pets = res.data || res || [];
+
+            const petSelect = document.getElementById('newBookingPet');
+            petSelect.innerHTML = '<option value="">-- Chọn thú cưng --</option>' + 
+                pets.map(p => `<option value="${p.MaThuCung}">${p.TenThuCung}</option>`).join('');
+        } catch (err) {
+            console.error('Lỗi load thú cưng:', err);
+        }
+    },
+
+    async onPetSelected() {
+        const petSelect = document.getElementById('newBookingPet');
+        const maThuCung = petSelect.value;
+
+        if (!maThuCung) {
+            document.getElementById('petMedicalHistoryPanel').style.display = 'none';
+            return;
+        }
+
+        this.selectedPet = maThuCung;
+        await this.loadPetMedicalHistory(maThuCung);
+    },
+
+    async loadPetMedicalHistory(maThuCung) {
+        try {
+            const res = await api.getPetMedicalHistory(maThuCung);
+            const history = res.data || res || {};
+
+            let historyHTML = '';
+
+            if (history.checkups && history.checkups.length > 0) {
+                historyHTML += `
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="color: #667eea; margin-bottom: 10px;">
+                            <i class="fas fa-stethoscope"></i> Lịch Khám Bệnh
+                        </h4>
+                        ${history.checkups.map(e => `
+                            <div style="background: #f0f7ff; padding: 10px; margin-bottom: 8px; border-radius: 6px; border-left: 3px solid #667eea;">
+                                <div><strong>${e.NgayHenTaiKham ? new Date(e.NgayHenTaiKham).toLocaleDateString('vi-VN') : 'N/A'}</strong> - ${e.ChuanDoan || 'N/A'}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            if (history.vaccinations && history.vaccinations.length > 0) {
+                historyHTML += `
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="color: #f59e0b; margin-bottom: 10px;">
+                            <i class="fas fa-syringe"></i> Lịch Tiêm Phòng
+                        </h4>
+                        ${history.vaccinations.map(v => `
+                            <div style="background: #fffbeb; padding: 10px; margin-bottom: 8px; border-radius: 6px; border-left: 3px solid #f59e0b;">
+                                <div><strong>${v.NgayTiem ? new Date(v.NgayTiem).toLocaleDateString('vi-VN') : 'N/A'}</strong> - ${v.TenVacxin || 'N/A'}</div>
+                                <div style="font-size: 0.85rem; color: #666;">Liều lượng: ${v.LieuLuong || 'N/A'}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            if (history.packages && history.packages.length > 0) {
+                historyHTML += `
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="color: #10b981; margin-bottom: 10px;">
+                            <i class="fas fa-box"></i> Gói Tiêm Đã Mua
+                        </h4>
+                        ${history.packages.map(p => `
+                            <div style="background: #ecfdf5; padding: 10px; margin-bottom: 8px; border-radius: 6px; border-left: 3px solid #10b981;">
+                                <div><strong>${p.LoaiGoiTiem || 'N/A'}</strong></div>
+                                <div style="font-size: 0.85rem; color: #666;">Chu kỳ: ${p.ChuKi || 'N/A'} ngày - Đăng ký: ${p.NgayDangKy ? new Date(p.NgayDangKy).toLocaleDateString('vi-VN') : 'N/A'}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            if (!historyHTML) {
+                historyHTML = '<p style="color: #999; text-align: center; padding: 20px 0;">Chưa có lịch sử y tế</p>';
+            }
+
+            document.getElementById('petMedicalHistory').innerHTML = historyHTML;
+            document.getElementById('petMedicalHistoryPanel').style.display = 'block';
+        } catch (err) {
+            console.error('Lỗi load lịch sử y tế:', err);
+        }
+    },
+
+    async createNewBooking() {
+        if (!this.selectedCustomer) {
+            alert('Vui lòng chọn khách hàng');
+            return;
+        }
+        if (!this.selectedPet) {
+            alert('Vui lòng chọn thú cưng');
+            return;
+        }
+
+        const service = document.getElementById('newBookingService').value;
+        const branch = document.getElementById('newBookingBranch').value;
+        const date = document.getElementById('newBookingDate').value;
+        const time = document.getElementById('newBookingTime').value;
+
+        if (!service || !branch || !date || !time) {
+            alert('Vui lòng điền đầy đủ thông tin lịch hẹn');
+            return;
+        }
+
+        try {
+            const bookingData = {
+                MaKhachHang: this.selectedCustomer.MaKhachHang,
+                MaThuCung: this.selectedPet,
+                MaChiNhanh: branch,
+                ThoiGian: `${date}T${time}:00`,
+                LoaiLichHen: service
+            };
+
+            const res = await api.createBooking(bookingData);
+            
+            if (res && (res.message || res.data)) {
+                alert('Đặt lịch hẹn thành công!');
+                
+                // Reset form
+                document.getElementById('customerSearchInput').value = '';
+                document.getElementById('selectedCustomerDisplay').innerHTML = 'Chưa chọn khách hàng';
+                document.getElementById('newBookingPet').innerHTML = '<option value="">-- Chọn thú cưng --</option>';
+                document.getElementById('newBookingService').value = '';
+                document.getElementById('newBookingDate').value = '';
+                document.getElementById('newBookingTime').value = '';
+                document.getElementById('customerSearchResult').innerHTML = '<p style="text-align: center; color: #999; font-size: 0.9rem;">Nhập tìm kiếm để xem kết quả...</p>';
+                document.getElementById('petMedicalHistoryPanel').style.display = 'none';
+                this.selectedCustomer = null;
+                this.selectedPet = null;
+            }
+        } catch (err) {
+            console.error('Lỗi đặt lịch:', err);
+            alert('Lỗi đặt lịch hẹn: ' + (err.message || 'Vui lòng thử lại'));
+        }
+    }
+};
+
+// Load branches vào dropdown
+async function loadBranchesForNewBooking() {
+    try {
+        const res = await api.getBranches();
+        const branches = res.data || res || [];
+        const select = document.getElementById('newBookingBranch');
+        select.innerHTML = branches.map(b => `<option value="${b.MaChiNhanh}">${b.TenChiNhanh}</option>`).join('');
+        window.receptionist.branches = branches;
+    } catch (err) {
+        console.error('Lỗi load chi nhánh:', err);
+    }
+}
+
+// Gọi khi trang load
+setTimeout(loadBranchesForNewBooking, 500);

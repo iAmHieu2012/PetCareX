@@ -14,8 +14,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (user.role !== 'BanHang') window.location.href = '/login.html';
     
     document.getElementById('userName').textContent = user.name;
+    updateGreeting();
     setupMainTabs();
+    
+    // Load initial data
     await loadUnconfirmedInvoices();
+    await loadMyConfirmedInvoices();
 
     document.getElementById('logoutBtn').onclick = () => {
         localStorage.clear();
@@ -23,14 +27,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 });
 
+// Update greeting message based on time
+function updateGreeting() {
+    const hour = new Date().getHours();
+    let greeting = 'Chào buổi sáng';
+    if (hour >= 11 && hour < 13) greeting = 'Chào trưa';
+    else if (hour >= 13 && hour < 17) greeting = 'Chào chiều';
+    else if (hour >= 17) greeting = 'Chào tối';
+    
+    const userName = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')).name : 'Nhân viên';
+    document.getElementById('greeting-message').textContent = `${greeting}, ${userName}!`;
+}
+
 function setupMainTabs() {
     document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.onclick = () => {
+        btn.onclick = async () => {
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
             btn.classList.add('active');
             const tabPane = document.getElementById(`${btn.dataset.tab}-tab`);
             if (tabPane) tabPane.classList.add('active');
+            
+            // Load confirmed invoices khi click tab
+            if (btn.dataset.tab === 'confirmed') {
+                await loadConfirmedInvoices();
+            }
+            // Load my invoices khi click tab
+            if (btn.dataset.tab === 'my-invoices') {
+                await loadMyConfirmedInvoices();
+            }
         };
     });
 }
@@ -44,11 +69,17 @@ async function loadUnconfirmedInvoices() {
     }
     
     try {
-        console.log('Loading unconfirmed invoices from:', `/api/retail/unconfirmed/${state.maChiNhanh}`);
-        const res = await fetch(`/api/retail/unconfirmed/${state.maChiNhanh}`).then(r => r.json());
+        console.log('Loading unconfirmed invoices...');
+        const res = await api.getAllPendingConfirmationInvoices();
         console.log('API Response:', res);
         
-        state.unconfirmedInvoices = res.data || [];
+        // FILTER: Chỉ lấy PHIEU_MUA_HANG (bán hàng)
+        let allInvoices = res.data || [];
+        
+        // Lọc theo loại phiếu dịch vụ - chỉ lấy bán hàng (retail)
+        const retailInvoices = allInvoices.filter(inv => inv.LoaiPhieu === 'retail');
+        
+        state.unconfirmedInvoices = retailInvoices;
         console.log('State updated:', state.unconfirmedInvoices);
 
         if (state.unconfirmedInvoices.length === 0) {
@@ -73,7 +104,7 @@ async function loadUnconfirmedInvoices() {
                 <div class="booking-body" style="grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
                     <div class="booking-info-item">
                         <div class="booking-info-label">Ngày Bán</div>
-                        <div class="booking-info-value">${new Date(invoice.NgayTao).toLocaleDateString('vi-VN')}</div>
+                        <div class="booking-info-value">${new Date(invoice.NgayLap).toLocaleDateString('vi-VN')}</div>
                     </div>
                     <div class="booking-info-item">
                         <div class="booking-info-label">SĐT</div>
@@ -81,22 +112,20 @@ async function loadUnconfirmedInvoices() {
                     </div>
                     <div class="booking-info-item">
                         <div class="booking-info-label">Tổng Tiền</div>
-                        <div class="booking-info-value" style="color: #ef4444; font-weight: bold;">₫${parseInt(invoice.TongTien).toLocaleString('vi-VN')}</div>
+                        <div class="booking-info-value" style="color: #ef4444; font-weight: bold;">₫${parseInt(invoice.TongTienThanhToan).toLocaleString('vi-VN')}</div>
                     </div>
                 </div>
-                
+
                 <div style="margin-top: 1rem; background: #f9fafb; padding: 1rem; border-radius: 8px;">
-                    <p style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;"><i class="fas fa-list"></i> Sản phẩm:</p>
-                    ${(invoice.details || []).map(detail => `
-                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #e5e7eb; font-size: 0.9rem;">
-                            <span><strong>${detail.TenSanPham}</strong> × ${detail.SoLuong}</span>
-                            <span style="color: #10b981;">₫${parseInt(detail.GiaBan * detail.SoLuong).toLocaleString('vi-VN')}</span>
-                        </div>
-                    `).join('')}
+                    <p style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;"><i class="fas fa-list"></i> Thông tin dịch vụ:</p>
+                    <div style="font-size: 0.9rem;">
+                        <strong>${invoice.TongTien}</strong> VNĐ
+                        <p style="color: #666; font-size: 0.85rem;">Phương thức: ${invoice.HinhThucThanhToan || 'Tiền mặt'}</p>
+                    </div>
                 </div>
 
                 <div class="booking-actions" style="margin-top: 1rem; display: flex; gap: 10px;">
-                    <button class="btn-primary" onclick="window.handleConfirmPayment('${invoice.MaPhieuDichVu}', '${invoice.MaHoaDon}')" style="flex: 1;">
+                    <button class="btn-primary" onclick="window.handleConfirmPayment('${invoice.MaHoaDon}', '${invoice.NgayLap.split('T')[0]}')" style="flex: 1;">
                         <i class="fas fa-check"></i> Xác Nhận Thanh Toán
                     </button>
                 </div>
@@ -105,6 +134,7 @@ async function loadUnconfirmedInvoices() {
         
         console.log('Rendering HTML, length:', html.length);
         container.innerHTML = html;
+        document.getElementById('pendingCount').textContent = state.unconfirmedInvoices.length;
     } catch (err) {
         console.error('Error loading unconfirmed invoices:', err);
         container.innerHTML = `<p style="color:red;">Lỗi tải dữ liệu: ${err.message}</p>`;
@@ -115,8 +145,11 @@ async function loadConfirmedInvoices() {
     const container = document.getElementById('confirmedInvoicesList');
     if (!container) return; // Nếu không có element thì bỏ qua
     try {
-        const res = await fetch(`/api/retail/confirmed/${state.maChiNhanh}`).then(r => r.json());
-        state.confirmedInvoices = res.data || [];
+        const res = await api.getInvoicesByBranch(state.maChiNhanh);
+        // Lọc chỉ lấy những hóa đơn đã xác nhận (MaNhanVien IS NOT NULL) và chỉ PHIEU_MUA_HANG
+        state.confirmedInvoices = (res.data || []).filter(inv => inv.MaNhanVien);
+        
+        document.getElementById('confirmedCount').textContent = state.confirmedInvoices.length;
 
         if (state.confirmedInvoices.length === 0) {
             container.innerHTML = `
@@ -134,37 +167,69 @@ async function loadConfirmedInvoices() {
                     <div class="invoice-info">
                         <h3><i class="fas fa-receipt"></i> ${invoice.MaHoaDon}</h3>
                         <p><strong>Khách hàng:</strong> ${invoice.TenKhachHang}</p>
-                        <p><strong>Ngày bán:</strong> ${new Date(invoice.NgayTao).toLocaleDateString('vi-VN')}</p>
-                        <p><strong>Phương thức:</strong> ${invoice.PhuongThucThanhToan || 'N/A'}</p>
-                        <p><strong>Thành tiền:</strong> <span style="color: #10b981; font-weight: 600;">₫${parseInt(invoice.TongTien).toLocaleString('vi-VN')}</span></p>
+                        <p><strong>Ngày bán:</strong> ${new Date(invoice.NgayLap).toLocaleDateString('vi-VN')}</p>
+                        <p><strong>Phương thức:</strong> ${invoice.HinhThucThanhToan || 'N/A'}</p>
+                        <p><strong>Thành tiền:</strong> <span style="color: #10b981; font-weight: 600;">₫${parseInt(invoice.tongTien).toLocaleString('vi-VN')}</span></p>
                     </div>
                     <span class="status-badge confirmed">
                         <i class="fas fa-check-circle"></i> Đã xác nhận
                     </span>
-                </div>
-
-                <div class="invoice-details">
-                    <div style="font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;">Chi tiết sản phẩm:</div>
-                    ${(invoice.details || []).map(detail => `
-                        <div class="detail-item">
-                            <div class="detail-product">
-                                <strong>${detail.TenSanPham}</strong>
-                                <small>${detail.DonVi}</small>
-                            </div>
-                            <div class="detail-quantity">
-                                <strong>${detail.SoLuong}</strong>
-                            </div>
-                            <div class="detail-price">
-                                ₫${parseInt(detail.GiaBan * detail.SoLuong).toLocaleString('vi-VN')}
-                            </div>
-                        </div>
-                    `).join('')}
                 </div>
             </div>
         `).join('');
     } catch (err) {
         console.error('Error loading confirmed invoices:', err);
         container.innerHTML = '<p style="color:red;">Lỗi tải dữ liệu</p>';
+    }
+}
+
+// Load danh sách hóa đơn mà nhân viên hiện tại đã xác nhận
+async function loadMyConfirmedInvoices() {
+    const container = document.getElementById('myConfirmedInvoicesList');
+    if (!container) return;
+    
+    try {
+        if (!state.maNhanVien) {
+            container.innerHTML = '<p style="color:red;">Lỗi: Không tìm thấy mã nhân viên</p>';
+            return;
+        }
+
+        const res = await api.getConfirmedInvoicesByStaff(state.maNhanVien);
+        // FILTER: Chỉ lấy PHIEU_MUA_HANG
+        let invoices = res.data || [];
+        
+        if (invoices.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <p>Bạn chưa xác nhận hóa đơn nào</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = invoices.map(invoice => `
+            <div class="invoice-card">
+                <div class="invoice-header">
+                    <div class="invoice-info">
+                        <h3><i class="fas fa-receipt"></i> ${invoice.MaHoaDon}</h3>
+                        <p><strong>Khách hàng:</strong> ${invoice.TenKhachHang} (${invoice.MaKhachHang})</p>
+                        <p><strong>Ngày xác nhận:</strong> ${new Date(invoice.NgayLap).toLocaleDateString('vi-VN')}</p>
+                        <p><strong>SĐT:</strong> ${invoice.SoDienThoai}</p>
+                        <p><strong>CCCD:</strong> ${invoice.CCCD}</p>
+                        <p><strong>Chi nhánh:</strong> ${invoice.TenChiNhanh}</p>
+                        <p><strong>Thành tiền:</strong> <span style="color: #10b981; font-weight: 600;">₫${parseInt(invoice.TongTienThanhToan).toLocaleString('vi-VN')}</span></p>
+                        <p><strong>Phương thức:</strong> ${invoice.HinhThucThanhToan}</p>
+                    </div>
+                    <span class="status-badge confirmed">
+                        <i class="fas fa-check-circle"></i> Đã xác nhận
+                    </span>
+                </div>
+            </div>
+        `).join('');
+    } catch (err) {
+        console.error('Error loading my confirmed invoices:', err);
+        container.innerHTML = '<p style="color:red;">Lỗi tải dữ liệu: ' + err.message + '</p>';
     }
 }
 
@@ -224,8 +289,8 @@ async function loadWarehouseInventory() {
 }
 
 // ==================== MODAL THANH TOÁN ====================
-async function handleConfirmPayment(maPhieuDichVu, maHoaDon) {
-    console.log('📝 Confirming payment:', { maPhieuDichVu, maHoaDon });
+async function handleConfirmPayment(maHoaDon, ngayLap) {
+    console.log('📝 Confirming payment:', { maHoaDon, ngayLap });
     
     if (!state.maNhanVien) {
         alert('Lỗi: Không tìm thấy mã nhân viên');
@@ -233,29 +298,26 @@ async function handleConfirmPayment(maPhieuDichVu, maHoaDon) {
     }
 
     // Tìm hóa đơn từ danh sách
-    const invoice = state.unconfirmedInvoices.find(inv => inv.MaPhieuDichVu === maPhieuDichVu);
+    const invoice = state.unconfirmedInvoices.find(inv => inv.MaHoaDon === maHoaDon);
     
     if (!invoice) {
         alert('Lỗi: Không tìm thấy hóa đơn');
         return;
     }
 
-    if (confirm(`Xác nhận thanh toán hóa đơn ${maHoaDon || invoice.MaHoaDon}?`)) {
+    if (confirm(`Xác nhận thanh toán hóa đơn ${maHoaDon}?`)) {
         try {
-            const res = await fetch('/api/invoices/confirm', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    maHoaDon: maHoaDon || invoice.MaHoaDon,
-                    ngayLap: invoice.NgayTao.split('T')[0],
-                    maNhanVien: state.maNhanVien,
-                    hinhThucThanhToan: invoice.HinhThucThanhToan || 'Tiền mặt'
-                })
-            }).then(r => r.json());
+            const res = await api.confirmPayment({
+                maHoaDon: maHoaDon,
+                ngayLap: ngayLap,
+                maNhanVien: state.maNhanVien,
+                hinhThucThanhToan: invoice.HinhThucThanhToan || 'Tiền mặt'
+            });
 
             if (res.success) {
                 alert('✓ Xác nhận thanh toán thành công!');
                 await loadUnconfirmedInvoices();
+                await loadConfirmedInvoices();
             } else {
                 alert('Lỗi: ' + (res.message || 'Không xác nhận được'));
             }

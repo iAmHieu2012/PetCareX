@@ -201,6 +201,22 @@ const submitReview = async (req, res) => {
     }
 }
 
+// Lấy danh sách hóa đơn đã xác nhận bởi nhân viên
+async function getConfirmedInvoicesByStaff(req, res) {
+    try {
+        const { maNhanVien } = req.params;
+
+        if (!maNhanVien) {
+            return res.status(400).json({ success: false, message: 'maNhanVien là bắt buộc' });
+        }
+
+        const invoices = await invoiceModel.getConfirmedInvoicesByStaff(maNhanVien);
+        res.json(successResponse(invoices));
+    } catch (err) {
+        handleControllerError(err, res, 'getConfirmedInvoicesByStaff');
+    }
+}
+
 // Lấy đánh giá của hóa đơn
 const getReview = async (req, res) => {
     try {
@@ -230,6 +246,7 @@ module.exports = {
     cancelInvoice,
     getInvoiceHistory,
     getAllPendingConfirmationInvoices,
+    getConfirmedInvoicesByStaff,
     confirmPayment,
     getInvoicesByBranch,
     submitReview,

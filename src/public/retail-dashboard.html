@@ -39,6 +39,8 @@
         <div class="tabs-navigation">
             <div class="tabs-header">
                 <button class="tab-btn active" data-tab="payment"><i class="fas fa-receipt"></i> Xác Nhận Thanh Toán</button>
+                <button class="tab-btn" data-tab="my-invoices"><i class="fas fa-history"></i> Hóa Đơn Của Tôi</button>
+                <button class="tab-btn" data-tab="confirmed"><i class="fas fa-check-double"></i> Tất Cả Hóa Đơn Đã Xác Nhận</button>
                 <button class="tab-btn" data-tab="warehouse"><i class="fas fa-warehouse"></i> Kho Hàng</button>
             </div>
         </div>
@@ -55,6 +57,36 @@
                     <div class="empty-state">
                         <i class="fas fa-check-circle"></i>
                         <p>Không có hóa đơn chưa xác nhận</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB HÓA ĐƠN CỦA TÔI -->
+            <div class="tab-pane" id="my-invoices-tab">
+                <div class="tab-header mb-lg">
+                    <h2>Hóa Đơn Của Tôi</h2>
+                    <p class="text-muted text-sm">Danh sách hóa đơn bạn đã xác nhận</p>
+                </div>
+
+                <div id="myConfirmedInvoicesList">
+                    <div class="empty-state">
+                        <i class="fas fa-history"></i>
+                        <p>Bạn chưa xác nhận hóa đơn nào</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB HÓA ĐƠN ĐÃ XÁC NHẬN -->
+            <div class="tab-pane" id="confirmed-tab">
+                <div class="tab-header mb-lg">
+                    <h2>Tất Cả Hóa Đơn Đã Xác Nhận</h2>
+                    <p class="text-muted text-sm">Danh sách các hóa đơn đã được xác nhận thanh toán tại chi nhánh</p>
+                </div>
+
+                <div id="confirmedInvoicesList">
+                    <div class="empty-state">
+                        <i class="fas fa-check-double"></i>
+                        <p>Không có hóa đơn đã xác nhận</p>
                     </div>
                 </div>
             </div>

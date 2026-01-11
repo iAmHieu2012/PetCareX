@@ -43,6 +43,8 @@ export const api = {
     getCustomerInfo: (maKhachHang) => fetch(`/api/customer/info/${maKhachHang}`).then(res => res.json()),
     getCustomerPets: (maKhachHang) => fetch(`/api/customer/pets/${maKhachHang}`).then(res => res.json()),
     getCustomerBookings: (maKhachHang) => fetch(`/api/bookings/customer/${maKhachHang}`).then(res => res.json()),
+    searchCustomer: (query) => fetch(`/api/customer/search?q=${encodeURIComponent(query)}`).then(res => res.json()),
+    getPetsByCustomer: (maKhachHang) => fetch(`/api/customer/pets/${maKhachHang}`).then(res => res.json()),
     // Pet APIs (NEW)
     getPetDetail: (maThuCung) => fetch(`/api/pets/detail/${maThuCung}`).then(res => res.json()),
     getPetMedicalHistory: (maThuCung) => fetch(`/api/pets/history/${maThuCung}`).then(res => res.json()),
@@ -90,5 +92,14 @@ export const api = {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(orderData)
         }).then(res => res.json());
-    }
+    },
+    // Invoice APIs
+    getAllPendingConfirmationInvoices: () => fetch('/api/invoices/pending-confirmation').then(res => res.json()),
+    getConfirmedInvoicesByStaff: (maNhanVien) => fetch(`/api/invoices/confirmed/${maNhanVien}`).then(res => res.json()),
+    confirmPayment: (data) => fetch('/api/invoices/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    }).then(res => res.json()),
+    getInvoicesByBranch: (maChiNhanh) => fetch(`/api/invoices/by-branch/${maChiNhanh}`).then(res => res.json())
 };
