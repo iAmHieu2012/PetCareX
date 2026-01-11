@@ -47,7 +47,7 @@ const authController = {
                 "Đăng ký thành công!"
             ));
         } catch (err) {
-            return handleControllerError(res, err);
+            return handleControllerError(err, res);;
         }
     },
 
@@ -87,7 +87,7 @@ const authController = {
                 maChiNhanh: user.MaChiNhanh || ''
             }, "Đăng nhập thành công!"));
         } catch (err) {
-            return handleControllerError(res, err);
+            return handleControllerError(err, res);;
         }
     }
 };

@@ -35,7 +35,7 @@ const customerController = {
 
             return res.json(successResponse(result.recordset[0], 'Lấy thông tin khách hàng thành công'));
         } catch (err) {
-            return handleControllerError(res, err);
+            return handleControllerError(err, res);;
         }
     },
 
@@ -69,7 +69,7 @@ const customerController = {
 
             return res.json(successResponse(result.recordset, 'Lấy danh sách thú cưng thành công'));
         } catch (err) {
-            return handleControllerError(res, err);
+            return handleControllerError(err, res);;
         }
     },
 
@@ -107,7 +107,7 @@ const customerController = {
 
             return res.json(successResponse(result.recordset, 'Lấy danh sách lịch hẹn thành công'));
         } catch (err) {
-            return handleControllerError(res, err);
+            return handleControllerError(err, res);;
         }
     },
 
@@ -149,7 +149,7 @@ const customerController = {
 
             return res.json(successResponse(customers[0], 'Tìm kiếm khách hàng thành công'));
         } catch (err) {
-            return handleControllerError(res, err);
+            return handleControllerError(err, res);;
         }
     },
 
@@ -172,7 +172,7 @@ const customerController = {
 
             return res.json(successResponse(result.recordset, 'Lấy danh sách khách hàng thành công'));
         } catch (err) {
-            return handleControllerError(res, err);
+            return handleControllerError(err, res);;
         }
     }
 };

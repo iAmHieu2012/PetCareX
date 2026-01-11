@@ -56,7 +56,7 @@ const bookingController = {
             const result = await BookingModel.createBooking(booking);
             return res.status(201).json(successResponse(result, 'Đặt lịch hẹn thành công'));
         } catch (err) {
-            return handleControllerError(res, err);
+            return handleControllerError(err, res);;
         }
     },
 
@@ -72,7 +72,7 @@ const bookingController = {
             const bookings = await BookingModel.getBookingsByCustomer(maKhachHang);
             return res.status(200).json(successResponse(bookings, 'Lấy lịch hẹn thành công'));
         } catch (err) {
-            return handleControllerError(res, err);
+            return handleControllerError(err, res);;
         }
     },
 
@@ -81,7 +81,7 @@ const bookingController = {
             const bookings = await BookingModel.getAllBookings();
             return res.status(200).json(successResponse(bookings, 'Lấy tất cả lịch hẹn thành công'));
         } catch (err) {
-            return handleControllerError(res, err);
+            return handleControllerError(err, res);;
         }
     },
 
@@ -99,7 +99,7 @@ const bookingController = {
             const result = await BookingModel.confirmBooking(maLichHen, maChiNhanh, maKhachHang);
             return res.status(200).json(successResponse(result, 'Xác nhận lịch hẹn thành công'));
         } catch (err) {
-            return handleControllerError(res, err);
+            return handleControllerError(err, res);;
         }
     },
 
@@ -117,7 +117,7 @@ const bookingController = {
             const result = await BookingModel.cancelBooking(maLichHen, maChiNhanh);
             return res.status(200).json(successResponse(result, 'Hủy lịch hẹn thành công'));
         } catch (err) {
-            return handleControllerError(res, err);
+            return handleControllerError(err, res);;
         }
     },
 
@@ -176,7 +176,7 @@ const bookingController = {
             const result = await BookingModel.createBookingStaff(booking);
             return res.status(201).json(successResponse(result, 'Tạo lịch hẹn thành công'));
         } catch (err) {
-            return handleControllerError(res, err);
+            return handleControllerError(err, res);;
         }
     },
 
@@ -192,7 +192,7 @@ const bookingController = {
             const bookings = await BookingModel.getBookingsByBranch(maChiNhanh);
             return res.status(200).json(successResponse(bookings, 'Lấy lịch hẹn theo chi nhánh thành công'));
         } catch (err) {
-            return handleControllerError(res, err);
+            return handleControllerError(err, res);;
         }
     }
 };

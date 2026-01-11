@@ -10,7 +10,7 @@ const productController = {
             const result = await productModel.getAll(name, type);
             return res.status(200).json(successResponse(result.recordset, 'Lấy danh sách sản phẩm thành công'));
         } catch (err) {
-            return handleControllerError(res, err);
+            return handleControllerError(err, res);;
         }
     },
 
@@ -27,7 +27,7 @@ const productController = {
             const result = await productModel.getByBranch(branchId, type);
             return res.status(200).json(successResponse(result.recordset, 'Lấy danh sách sản phẩm tại chi nhánh thành công'));
         } catch (err) {
-            return handleControllerError(res, err);
+            return handleControllerError(err, res);;
         }
     },
 
@@ -37,7 +37,7 @@ const productController = {
             const expiring = await productModel.getExpiring();
             return res.status(200).json(successResponse(expiring, 'Lấy danh sách sản phẩm sắp hết hạn thành công'));
         } catch (err) {
-            return handleControllerError(res, err);
+            return handleControllerError(err, res);;
         }
     },
 

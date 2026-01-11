@@ -29,11 +29,11 @@ const productModel = {
         // Nếu có filter loại, thêm vào với parameterized input
         if (type && type !== 'all') {
             request.input('LoaiSanPham', sql.NVarChar, type);
-            query += `AND sp.LoaiSanPham = @LoaiSanPham`;
+            query += ` AND sp.LoaiSanPham = @LoaiSanPham `;
         }
         
-        query += `GROUP BY sp.MaSanPham, sp.TenSanPham, sp.LoaiSanPham, sp.GiaBan
-            ORDER BY sp.TenSanPham`;
+        query += ` GROUP BY sp.MaSanPham, sp.TenSanPham, sp.LoaiSanPham, sp.GiaBan
+            ORDER BY sp.TenSanPham `;
         
         return await request.query(query);
     },

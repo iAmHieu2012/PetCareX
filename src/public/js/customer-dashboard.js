@@ -985,7 +985,14 @@ window.checkoutDashboardShop = async () => {
 // Hàm lọc sản phẩm theo loại
 window.filterDashboardShop = () => {
     const filterValue = document.getElementById('dashboard-shop-filter').value;
-    window.dashboard.loadShopProducts(filterValue);
+    const branchId = document.getElementById('shop-branch-select').value; // Lấy branchId hiện tại
+    
+    if (!branchId) {
+        showAlert('Vui lòng chọn chi nhánh trước!', 'warning');
+        return;
+    }
+    
+    window.dashboard.loadShopProducts(filterValue, branchId); // Truyền cả 2 tham số
 };
 
 // ==================== VACCINATION MANAGEMENT ====================

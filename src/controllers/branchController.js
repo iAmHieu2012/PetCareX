@@ -7,7 +7,7 @@ const branchController = {
             const branches = await BranchModel.getBranches();
             return res.status(200).json(successResponse(branches, 'Lấy danh sách chi nhánh thành công'));
         } catch (err) {
-            return handleControllerError(res, err);
+            return handleControllerError(err, res);;
         }
     },
 
@@ -16,7 +16,7 @@ const branchController = {
             const services = await BranchModel.getServices();
             return res.status(200).json(successResponse(services, 'Lấy danh sách dịch vụ thành công'));
         } catch (err) {
-            return handleControllerError(res, err);
+            return handleControllerError(err, res);;
         }
     },
 
@@ -25,7 +25,7 @@ const branchController = {
             const count = await BranchModel.getStaffCount();
             return res.status(200).json(successResponse({ count }, 'Lấy số lượng nhân viên thành công'));
         } catch (err) {
-            return handleControllerError(res, err);
+            return handleControllerError(err, res);;
         }
     },
 
@@ -41,7 +41,7 @@ const branchController = {
             const doctors = await BranchModel.getDoctorsByBranch(maChiNhanh);
             return res.status(200).json(successResponse(doctors, 'Lấy danh sách bác sĩ thành công'));
         } catch (err) {
-            return handleControllerError(res, err);
+            return handleControllerError(err, res);;
         }
     },
 
@@ -50,7 +50,7 @@ const branchController = {
             const count = await BranchModel.getCustomersCount();
             return res.status(200).json(successResponse({ count }, 'Lấy số lượng khách hàng thành công'));
         } catch (err) {
-            return handleControllerError(res, err);
+            return handleControllerError(err, res);;
         }
     },
 
@@ -60,7 +60,7 @@ const branchController = {
             const staff = await BranchModel.getAllStaff(maNV);
             return res.status(200).json(successResponse(staff, 'Lấy danh sách nhân viên thành công'));
         } catch (err) {
-            return handleControllerError(res, err);
+            return handleControllerError(err, res);;
         }
     },
 
@@ -76,7 +76,7 @@ const branchController = {
             const history = await BranchModel.getTransferHistory(maNV);
             return res.status(200).json(successResponse(history, 'Lấy lịch sử điều động thành công'));
         } catch (err) {
-            return handleControllerError(res, err);
+            return handleControllerError(err, res);;
         }
     },
 
@@ -97,7 +97,7 @@ const branchController = {
             const income = await BranchModel.getEmployeeIncome(maNV, parseInt(thang), parseInt(nam));
             return res.status(200).json(successResponse(income, 'Lấy doanh thu nhân viên thành công'));
         } catch (err) {
-            return handleControllerError(res, err);
+            return handleControllerError(err, res);;
         }
     },
 
@@ -118,7 +118,7 @@ const branchController = {
             const performance = await BranchModel.getEmployeePerformance(maNV, parseInt(thang), parseInt(nam));
             return res.status(200).json(successResponse(performance, 'Lấy hiệu suất nhân viên thành công'));
         } catch (err) {
-            return handleControllerError(res, err);
+            return handleControllerError(err, res);;
         }
     },
 
@@ -139,7 +139,7 @@ const branchController = {
             const performance = await BranchModel.getAllEmployeesPerformance(parseInt(thang), parseInt(nam), maNVParam);
             return res.status(200).json(successResponse(performance, 'Lấy hiệu suất tất cả nhân viên thành công'));
         } catch (err) {
-            return handleControllerError(res, err);
+            return handleControllerError(err, res);;
         }
     },
 
@@ -155,7 +155,7 @@ const branchController = {
             const staff = await BranchModel.getStaffByBranch(maChiNhanh);
             return res.status(200).json(successResponse(staff, 'Lấy danh sách nhân viên chi nhánh thành công'));
         } catch (err) {
-            return handleControllerError(res, err);
+            return handleControllerError(err, res);;
         }
     }
 };

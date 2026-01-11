@@ -22,7 +22,7 @@ const reportController = {
             
             return res.status(200).json(successResponse(result.recordset, 'Lấy báo cáo doanh thu thành công'));
         } catch (err) {
-            return handleControllerError(res, err);
+            return handleControllerError(err, res);;
         }
     },
 
@@ -32,7 +32,7 @@ const reportController = {
             const result = await reportModel.getStaffPerformance(branchId);
             return res.status(200).json(successResponse(result.recordset, 'Lấy thống kê nhân viên thành công'));
         } catch (err) {
-            return handleControllerError(res, err);
+            return handleControllerError(err, res);;
         }
     },
 
@@ -46,7 +46,7 @@ const reportController = {
             // Gửi về { stats: {...}, doctors: [...] }
             return res.status(200).json(successResponse(data, 'Lấy thống kê nâng cao thành công'));
         } catch (err) {
-            return handleControllerError(res, err);
+            return handleControllerError(err, res);;
         }
     }
 };
