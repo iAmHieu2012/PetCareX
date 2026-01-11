@@ -147,7 +147,7 @@ const customerController = {
                 return res.json(successResponse(null, 'Không tìm thấy khách hàng'));
             }
 
-            return res.json(successResponse(customers[0], 'Tìm kiếm khách hàng thành công'));
+            return res.json(successResponse(customers, 'Tìm kiếm khách hàng thành công'));
         } catch (err) {
             return handleControllerError(err, res);;
         }

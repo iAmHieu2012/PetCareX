@@ -657,28 +657,25 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             try {
-                const response = await fetch(`/api/customer/search?keyword=${encodeURIComponent(keyword)}`);
+                const token = localStorage.getItem('token'); // Lấy token từ storage
+                const response = await fetch(`/api/customer/search?keyword=${encodeURIComponent(keyword)}`, {
+                    headers: { 
+                        'Authorization': `Bearer ${token}` // Gửi kèm token xác thực
+                    }
+                });
                 const result = await response.json();
                 
-                if (result.success && result.data && result.data.length > 0) {
+                if (result.success && Array.isArray(result.data)) { // Kiểm tra mảng an toàn
                     const resultsDiv = document.getElementById('customer-search-results');
                     resultsDiv.innerHTML = result.data.map(customer => `
-                        <div style="padding: 12px; border-bottom: 1px solid #e5e7eb; cursor: pointer; transition: background 0.2s; background: white;" 
-                             onmouseover="this.style.background='#f3f4f6'"
-                             onmouseout="this.style.background='white'"
-                             onclick="selectCustomer('${customer.MaKhachHang}', '${customer.TenKhachHang}')">
-                            <strong style="color: #1f2937; display: block;">${customer.TenKhachHang}</strong>
-                            <small style="color: #6b7280; display: block;">📱 ${customer.DienThoai || 'N/A'}</small>
-                            ${customer.Email ? `<small style="color: #6b7280; display: block;">📧 ${customer.Email}</small>` : ''}
-                        </div>
+                        <div style="padding: 12px; border-bottom: 1px solid #e5e7eb; cursor: pointer;" 
+                            onclick="selectCustomer('${customer.MaKhachHang}', '${customer.TenKhachHang}')">
+                            <strong>${customer.TenKhachHang}</strong>
+                            <small style="display: block;">📱 ${customer.SoDienThoai}</small> </div>
                     `).join('');
                     resultsDiv.style.display = 'block';
-                } else {
-                    document.getElementById('customer-search-results').style.display = 'none';
                 }
-            } catch (err) {
-                console.error('Lỗi tìm kiếm:', err);
-            }
+            } catch (err) { console.error('Lỗi:', err); }
         });
     }
 });
