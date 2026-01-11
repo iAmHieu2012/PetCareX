@@ -154,6 +154,9 @@ class CustomerDashboard {
         this.loadPets();
         this.loadBookings();
         this.loadBranches();
+        
+        // Load doctor search branches
+        loadDoctorSearchBranches();
     }
 
     setupTabNavigation() {
@@ -194,6 +197,12 @@ class CustomerDashboard {
                     window.location.href = '/login.html';
                 }
             });
+        }
+
+        // Doctor schedule search
+        const searchBtn = document.getElementById('doctor-search-btn');
+        if (searchBtn) {
+            searchBtn.addEventListener('click', searchAvailableDoctors);
         }
 
         // Pet management
@@ -1775,3 +1784,126 @@ window.closeViewReviewModal = function() {
     const viewModal = document.getElementById('view-review-modal');
     viewModal.classList.remove('active');
 }
+
+// ==================== DOCTOR SCHEDULE SEARCH ====================
+
+// Load branches cho search doctor
+async function loadDoctorSearchBranches() {
+    const branchSelect = document.getElementById('doctor-search-branch');
+    if (!branchSelect) return;
+
+    const response = await apiCall('/api/branches');
+    if (response && response.data) {
+        branchSelect.innerHTML = '<option value="">-- Chọn chi nhánh --</option>';
+        response.data.forEach(branch => {
+            const option = document.createElement('option');
+            option.value = branch.MaChiNhanh;
+            option.textContent = branch.TenChiNhanh;
+            branchSelect.appendChild(option);
+        });
+    }
+}
+
+// Search available doctors
+window.searchAvailableDoctors = async function() {
+    const branchSelect = document.getElementById('doctor-search-branch');
+    const dateInput = document.getElementById('doctor-search-date');
+    const timeInput = document.getElementById('doctor-search-time');
+
+    if (!branchSelect.value || !dateInput.value || !timeInput.value) {
+        showAlert('Vui lòng chọn chi nhánh, ngày và giờ khám', 'warning');
+        return;
+    }
+
+    const searchBtn = document.getElementById('doctor-search-btn');
+    searchBtn.disabled = true;
+    searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang tìm kiếm...';
+
+    try {
+        // Format time to HH:mm:ss
+        let timeFormatted = timeInput.value; // HH:mm
+        const timeParts = timeFormatted.split(':');
+        if (timeParts.length === 2) {
+            timeFormatted = `${timeParts[0]}:${timeParts[1]}:00`;
+        }
+
+        const response = await apiCall(`/api/staff/available-doctors?maChiNhanh=${encodeURIComponent(branchSelect.value)}&gioKham=${encodeURIComponent(timeFormatted)}`);
+
+        if (response && response.data && response.data.length > 0) {
+            displayAvailableDoctors(response.data);
+        } else {
+            document.getElementById('doctor-results-container').style.display = 'none';
+            document.getElementById('doctor-empty-state').style.display = 'block';
+            document.getElementById('doctor-empty-state').innerHTML = `
+                <i class="fas fa-calendar-times" style="font-size: 48px; margin-bottom: 15px; display: block; color: #ccc;"></i>
+                <p style="color: #999; font-weight: 500; margin-bottom: 5px;">Không có bác sĩ khả dụng</p>
+                <p style="font-size: 13px; color: #bbb;">Vui lòng thử lại với thời gian hoặc chi nhánh khác</p>
+            `;
+            showAlert('Không có bác sĩ khả dụng vào thời gian này', 'info');
+        }
+    } catch (err) {
+        console.error('Lỗi tìm kiếm bác sĩ:', err);
+        showAlert('Lỗi: ' + err.message, 'error');
+    } finally {
+        searchBtn.disabled = false;
+        searchBtn.innerHTML = '<i class="fas fa-search"></i> Tìm Kiếm';
+    }
+}
+
+// Display available doctors
+function displayAvailableDoctors(doctors) {
+    const resultsContainer = document.getElementById('doctor-results-container');
+    const doctorList = document.getElementById('doctor-list');
+    
+    doctorList.innerHTML = doctors.map(doctor => `
+        <div style="background: white; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; transition: all 0.3s ease;">
+            <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                <div style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 20px; margin-right: 15px;">
+                    ${doctor.HoTen.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                    <h4 style="margin: 0; color: #333; font-size: 16px; font-weight: 600;">${doctor.HoTen}</h4>
+                    <p style="margin: 5px 0 0 0; color: #999; font-size: 13px;">Bác sĩ thú y</p>
+                </div>
+            </div>
+
+            <div style="background: #f8f9fa; border-radius: 6px; padding: 12px; margin-bottom: 15px;">
+                <div style="display: flex; align-items: center;">
+                    <i class="fas fa-clock" style="color: #667eea; margin-right: 8px; width: 14px;"></i>
+                    <span style="font-size: 13px; color: #333;">Giờ làm việc: <strong>${formatTimeRange(doctor.GioLamViec, doctor.GioNghi)}</strong></span>
+                </div>
+            </div>
+        </div>
+    `).join('');
+
+    resultsContainer.style.display = 'block';
+    document.getElementById('doctor-empty-state').style.display = 'none';
+}
+
+// Format time range
+function formatTimeRange(startTime, endTime) {
+    const formatTime = (time) => {
+        if (typeof time === 'string') {
+            return time.substring(0, 5);
+        }
+        return new Date(time).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+    };
+    
+    return `${formatTime(startTime)} - ${formatTime(endTime)}`;
+}
+
+// Booking with selected doctor
+window.bookingWithDoctor = function(doctorId, doctorName) {
+    // Switch to bookings tab
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+    
+    document.querySelector('[data-tab="bookings"]').classList.add('active');
+    document.getElementById('bookings-tab').classList.add('active');
+    
+    // Populate booking form if needed
+    showAlert(`Vui lòng chọn thú cưng và hoàn thành đặt lịch cho bác sĩ ${doctorName}`, 'info');
+}
+
+// Initialize doctor schedule search on page load
+loadDoctorSearchBranches();

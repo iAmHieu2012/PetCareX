@@ -53,6 +53,10 @@
                     <i class="fas fa-calendar-alt"></i>
                     <span>Lịch Hẹn</span>
                 </button>
+                <button class="tab-btn" data-tab="doctor-schedule">
+                    <i class="fas fa-stethoscope"></i>
+                    <span>Tra Cứu Lịch Bác Sĩ</span>
+                </button>
                 <button class="tab-btn" data-tab="vaccination">
                     <i class="fas fa-syringe"></i>
                     <span>Gói Tiêm</span>
@@ -119,6 +123,53 @@
                     <!-- Bookings will be loaded here -->
                     <div class="loading-message">
                         <i class="fas fa-spinner fa-spin"></i> Đang tải lịch hẹn...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Doctor Schedule Search -->
+            <div class="tab-pane" id="doctor-schedule-tab">
+                <div class="tab-header">
+                    <h2><i class="fas fa-stethoscope"></i> Tra Cứu Lịch Bác Sĩ</h2>
+                </div>
+
+                <div style="background: white; border-radius: 12px; padding: 20px; margin-top: 20px;">
+                    <!-- Search Form -->
+                    <div style="background: #f8f9fa; border-radius: 8px; padding: 20px; margin-bottom: 30px;">
+                        <h3 style="margin-top: 0; margin-bottom: 20px; color: #333;">Tìm Kiếm Bác Sĩ Khả Dụng</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 15px; align-items: flex-end;">
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Chi Nhánh</label>
+                                <select id="doctor-search-branch" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
+                                    <option value="">-- Chọn chi nhánh --</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Ngày Khám</label>
+                                <input type="date" id="doctor-search-date" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
+                            </div>
+                            <div>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Giờ Khám</label>
+                                <input type="time" id="doctor-search-time" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
+                            </div>
+                            <button id="doctor-search-btn" class="btn-primary" style="margin-bottom: 0;">
+                                <i class="fas fa-search"></i> Tìm Kiếm
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Results -->
+                    <div id="doctor-results-container" style="display: none;">
+                        <h3 style="margin-top: 0; margin-bottom: 20px; color: #333;">Danh Sách Bác Sĩ Khả Dụng</h3>
+                        <div id="doctor-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+                            <!-- Doctor cards will be inserted here -->
+                        </div>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div id="doctor-empty-state" style="text-align: center; padding: 60px 20px;">
+                        <i class="fas fa-search" style="font-size: 48px; color: #ccc; margin-bottom: 20px; display: block;"></i>
+                        <p style="color: #999; font-size: 16px;">Nhập tiêu chí tìm kiếm để xem danh sách bác sĩ</p>
                     </div>
                 </div>
             </div>

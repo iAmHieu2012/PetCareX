@@ -3,6 +3,9 @@ const router = express.Router();
 const staffController = require('../controllers/staffController');
 const authMiddleware = require('../middlewares/authMiddleware');
 
+// GET - Tra cứu bác sĩ khả dụng (public - khách hàng dùng)
+router.get('/available-doctors', authMiddleware.verifyToken, staffController.getAvailableDoctors);
+
 // POST - Thêm nhân viên mới
 router.post('/add', authMiddleware.verifyToken, authMiddleware.isManager, staffController.addStaff);
 

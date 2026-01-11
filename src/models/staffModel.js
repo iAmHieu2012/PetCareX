@@ -717,6 +717,86 @@ async function getSalaryTable() {
     }
 }
 
+// Lấy danh sách bác sĩ khả dụng theo chi nhánh và thời gian
+async function getAvailableDoctors(maChiNhanh, gioKham) {
+    try {
+        const pool = await connectDB();
+
+        // Convert TIME object { hours, minutes, seconds } thành string HH:mm:ss
+        const timeStr = `${String(gioKham.hours).padStart(2, '0')}:${String(gioKham.minutes).padStart(2, '0')}:${String(gioKham.seconds).padStart(2, '0')}`;
+
+        // Lấy ngày hôm nay
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Query kiểm tra: bác sĩ phải đang làm việc tại chi nhánh trong ngày (từ bảng LICH_SU_DIEU_DONG)
+        const result = await pool.request()
+            .input('MaChiNhanh', sql.Char(10), maChiNhanh)
+            .input('HomNay', sql.Date, today)
+            .query(`
+                DECLARE @GioKham TIME = '${timeStr}'
+                
+                SELECT 
+                    nv.MaNhanVien,
+                    nv.HoTen,
+                    bs.GioLamViec,
+                    bs.GioNghi
+                FROM NHAN_VIEN nv
+                INNER JOIN BAC_SI_THU_Y bs ON nv.MaNhanVien = bs.MaNhanVien
+                INNER JOIN LICH_SU_DIEU_DONG lsdd ON nv.MaNhanVien = lsdd.MaNhanVien
+                WHERE lsdd.MaChiNhanh = @MaChiNhanh
+                    AND lsdd.ViTri = N'Bác sĩ thú y'
+                    AND lsdd.NgayBatDau <= @HomNay
+                    AND (lsdd.NgayKetThuc IS NULL OR lsdd.NgayKetThuc >= @HomNay)
+                    AND bs.GioLamViec <= @GioKham
+                    AND @GioKham < bs.GioNghi
+                ORDER BY nv.HoTen
+            `);
+
+        // Format lại giờ làm việc và giờ nghỉ để display đúng
+        const formattedDoctors = result.recordset.map(doctor => ({
+            ...doctor,
+            GioLamViec: formatTimeForDisplay(doctor.GioLamViec),
+            GioNghi: formatTimeForDisplay(doctor.GioNghi)
+        }));
+
+        return formattedDoctors;
+    } catch (err) {
+        handleModelError(err, 'getAvailableDoctors');
+    }
+}
+
+// Helper: Format TIME để display
+function formatTimeForDisplay(timeValue) {
+    if (!timeValue) return '';
+    
+    // Nếu là string ISO (từ TIME database)
+    if (typeof timeValue === 'string') {
+        // Xử lý format HH:mm:ss.mmm
+        return timeValue.substring(0, 5);
+    }
+    
+    // Nếu là Date object
+    if (timeValue instanceof Date) {
+        const hours = String(timeValue.getHours()).padStart(2, '0');
+        const minutes = String(timeValue.getMinutes()).padStart(2, '0');
+        return `${hours}:${minutes}`;
+    }
+    
+    return timeValue;
+}
+
+// Helper: Convert TIME string "HH:mm:ss" to minutes
+function timeStringToMinutes(timeStr) {
+    if (typeof timeStr === 'string') {
+        const [h, m, s] = timeStr.split(':').map(Number);
+        return h * 60 + m;
+    }
+    // Nếu là Date object từ DB
+    const date = new Date(timeStr);
+    return date.getHours() * 60 + date.getMinutes();
+}
+
 module.exports = {
     addStaff,
     getStaffByBranch,
@@ -727,5 +807,6 @@ module.exports = {
     getStaffHistory,
     getAllStaff,
     getSalaryTable,
-    transferStaff
+    transferStaff,
+    getAvailableDoctors
 };

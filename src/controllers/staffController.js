@@ -249,6 +249,35 @@ const transferStaff = async (req, res) => {
     }
 };
 
+// Lấy danh sách bác sĩ khả dụng theo chi nhánh và giờ khám
+const getAvailableDoctors = async (req, res) => {
+    try {
+        const { maChiNhanh, gioKham } = req.query;
+
+        if (!maChiNhanh || !gioKham) {
+            return res.status(400).json(errorResponse('Thiếu mã chi nhánh hoặc giờ khám'));
+        }
+
+        // Validate time format HH:mm:ss
+        const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/;
+        if (!timeRegex.test(gioKham)) {
+            return res.status(400).json(errorResponse('Format giờ khám không hợp lệ. Cần HH:mm hoặc HH:mm:ss'));
+        }
+
+        // Parse time thành object { hours, minutes, seconds }
+        const timeParts = gioKham.split(':');
+        const hours = parseInt(timeParts[0], 10);
+        const minutes = parseInt(timeParts[1], 10);
+        const seconds = timeParts.length === 3 ? parseInt(timeParts[2], 10) : 0;
+
+        const doctors = await staffModel.getAvailableDoctors(maChiNhanh, { hours, minutes, seconds });
+
+        return res.json(successResponse(doctors || [], 'Lấy danh sách bác sĩ thành công'));
+    } catch (err) {
+        handleControllerError(err, res, 'getAvailableDoctors');
+    }
+};
+
 module.exports = {
     addStaff,
     getAllStaff,
@@ -259,5 +288,6 @@ module.exports = {
     updateStaff,
     getStaffHistory,
     getSalaryTable,
-    transferStaff
+    transferStaff,
+    getAvailableDoctors
 };
